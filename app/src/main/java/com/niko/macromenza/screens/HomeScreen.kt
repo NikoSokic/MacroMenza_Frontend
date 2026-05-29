@@ -11,26 +11,29 @@ import com.niko.macromenza.viewmodel.HomeViewModel
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import com.niko.macromenza.model.StavkaObroka
-
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 
 @Composable
 fun HomeScreen(
     navController: NavController,
+    refreshKey: Int = 0,
     viewModel: HomeViewModel = viewModel()
 ) {
     val ukupniUnos by viewModel.ukupniUnos.collectAsState()
     val danasnjiObroci by viewModel.danasnjiObroci.collectAsState()
+    val preporuka by viewModel.preporuka.collectAsState()
 
+    val ciljKalorije = preporuka?.kalorije ?: 2400.0
+    val ciljProteini = preporuka?.proteini ?: 160.0
+    val ciljUh = preporuka?.ugljikohidrati ?: 300.0
+    val ciljMasti = preporuka?.masti ?: 80.0
 
-    val ciljKalorije = 2400.0
-    val ciljProteini = 160.0
-    val ciljUh = 300.0
-    val ciljMasti = 80.0
-
-    LaunchedEffect(Unit) {
+    LaunchedEffect(refreshKey) {
         viewModel.ucitajUkupniUnos()
         viewModel.ucitajDanasnjeObroke()
-
+        viewModel.ucitajPreporuku()
     }
 
     val kalorije = ukupniUnos?.kalorije ?: 0.0

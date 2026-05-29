@@ -6,10 +6,10 @@ import com.niko.macromenza.api.RetrofitInstance
 import com.niko.macromenza.model.Korisnik
 import com.niko.macromenza.model.Mjerenje
 import com.niko.macromenza.model.ProfilPodaci
+import com.niko.macromenza.model.Preporuka
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import java.time.LocalDate
 
 class ProfilViewModel : ViewModel() {
 
@@ -22,11 +22,36 @@ class ProfilViewModel : ViewModel() {
     private val _poruka = MutableStateFlow<String?>(null)
     val poruka = _poruka.asStateFlow()
 
+    private val _zadnjeMjerenje = MutableStateFlow<Mjerenje?>(null)
+    val zadnjeMjerenje = _zadnjeMjerenje.asStateFlow()
+
+    private val _zadnjaPreporuka = MutableStateFlow<Preporuka?>(null)
+    val zadnjaPreporuka = _zadnjaPreporuka.asStateFlow()
+
     fun ucitajProfil(idKorisnik: Long = 1) {
         viewModelScope.launch {
             try {
                 _korisnik.value = RetrofitInstance.api.dohvatiKorisnika(idKorisnik)
+            } catch (e: Exception) {
+                _poruka.value = e.message
+            }
+
+            try {
                 _profil.value = RetrofitInstance.api.dohvatiProfilPoKorisniku(idKorisnik)
+            } catch (e: Exception) {
+                _poruka.value = e.message
+            }
+
+            try {
+                val mjerenja = RetrofitInstance.api.dohvatiMjerenjaZaKorisnika(idKorisnik)
+                _zadnjeMjerenje.value = mjerenja.maxByOrNull { it.id ?: 0 }
+            } catch (e: Exception) {
+                _poruka.value = e.message
+            }
+
+            try {
+                val preporuke = RetrofitInstance.api.dohvatiPreporukeZaKorisnika(idKorisnik)
+                _zadnjaPreporuka.value = preporuke.maxByOrNull { it.id ?: 0 }
             } catch (e: Exception) {
                 _poruka.value = e.message
             }
@@ -37,9 +62,7 @@ class ProfilViewModel : ViewModel() {
         idKorisnik: Long = 1,
         ime: String,
         prezime: String,
-        visina: Int,
-        masa: Double,
-        dob: Int,
+        email: String,
         spol: String
     ) {
         viewModelScope.launch {
@@ -50,7 +73,7 @@ class ProfilViewModel : ViewModel() {
                     id = idKorisnik,
                     ime = ime,
                     prezime = prezime,
-                    email = stariKorisnik?.email ?: "test@test.com",
+                    email = email,
                     lozinka_hash = stariKorisnik?.lozinka_hash ?: "test"
                 )
 
@@ -65,9 +88,9 @@ class ProfilViewModel : ViewModel() {
                     val azuriraniProfil = ProfilPodaci(
                         id = stariProfil.id,
                         idKorisnik = idKorisnik,
-                        visina = visina,
+                        visina = stariProfil.visina,
                         spol = spol,
-                        dob = dob
+                        dob = stariProfil.dob
                     )
 
                     RetrofitInstance.api.azurirajProfil(
@@ -75,16 +98,6 @@ class ProfilViewModel : ViewModel() {
                         profil = azuriraniProfil
                     )
                 }
-
-                val novoMjerenje = Mjerenje(
-                    idKorisnik = idKorisnik,
-                    masa = masa,
-                    razinaAktivnosti = "umjerena",
-                    tipCilja = "odrzavanje",
-                    datum = LocalDate.now().toString()
-                )
-
-                RetrofitInstance.api.dodajMjerenje(novoMjerenje)
 
                 _poruka.value = "Profil spremljen"
                 ucitajProfil(idKorisnik)

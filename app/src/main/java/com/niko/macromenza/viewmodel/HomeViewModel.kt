@@ -9,6 +9,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import com.niko.macromenza.model.PovijestDana
 import java.time.LocalDate
+import com.niko.macromenza.model.Preporuka
+
 
 
 class HomeViewModel : ViewModel() {
@@ -17,7 +19,8 @@ class HomeViewModel : ViewModel() {
     val ukupniUnos = _ukupniUnos.asStateFlow()
     private val _danasnjiObroci = MutableStateFlow<PovijestDana?>(null)
     val danasnjiObroci = _danasnjiObroci.asStateFlow()
-
+    private val _preporuka = MutableStateFlow<Preporuka?>(null)
+    val preporuka = _preporuka.asStateFlow()
 
     fun ucitajUkupniUnos() {
         viewModelScope.launch {
@@ -37,5 +40,17 @@ class HomeViewModel : ViewModel() {
             }
         }
     }
+
+    fun ucitajPreporuku(idKorisnik: Long = 1) {
+        viewModelScope.launch {
+            try {
+                val preporuke = RetrofitInstance.api.dohvatiPreporukeZaKorisnika(idKorisnik)
+
+                _preporuka.value = preporuke.maxByOrNull { it.id ?: 0 }
+            } catch (_: Exception) {
+            }
+        }
+    }
+
 
 }

@@ -12,6 +12,8 @@ import com.niko.macromenza.model.UkupniUnos
 import com.niko.macromenza.model.Korisnik
 import com.niko.macromenza.model.ProfilPodaci
 import com.niko.macromenza.model.Mjerenje
+import com.niko.macromenza.model.Preporuka
+
 import retrofit2.http.PUT
 import retrofit2.http.Path
 
@@ -80,6 +82,21 @@ interface ApiService {
     suspend fun dodajMjerenje(
         @Body mjerenje: Mjerenje
     ): Mjerenje
+
+    @GET("mjerenja/korisnik/{idKorisnik}")
+    suspend fun dohvatiMjerenjaZaKorisnika(
+        @Path("idKorisnik") idKorisnik: Long
+    ): List<Mjerenje>
+
+    @GET("preporuke/korisnik/{idKorisnik}")
+    suspend fun dohvatiPreporukeZaKorisnika(
+        @Path("idKorisnik") idKorisnik: Long
+    ): List<Preporuka>
+
+    @POST("preporuke/izracunaj/{idKorisnik}")
+    suspend fun izracunajPreporuku(
+        @Path("idKorisnik") idKorisnik: Long
+    ): Preporuka
 
 
 

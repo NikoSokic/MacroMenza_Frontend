@@ -2,30 +2,41 @@ package com.niko.macromenza.screens
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.Flag
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Straighten
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-
+import com.niko.macromenza.viewmodel.ProfilViewModel
 
 @Composable
 fun ProfilScreen(
-    navController: NavController
+    navController: NavController,
+    refreshKey: Int = 0,
+    viewModel: ProfilViewModel = viewModel()
 ) {
+    val korisnik by viewModel.korisnik.collectAsState()
+    val zadnjeMjerenje by viewModel.zadnjeMjerenje.collectAsState()
+    val zadnjaPreporuka by viewModel.zadnjaPreporuka.collectAsState()
+    var prikaziOdjavaDialog by remember { mutableStateOf(false) }
+
+    LaunchedEffect(refreshKey) {
+        viewModel.ucitajProfil(1)
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -43,13 +54,16 @@ fun ProfilScreen(
         Spacer(modifier = Modifier.height(24.dp))
 
         ProfileAvatar(
-            initials = "NS"
+            initials = buildString {
+                append(korisnik?.ime?.firstOrNull() ?: 'K')
+                append(korisnik?.prezime?.firstOrNull() ?: 'R')
+            }
         )
 
         Spacer(modifier = Modifier.height(12.dp))
 
         Text(
-            text = "Niko Sokić",
+            text = "${korisnik?.ime ?: ""} ${korisnik?.prezime ?: ""}".ifBlank { "Korisnik" },
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold
         )
@@ -77,8 +91,12 @@ fun ProfilScreen(
             Spacer(modifier = Modifier.height(10.dp))
 
             GoalCard(
-                title = "Održavanje težine",
-                subtitle = "2.400 kcal dnevno"
+                title = prikaziCilj(zadnjeMjerenje?.tipCilja),
+                subtitle = if (zadnjaPreporuka != null) {
+                    "${zadnjaPreporuka?.kalorije?.toInt()} kcal dnevno"
+                } else {
+                    "Nema preporuke"
+                }
             )
 
             Spacer(modifier = Modifier.height(18.dp))
@@ -95,7 +113,7 @@ fun ProfilScreen(
                 title = "Moje mjere",
                 iconType = ProfileIconType.Measurements,
                 onClick = {
-                    // kasnije: ekran mjera
+                    navController.navigate("moje_mjere")
                 }
             )
 
@@ -103,15 +121,50 @@ fun ProfilScreen(
                 title = "Postavke aplikacije",
                 iconType = ProfileIconType.Settings,
                 onClick = {
-                    // kasnije: ekran postavki aplikacije
+                    navController.navigate("postavke_aplikacije")
                 }
             )
-
             ProfileMenuItem(
                 title = "Odjava",
                 iconType = ProfileIconType.Logout,
                 onClick = {
-                    // kasnije: logout
+                    prikaziOdjavaDialog = true
+                }
+            )
+        }
+        if (prikaziOdjavaDialog) {
+            AlertDialog(
+                onDismissRequest = {
+                    prikaziOdjavaDialog = false
+                },
+                title = {
+                    Text("Odjava")
+                },
+                text = {
+                    Text("Jeste li sigurni da se želite odjaviti?")
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            prikaziOdjavaDialog = false
+                            navController.navigate("home") {
+                                popUpTo("home") {
+                                    inclusive = false
+                                }
+                            }
+                        }
+                    ) {
+                        Text("Odjava")
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = {
+                            prikaziOdjavaDialog = false
+                        }
+                    ) {
+                        Text("Odustani")
+                    }
                 }
             )
         }
@@ -249,5 +302,14 @@ fun ProfileMenuItem(
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
+    }
+}
+
+fun prikaziCilj(tipCilja: String?): String {
+    return when (tipCilja) {
+        "mrsavljenje" -> "Mršavljenje"
+        "odrzavanje" -> "Održavanje težine"
+        "dobivanje_mase" -> "Dobivanje mase"
+        else -> "Cilj nije postavljen"
     }
 }

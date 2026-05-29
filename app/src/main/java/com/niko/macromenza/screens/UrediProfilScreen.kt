@@ -4,7 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -24,9 +24,7 @@ fun UrediProfilScreen(
 
     var ime by remember { mutableStateOf("") }
     var prezime by remember { mutableStateOf("") }
-    var visina by remember { mutableStateOf("") }
-    var masa by remember { mutableStateOf("") }
-    var dob by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
     var spol by remember { mutableStateOf("M") }
 
     LaunchedEffect(Unit) {
@@ -37,11 +35,10 @@ fun UrediProfilScreen(
         korisnik?.let {
             ime = it.ime
             prezime = it.prezime
+            email = it.email
         }
 
         profil?.let {
-            visina = it.visina.toString()
-            dob = it.dob.toString()
             spol = it.spol
         }
     }
@@ -62,7 +59,7 @@ fun UrediProfilScreen(
                 }
             ) {
                 Icon(
-                    imageVector = Icons.Default.ArrowBack,
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "Nazad"
                 )
             }
@@ -108,27 +105,9 @@ fun UrediProfilScreen(
                 Spacer(modifier = Modifier.height(10.dp))
 
                 OutlinedTextField(
-                    value = visina,
-                    onValueChange = { visina = it },
-                    label = { Text("Visina (cm)") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                OutlinedTextField(
-                    value = masa,
-                    onValueChange = { masa = it },
-                    label = { Text("Masa (kg)") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                OutlinedTextField(
-                    value = dob,
-                    onValueChange = { dob = it },
-                    label = { Text("Dob") },
+                    value = email,
+                    onValueChange = { email = it },
+                    label = { Text("Email") },
                     modifier = Modifier.fillMaxWidth()
                 )
             }
@@ -175,9 +154,7 @@ fun UrediProfilScreen(
                     idKorisnik = 1,
                     ime = ime,
                     prezime = prezime,
-                    visina = visina.toIntOrNull() ?: 0,
-                    masa = masa.toDoubleOrNull() ?: 0.0,
-                    dob = dob.toIntOrNull() ?: 0,
+                    email = email,
                     spol = spol
                 )
             },

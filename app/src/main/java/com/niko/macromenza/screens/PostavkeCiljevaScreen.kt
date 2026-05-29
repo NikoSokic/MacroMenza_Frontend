@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -11,8 +12,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.niko.macromenza.viewmodel.CiljeviViewModel
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-
 
 @Composable
 fun PostavkeCiljevaScreen(
@@ -21,7 +20,10 @@ fun PostavkeCiljevaScreen(
 ) {
     val poruka by viewModel.poruka.collectAsState()
 
+    var visina by remember { mutableStateOf("") }
+    var dob by remember { mutableStateOf("") }
     var masa by remember { mutableStateOf("") }
+
     var tipCilja by remember { mutableStateOf("odrzavanje") }
     var aktivnost by remember { mutableStateOf("umjerena") }
 
@@ -62,11 +64,29 @@ fun PostavkeCiljevaScreen(
                 modifier = Modifier.padding(16.dp)
             ) {
                 Text(
-                    text = "Trenutna masa",
+                    text = "Podaci za preporuku",
                     style = MaterialTheme.typography.titleLarge
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
+
+                OutlinedTextField(
+                    value = visina,
+                    onValueChange = { visina = it },
+                    label = { Text("Visina (cm)") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                OutlinedTextField(
+                    value = dob,
+                    onValueChange = { dob = it },
+                    label = { Text("Dob") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(10.dp))
 
                 OutlinedTextField(
                     value = masa,
@@ -160,17 +180,25 @@ fun PostavkeCiljevaScreen(
             onClick = {
                 viewModel.spremiCilj(
                     idKorisnik = 1,
+                    visina = visina.toIntOrNull() ?: 0,
+                    dob = dob.toIntOrNull() ?: 0,
                     masa = masa.toDoubleOrNull() ?: 0.0,
                     razinaAktivnosti = aktivnost,
                     tipCilja = tipCilja
                 )
             },
-            enabled = masa.toDoubleOrNull() != null && masa.toDoubleOrNull()!! > 0,
+            enabled =
+                visina.toIntOrNull() != null &&
+                        dob.toIntOrNull() != null &&
+                        masa.toDoubleOrNull() != null &&
+                        visina.toIntOrNull()!! > 0 &&
+                        dob.toIntOrNull()!! > 0 &&
+                        masa.toDoubleOrNull()!! > 0,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(54.dp)
         ) {
-            Text("Spremi cilj")
+            Text("Spremi cilj i izračunaj preporuku")
         }
     }
 }

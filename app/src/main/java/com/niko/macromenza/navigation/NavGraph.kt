@@ -6,12 +6,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.*
 import com.niko.macromenza.screens.*
-
+import androidx.compose.runtime.*
 
 
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
+    var homeRefreshKey by remember { mutableStateOf(0) }
+    var profileRefreshKey by remember { mutableStateOf(0) }
 
     val items = listOf(
         BottomNavItem.Home,
@@ -30,6 +32,14 @@ fun AppNavigation() {
                     NavigationBarItem(
                         selected = currentRoute == item.route,
                         onClick = {
+                            if (item == BottomNavItem.Home) {
+                                homeRefreshKey++
+                            }
+
+                            if (item == BottomNavItem.Profil) {
+                                profileRefreshKey++
+                            }
+
                             navController.navigate(item.route) {
                                 popUpTo(navController.graph.startDestinationId)
                                 launchSingleTop = true
@@ -52,7 +62,10 @@ fun AppNavigation() {
             modifier = Modifier.padding(innerPadding)
         ) {
             composable(BottomNavItem.Home.route) {
-                HomeScreen(navController)
+                HomeScreen(
+                    navController = navController,
+                    refreshKey = homeRefreshKey
+                )
             }
             composable(BottomNavItem.Konzumacija.route) {
                 KonzumacijaScreen(navController)
@@ -61,13 +74,22 @@ fun AppNavigation() {
                 PovijestScreen(navController)
             }
             composable(BottomNavItem.Profil.route) {
-                ProfilScreen(navController)
+                ProfilScreen(
+                    navController = navController,
+                    refreshKey = profileRefreshKey
+                )
             }
             composable("uredi_profil") {
                 UrediProfilScreen(navController)
             }
             composable("postavke_ciljeva") {
                 PostavkeCiljevaScreen(navController)
+            }
+            composable("moje_mjere") {
+                MojeMjereScreen(navController)
+            }
+            composable("postavke_aplikacije") {
+                PostavkeAplikacijeScreen(navController)
             }
 
             composable("unos_obroka/{tipObroka}") { backStackEntry ->
