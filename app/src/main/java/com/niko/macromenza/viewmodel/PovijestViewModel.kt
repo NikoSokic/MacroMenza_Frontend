@@ -11,25 +11,12 @@ import kotlinx.coroutines.launch
 
 class PovijestViewModel : ViewModel() {
 
-    private val _dani = MutableStateFlow<List<String>>(emptyList())
-    val dani = _dani.asStateFlow()
-
     private val _povijestDana = MutableStateFlow<PovijestDana?>(null)
     val povijestDana = _povijestDana.asStateFlow()
 
     private val _tjedniPregled = MutableStateFlow<TjedniPregled?>(null)
     val tjedniPregled = _tjedniPregled.asStateFlow()
 
-
-    fun ucitajDane() {
-        viewModelScope.launch {
-            try {
-                _dani.value = RetrofitInstance.api.dohvatiDanePovijesti()
-            } catch (_: Exception) {
-
-            }
-        }
-    }
 
     fun ucitajDan(datum: String) {
         viewModelScope.launch {

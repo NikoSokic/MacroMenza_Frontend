@@ -249,20 +249,45 @@ fun UnosObrokaScreen(
         LazyColumn(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            items(jela) { jelo ->
-                JeloKolicinaItem(
-                    jelo = jelo,
-                    kolicina = kolicine[jelo.id] ?: 0,
-                    onPlus = {
-                        kolicine[jelo.id] = (kolicine[jelo.id] ?: 0) + 1
-                    },
-                    onMinus = {
-                        val trenutna = kolicine[jelo.id] ?: 0
-                        if (trenutna > 0) {
-                            kolicine[jelo.id] = trenutna - 1
+            if (jela.isEmpty()) {
+                item {
+                    Card(
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(16.dp)
+                        ) {
+                            Text(
+                                text = "Nema pronađenih jela.",
+                                style = MaterialTheme.typography.titleMedium
+                            )
+
+                            Spacer(modifier = Modifier.height(4.dp))
+
+                            Text(
+                                text = "Pokušaj promijeniti pretragu ili filter.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                         }
                     }
-                )
+                }
+            } else {
+                items(jela) { jelo ->
+                    JeloKolicinaItem(
+                        jelo = jelo,
+                        kolicina = kolicine[jelo.id] ?: 0,
+                        onPlus = {
+                            kolicine[jelo.id] = (kolicine[jelo.id] ?: 0) + 1
+                        },
+                        onMinus = {
+                            val trenutna = kolicine[jelo.id] ?: 0
+                            if (trenutna > 0) {
+                                kolicine[jelo.id] = trenutna - 1
+                            }
+                        }
+                    )
+                }
             }
         }
     }

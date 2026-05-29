@@ -11,9 +11,7 @@ import com.niko.macromenza.viewmodel.HomeViewModel
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import com.niko.macromenza.model.StavkaObroka
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.compose.LocalLifecycleOwner
+
 
 @Composable
 fun HomeScreen(
@@ -29,6 +27,31 @@ fun HomeScreen(
     val ciljProteini = preporuka?.proteini ?: 160.0
     val ciljUh = preporuka?.ugljikohidrati ?: 300.0
     val ciljMasti = preporuka?.masti ?: 80.0
+
+    if (preporuka == null) {
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Card(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(
+                modifier = Modifier.padding(14.dp)
+            ) {
+                Text(
+                    text = "Preporuka nije postavljena.",
+                    style = MaterialTheme.typography.titleMedium
+                )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                Text(
+                    text = "Otvori Profil → Postavke ciljeva kako bi se izračunali tvoji dnevni ciljevi.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+    }
 
     LaunchedEffect(refreshKey) {
         viewModel.ucitajUkupniUnos()
@@ -143,16 +166,39 @@ fun HomeScreen(
                 modifier = Modifier.padding(12.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                danasnjiObroci?.obroci?.forEach { (tip, stavke) ->
+                val imaObroka = danasnjiObroci?.obroci?.any { (_, stavke) ->
+                    stavke.isNotEmpty()
+                } == true
+
+                if (!imaObroka) {
                     item {
                         Text(
-                            text = tip,
-                            style = MaterialTheme.typography.titleMedium
+                            text = "Nema današnjih obroka.",
+                            style = MaterialTheme.typography.bodyMedium
                         )
                     }
 
-                    items(stavke) { stavka ->
-                        DanasnjiObrokItem(stavka)
+                    item {
+                        Text(
+                            text = "Dodaj doručak, ručak, večeru ili užinu.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                } else {
+                    danasnjiObroci?.obroci?.forEach { (tip, stavke) ->
+                        if (stavke.isNotEmpty()) {
+                            item {
+                                Text(
+                                    text = tip,
+                                    style = MaterialTheme.typography.titleMedium
+                                )
+                            }
+
+                            items(stavke) { stavka ->
+                                DanasnjiObrokItem(stavka)
+                            }
+                        }
                     }
                 }
             }

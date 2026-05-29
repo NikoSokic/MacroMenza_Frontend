@@ -42,9 +42,6 @@ interface ApiService {
         @Query("maxMasti") maxMasti: Int? = null
     ): List<Jelo>
 
-    @GET("api/konzumacije/povijest/dani/1")
-    suspend fun dohvatiDanePovijesti(): List<String>
-
     @GET("api/konzumacije/povijest/1")
     suspend fun dohvatiPovijestZaDan(
         @Query("datum") datum: String
@@ -98,6 +95,10 @@ interface ApiService {
         @Path("idKorisnik") idKorisnik: Long
     ): Preporuka
 
+    @POST("korisnici/supabase")
+    suspend fun pronadiIliDodajKorisnikaPrekoSupabase(
+        @Body korisnik: Korisnik
+    ): Korisnik
 
 
 }
