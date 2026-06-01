@@ -66,7 +66,6 @@ dependencies {
     implementation("androidx.navigation:navigation-compose:2.9.0")
     implementation("androidx.compose.material:material-icons-extended")
 
-    implementation("io.github.jan-tennert.supabase:auth-kt-android:3.2.2")
-    implementation("io.ktor:ktor-client-android:3.1.3")
+    implementation("androidx.datastore:datastore-preferences:1.1.7")
 
 }

@@ -12,7 +12,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.niko.macromenza.viewmodel.ProfilViewModel
-
+import androidx.compose.ui.platform.LocalContext
+import com.niko.macromenza.session.UserSessionManager
 @Composable
 fun UrediProfilScreen(
     navController: NavController,
@@ -21,14 +22,24 @@ fun UrediProfilScreen(
     val korisnik by viewModel.korisnik.collectAsState()
     val profil by viewModel.profil.collectAsState()
     val poruka by viewModel.poruka.collectAsState()
+    val context = LocalContext.current
+
+    val sessionManager = remember {
+        UserSessionManager(context)
+    }
+
+    val prijavljeniKorisnikId by sessionManager.korisnikId.collectAsState(initial = null)
+
 
     var ime by remember { mutableStateOf("") }
     var prezime by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var spol by remember { mutableStateOf("M") }
 
-    LaunchedEffect(Unit) {
-        viewModel.ucitajProfil(1)
+    LaunchedEffect(prijavljeniKorisnikId) {
+        prijavljeniKorisnikId?.let { id ->
+            viewModel.ucitajProfil(id)
+        }
     }
 
     LaunchedEffect(korisnik, profil) {
@@ -151,7 +162,7 @@ fun UrediProfilScreen(
         Button(
             onClick = {
                 viewModel.spremiProfil(
-                    idKorisnik = 1,
+                    idKorisnik = prijavljeniKorisnikId ?: return@Button,
                     ime = ime,
                     prezime = prezime,
                     email = email,

@@ -10,18 +10,18 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.niko.macromenza.viewmodel.AuthViewModel
 
 @Composable
 fun LoginScreen(
     navController: NavController,
-    viewModel: AuthViewModel = viewModel()
+    viewModel: AuthViewModel
 ) {
     val poruka by viewModel.poruka.collectAsState()
     val ucitavanje by viewModel.ucitavanje.collectAsState()
     val korisnikId by viewModel.korisnikId.collectAsState()
+
 
     var email by remember { mutableStateOf("") }
     var lozinka by remember { mutableStateOf("") }

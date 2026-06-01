@@ -36,10 +36,16 @@ class JelaViewModel : ViewModel() {
         }
     }
 
-    fun spremiKonzumaciju(idJelo: Long, kolicina: Double, tipObroka: String) {
+    fun spremiKonzumaciju(
+        idKorisnik: Long,
+        idJelo: Long,
+        kolicina: Double,
+        tipObroka: String
+    ) {
         viewModelScope.launch {
             try {
                 val request = KonzumacijaRequest(
+                    idKorisnik = idKorisnik,
                     idJelo = idJelo,
                     kolicina = kolicina.toInt(),
                     tipObroka = tipObroka

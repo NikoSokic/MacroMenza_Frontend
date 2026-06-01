@@ -12,6 +12,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.niko.macromenza.viewmodel.CiljeviViewModel
+import androidx.compose.ui.platform.LocalContext
+import com.niko.macromenza.session.UserSessionManager
 
 @Composable
 fun PostavkeCiljevaScreen(
@@ -19,6 +21,14 @@ fun PostavkeCiljevaScreen(
     viewModel: CiljeviViewModel = viewModel()
 ) {
     val poruka by viewModel.poruka.collectAsState()
+
+    val context = LocalContext.current
+
+    val sessionManager = remember {
+        UserSessionManager(context)
+    }
+
+    val prijavljeniKorisnikId by sessionManager.korisnikId.collectAsState(initial = null)
 
     var visina by remember { mutableStateOf("") }
     var dob by remember { mutableStateOf("") }
@@ -179,7 +189,7 @@ fun PostavkeCiljevaScreen(
         Button(
             onClick = {
                 viewModel.spremiCilj(
-                    idKorisnik = 1,
+                    idKorisnik = prijavljeniKorisnikId ?: return@Button,
                     visina = visina.toIntOrNull() ?: 0,
                     dob = dob.toIntOrNull() ?: 0,
                     masa = masa.toDoubleOrNull() ?: 0.0,

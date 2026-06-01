@@ -3,15 +3,18 @@ package com.niko.macromenza.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.niko.macromenza.api.RetrofitInstance
+import com.niko.macromenza.api.SupabaseAuthInstance
 import com.niko.macromenza.model.Korisnik
-import com.niko.macromenza.supabase.SupabaseClientInstance
-import io.github.jan.supabase.auth.auth
-import io.github.jan.supabase.auth.providers.builtin.Email
+import com.niko.macromenza.model.RegistracijaProfilRequest
+import com.niko.macromenza.model.SupabaseAuthRequest
+import com.niko.macromenza.session.UserSessionManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class AuthViewModel : ViewModel() {
+class AuthViewModel(
+    private val sessionManager: UserSessionManager
+) : ViewModel() {
 
     private val _poruka = MutableStateFlow<String?>(null)
     val poruka = _poruka.asStateFlow()
@@ -25,19 +28,72 @@ class AuthViewModel : ViewModel() {
     private val _korisnikId = MutableStateFlow<Long?>(null)
     val korisnikId = _korisnikId.asStateFlow()
 
+    init {
+        ucitajSesiju()
+    }
+
+    private fun ucitajSesiju() {
+        viewModelScope.launch {
+            sessionManager.supabaseUid.collect { uid ->
+                _supabaseUid.value = uid
+            }
+        }
+
+        viewModelScope.launch {
+            sessionManager.korisnikId.collect { id ->
+                _korisnikId.value = id
+            }
+        }
+    }
+
     fun registracija(
         email: String,
-        lozinka: String
+        lozinka: String,
+        ime: String,
+        prezime: String,
+        spol: String,
+        visina: Int,
+        dob: Int,
+        masa: Double,
+        razinaAktivnosti: String,
+        tipCilja: String
     ) {
         viewModelScope.launch {
             _ucitavanje.value = true
             _poruka.value = null
 
             try {
-                SupabaseClientInstance.client.auth.signUpWith(Email) {
-                    this.email = email
-                    this.password = lozinka
+                val response = SupabaseAuthInstance.api.registracija(
+                    apiKey = SupabaseAuthInstance.SUPABASE_ANON_KEY,
+                    request = SupabaseAuthRequest(
+                        email = email,
+                        password = lozinka
+                    )
+                )
+
+                val uid = response.user?.id
+                _poruka.value = "UID: $uid"
+
+
+                if (uid == null) {
+                    _poruka.value = "UID = $uid"
+                    return@launch
                 }
+
+                RetrofitInstance.api.registracijaProfil(
+                    RegistracijaProfilRequest(
+                        supabaseUid = uid,
+                        email = email,
+                        ime = ime,
+                        prezime = prezime,
+                        spol = spol,
+                        visina = visina,
+                        dob = dob,
+                        masa = masa,
+                        razinaAktivnosti = razinaAktivnosti,
+                        tipCilja = tipCilja
+                    )
+                )
 
                 _poruka.value = "Registracija uspješna. Provjeri email i potvrdi račun."
 
@@ -58,23 +114,33 @@ class AuthViewModel : ViewModel() {
             _poruka.value = null
 
             try {
-                SupabaseClientInstance.client.auth.signInWith(Email) {
-                    this.email = email
-                    this.password = lozinka
-                }
-
-                val user =
-                    SupabaseClientInstance.client.auth.retrieveUserForCurrentSession(
-                        updateSession = true
+                val response = SupabaseAuthInstance.api.prijava(
+                    apiKey = SupabaseAuthInstance.SUPABASE_ANON_KEY,
+                    request = SupabaseAuthRequest(
+                        email = email,
+                        password = lozinka
                     )
+                )
 
-                val uid = user.id.toString()
+                val uid = response.user?.id
+
+                if (uid == null) {
+                    _poruka.value = "Prijava nije uspjela."
+                    return@launch
+                }
 
                 _supabaseUid.value = uid
 
-                poveziKorisnikaSBackendom(
+                val backendKorisnik = poveziKorisnikaSBackendom(
                     supabaseUid = uid,
                     email = email
+                )
+
+                _korisnikId.value = backendKorisnik.id
+
+                sessionManager.spremiSesiju(
+                    korisnikId = backendKorisnik.id ?: 0L,
+                    supabaseUid = uid
                 )
 
                 _poruka.value = "Prijava uspješna"
@@ -89,23 +155,18 @@ class AuthViewModel : ViewModel() {
 
     fun odjava() {
         viewModelScope.launch {
-            try {
-                SupabaseClientInstance.client.auth.signOut()
+            sessionManager.obrisiSesiju()
 
-                _supabaseUid.value = null
-                _korisnikId.value = null
-                _poruka.value = "Odjavljen korisnik"
-
-            } catch (e: Exception) {
-                _poruka.value = e.message ?: "Greška pri odjavi"
-            }
+            _supabaseUid.value = null
+            _korisnikId.value = null
+            _poruka.value = "Odjavljen korisnik"
         }
     }
 
     private suspend fun poveziKorisnikaSBackendom(
         supabaseUid: String,
         email: String
-    ) {
+    ): Korisnik {
         val korisnik = Korisnik(
             supabaseUid = supabaseUid,
             ime = "",
@@ -114,9 +175,6 @@ class AuthViewModel : ViewModel() {
             lozinka_hash = ""
         )
 
-        val backendKorisnik =
-            RetrofitInstance.api.pronadiIliDodajKorisnikaPrekoSupabase(korisnik)
-
-        _korisnikId.value = backendKorisnik.id
+        return RetrofitInstance.api.pronadiIliDodajKorisnikaPrekoSupabase(korisnik)
     }
 }

@@ -18,20 +18,29 @@ class PovijestViewModel : ViewModel() {
     val tjedniPregled = _tjedniPregled.asStateFlow()
 
 
-    fun ucitajDan(datum: String) {
+    fun ucitajDan(
+        idKorisnik: Long,
+        datum: String
+    ) {
         viewModelScope.launch {
             try {
                 _povijestDana.value =
-                    RetrofitInstance.api.dohvatiPovijestZaDan(datum)
+                    RetrofitInstance.api.dohvatiPovijestZaDan(
+                        idKorisnik = idKorisnik,
+                        datum = datum
+                    )
             } catch (_: Exception) {
 
             }
         }
     }
-    fun ucitajTjedniPregled() {
+    fun ucitajTjedniPregled(
+        idKorisnik: Long
+    ) {
         viewModelScope.launch {
             try {
-                _tjedniPregled.value = RetrofitInstance.api.dohvatiTjedniPregled()
+                _tjedniPregled.value =
+                    RetrofitInstance.api.dohvatiTjedniPregled(idKorisnik)
             } catch (_: Exception) {
             }
         }

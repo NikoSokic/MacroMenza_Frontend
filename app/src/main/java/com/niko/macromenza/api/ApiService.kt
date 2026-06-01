@@ -13,6 +13,7 @@ import com.niko.macromenza.model.Korisnik
 import com.niko.macromenza.model.ProfilPodaci
 import com.niko.macromenza.model.Mjerenje
 import com.niko.macromenza.model.Preporuka
+import com.niko.macromenza.model.RegistracijaProfilRequest
 
 import retrofit2.http.PUT
 import retrofit2.http.Path
@@ -42,16 +43,21 @@ interface ApiService {
         @Query("maxMasti") maxMasti: Int? = null
     ): List<Jelo>
 
-    @GET("api/konzumacije/povijest/1")
+    @GET("api/konzumacije/povijest/{idKorisnik}")
     suspend fun dohvatiPovijestZaDan(
+        @Path("idKorisnik") idKorisnik: Long,
         @Query("datum") datum: String
     ): PovijestDana
 
-    @GET("api/konzumacije/tjedni-pregled/1")
-    suspend fun dohvatiTjedniPregled(): TjedniPregled
+    @GET("api/konzumacije/tjedni-pregled/{idKorisnik}")
+    suspend fun dohvatiTjedniPregled(
+        @Path("idKorisnik") idKorisnik: Long
+    ): TjedniPregled
 
-    @GET("api/konzumacije/ukupno/1")
-    suspend fun dohvatiUkupniUnos(): UkupniUnos
+    @GET("api/konzumacije/ukupno/{idKorisnik}")
+    suspend fun dohvatiUkupniUnos(
+        @Path("idKorisnik") idKorisnik: Long
+    ): UkupniUnos
 
     @GET("korisnici/{id}")
     suspend fun dohvatiKorisnika(
@@ -100,5 +106,14 @@ interface ApiService {
         @Body korisnik: Korisnik
     ): Korisnik
 
+    @POST("profil")
+    suspend fun dodajProfil(
+        @Body profil: ProfilPodaci
+    ): ProfilPodaci
+
+    @POST("korisnici/registracija-profil")
+    suspend fun registracijaProfil(
+        @Body request: RegistracijaProfilRequest
+    ): Korisnik
 
 }

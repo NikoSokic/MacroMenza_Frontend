@@ -21,6 +21,12 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.niko.macromenza.viewmodel.ProfilViewModel
+import androidx.compose.ui.platform.LocalContext
+import com.niko.macromenza.session.UserSessionManager
+import com.niko.macromenza.viewmodel.AuthViewModel
+import com.niko.macromenza.viewmodel.AuthViewModelFactory
+import androidx.compose.ui.platform.LocalContext
+
 
 @Composable
 fun ProfilScreen(
@@ -33,8 +39,23 @@ fun ProfilScreen(
     val zadnjaPreporuka by viewModel.zadnjaPreporuka.collectAsState()
     var prikaziOdjavaDialog by remember { mutableStateOf(false) }
 
-    LaunchedEffect(refreshKey) {
-        viewModel.ucitajProfil(1)
+    val context = LocalContext.current
+    val sessionManager = remember {
+        UserSessionManager(context)
+    }
+
+    val authViewModel: AuthViewModel = viewModel(
+        factory = AuthViewModelFactory(
+            UserSessionManager(context)
+        )
+    )
+
+    val prijavljeniKorisnikId by sessionManager.korisnikId.collectAsState(initial = null)
+
+    LaunchedEffect(refreshKey, prijavljeniKorisnikId) {
+        prijavljeniKorisnikId?.let { id ->
+            viewModel.ucitajProfil(id)
+        }
     }
 
     Column(
@@ -147,10 +168,11 @@ fun ProfilScreen(
                     Button(
                         onClick = {
                             prikaziOdjavaDialog = false
-                            navController.navigate("home") {
-                                popUpTo("home") {
-                                    inclusive = false
-                                }
+
+                            authViewModel.odjava()
+
+                            navController.navigate("login") {
+                                popUpTo(0)
                             }
                         }
                     ) {

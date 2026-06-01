@@ -14,6 +14,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.niko.macromenza.model.Mjerenje
 import com.niko.macromenza.viewmodel.MjereViewModel
+import androidx.compose.ui.platform.LocalContext
+import com.niko.macromenza.session.UserSessionManager
 
 @Composable
 fun MojeMjereScreen(
@@ -23,8 +25,18 @@ fun MojeMjereScreen(
     val mjerenja by viewModel.mjerenja.collectAsState()
     val greska by viewModel.greska.collectAsState()
 
-    LaunchedEffect(Unit) {
-        viewModel.ucitajMjerenja(1)
+    val context = LocalContext.current
+
+    val sessionManager = remember {
+        UserSessionManager(context)
+    }
+
+    val prijavljeniKorisnikId by sessionManager.korisnikId.collectAsState(initial = null)
+
+    LaunchedEffect(prijavljeniKorisnikId) {
+        prijavljeniKorisnikId?.let { id ->
+            viewModel.ucitajMjerenja(id)
+        }
     }
 
     val zadnjeMjerenje = mjerenja.maxByOrNull { it.datum ?: "" }

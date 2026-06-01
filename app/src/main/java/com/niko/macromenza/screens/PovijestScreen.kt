@@ -13,6 +13,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.niko.macromenza.viewmodel.PovijestViewModel
 import java.time.LocalDate
+import androidx.compose.ui.platform.LocalContext
+import com.niko.macromenza.session.UserSessionManager
 
 enum class PovijestTab {
     TJEDNI,
@@ -29,13 +31,25 @@ fun PovijestScreen(
     var odabraniTab by remember { mutableStateOf(PovijestTab.TJEDNI) }
     var odabraniDatum by remember { mutableStateOf<String?>(null) }
 
-    LaunchedEffect(Unit) {
-        viewModel.ucitajTjedniPregled()
+    val context = LocalContext.current
+
+    val sessionManager = remember {
+        UserSessionManager(context)
+    }
+
+    val prijavljeniKorisnikId by sessionManager.korisnikId.collectAsState(initial = null)
+
+    LaunchedEffect(prijavljeniKorisnikId) {
+        prijavljeniKorisnikId?.let { id ->
+            viewModel.ucitajTjedniPregled(id)
+        }
     }
 
     LaunchedEffect(odabraniDatum) {
         odabraniDatum?.let { datum ->
-            viewModel.ucitajDan(datum)
+            prijavljeniKorisnikId?.let { id ->
+                viewModel.ucitajDan(id, datum)
+            }
         }
     }
 

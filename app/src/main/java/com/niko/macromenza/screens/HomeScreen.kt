@@ -11,6 +11,8 @@ import com.niko.macromenza.viewmodel.HomeViewModel
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import com.niko.macromenza.model.StavkaObroka
+import androidx.compose.ui.platform.LocalContext
+import com.niko.macromenza.session.UserSessionManager
 
 
 @Composable
@@ -27,6 +29,14 @@ fun HomeScreen(
     val ciljProteini = preporuka?.proteini ?: 160.0
     val ciljUh = preporuka?.ugljikohidrati ?: 300.0
     val ciljMasti = preporuka?.masti ?: 80.0
+
+    val context = LocalContext.current
+
+    val sessionManager = remember {
+        UserSessionManager(context)
+    }
+
+    val prijavljeniKorisnikId by sessionManager.korisnikId.collectAsState(initial = null)
 
     if (preporuka == null) {
         Spacer(modifier = Modifier.height(12.dp))
@@ -53,10 +63,12 @@ fun HomeScreen(
         }
     }
 
-    LaunchedEffect(refreshKey) {
-        viewModel.ucitajUkupniUnos()
-        viewModel.ucitajDanasnjeObroke()
-        viewModel.ucitajPreporuku()
+    LaunchedEffect(refreshKey, prijavljeniKorisnikId) {
+        prijavljeniKorisnikId?.let { id ->
+            viewModel.ucitajUkupniUnos(id)
+            viewModel.ucitajDanasnjeObroke(id)
+            viewModel.ucitajPreporuku(id)
+        }
     }
 
     val kalorije = ukupniUnos?.kalorije ?: 0.0

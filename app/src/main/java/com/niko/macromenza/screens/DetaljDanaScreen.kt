@@ -11,7 +11,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.niko.macromenza.model.StavkaObroka
 import com.niko.macromenza.viewmodel.PovijestViewModel
-
+import androidx.compose.ui.platform.LocalContext
+import com.niko.macromenza.session.UserSessionManager
 @Composable
 fun DetaljDanaScreen(
     datum: String,
@@ -19,9 +20,20 @@ fun DetaljDanaScreen(
 ) {
     val povijestDana by viewModel.povijestDana.collectAsState()
 
-    LaunchedEffect(datum) {
-        viewModel.ucitajDan(datum)
+    val context = LocalContext.current
+
+    val sessionManager = remember {
+        UserSessionManager(context)
     }
+
+    val prijavljeniKorisnikId by sessionManager.korisnikId.collectAsState(initial = null)
+
+    LaunchedEffect(datum, prijavljeniKorisnikId) {
+        prijavljeniKorisnikId?.let { id ->
+            viewModel.ucitajDan(id, datum)
+        }
+    }
+
 
     LazyColumn(
         modifier = Modifier

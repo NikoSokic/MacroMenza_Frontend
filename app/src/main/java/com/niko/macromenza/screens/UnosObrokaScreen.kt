@@ -17,6 +17,9 @@ import com.niko.macromenza.model.Jelo
 import com.niko.macromenza.viewmodel.JelaViewModel
 import kotlinx.coroutines.delay
 import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.ui.platform.LocalContext
+import com.niko.macromenza.session.UserSessionManager
+
 
 
 @Composable
@@ -37,6 +40,14 @@ fun UnosObrokaScreen(
     var maxProteini by remember { mutableStateOf("") }
 
     val kolicine = remember { mutableStateMapOf<Long, Int>() }
+
+    val context = LocalContext.current
+
+    val sessionManager = remember {
+        UserSessionManager(context)
+    }
+
+    val prijavljeniKorisnikId by sessionManager.korisnikId.collectAsState(initial = null)
 
     LaunchedEffect(search) {
         delay(300)
@@ -221,8 +232,11 @@ fun UnosObrokaScreen(
 
                 Button(
                     onClick = {
+                        val idKorisnik = prijavljeniKorisnikId ?: return@Button
+
                         odabranaJela.forEach { jelo ->
                             viewModel.spremiKonzumaciju(
+                                idKorisnik = idKorisnik,
                                 idJelo = jelo.id,
                                 kolicina = (kolicine[jelo.id] ?: 0).toDouble(),
                                 tipObroka = tipObroka
