@@ -32,14 +32,22 @@ class UserSessionManager(
 
     val isLoggedIn: Flow<Boolean> =
         context.userSessionDataStore.data.map { preferences ->
-            preferences[KORISNIK_ID] != null &&
-                    preferences[SUPABASE_UID] != null
+            val korisnikId = preferences[KORISNIK_ID]
+            val supabaseUid = preferences[SUPABASE_UID]
+
+            korisnikId != null &&
+                    korisnikId > 0 &&
+                    !supabaseUid.isNullOrBlank()
         }
 
     suspend fun spremiSesiju(
         korisnikId: Long,
         supabaseUid: String
     ) {
+        if (korisnikId <= 0 || supabaseUid.isBlank()) {
+            return
+        }
+
         context.userSessionDataStore.edit { preferences ->
             preferences[KORISNIK_ID] = korisnikId
             preferences[SUPABASE_UID] = supabaseUid

@@ -1,19 +1,18 @@
 package com.niko.macromenza.screens
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.niko.macromenza.viewmodel.HomeViewModel
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import com.niko.macromenza.model.StavkaObroka
-import androidx.compose.ui.platform.LocalContext
 import com.niko.macromenza.session.UserSessionManager
-
+import com.niko.macromenza.viewmodel.HomeViewModel
 
 @Composable
 fun HomeScreen(
@@ -38,7 +37,6 @@ fun HomeScreen(
 
     val prijavljeniKorisnikId by sessionManager.korisnikId.collectAsState(initial = null)
 
-
     LaunchedEffect(refreshKey, prijavljeniKorisnikId) {
         prijavljeniKorisnikId?.let { id ->
             viewModel.ucitajUkupniUnos(id)
@@ -52,171 +50,199 @@ fun HomeScreen(
     val uh = ukupniUnos?.ugljikohidrati ?: 0.0
     val masti = ukupniUnos?.masti ?: 0.0
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(
+            start = 16.dp,
+            top = 16.dp,
+            end = 16.dp,
+            bottom = 100.dp
+        ),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Text("Danas", style = MaterialTheme.typography.headlineLarge)
-        Text("Pregled dnevnog unosa")
+        item {
+            Column {
+                Text(
+                    text = "Danas",
+                    style = MaterialTheme.typography.headlineLarge
+                )
+
+                Text(
+                    text = "Pregled dnevnog unosa",
+                    style = MaterialTheme.typography.bodyLarge
+                )
+            }
+        }
 
         if (preporuka == null) {
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Card(
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(
-                    modifier = Modifier.padding(14.dp)
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth()
                 ) {
+                    Column(
+                        modifier = Modifier.padding(14.dp)
+                    ) {
+                        Text(
+                            text = "Preporuka nije postavljena.",
+                            style = MaterialTheme.typography.titleMedium
+                        )
+
+                        Spacer(modifier = Modifier.height(4.dp))
+
+                        Text(
+                            text = "Otvori Profil → Postavke ciljeva kako bi se izračunali tvoji dnevni ciljevi.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+        }
+
+        item {
+            Card(modifier = Modifier.fillMaxWidth()) {
+                Column(modifier = Modifier.padding(12.dp)) {
                     Text(
-                        text = "Preporuka nije postavljena.",
+                        text = "Uneseno kalorija",
                         style = MaterialTheme.typography.titleMedium
                     )
 
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "%.0f / %.0f kcal".format(kalorije, ciljKalorije),
+                        style = MaterialTheme.typography.headlineMedium
+                    )
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    LinearProgressIndicator(
+                        progress = {
+                            (kalorije / ciljKalorije).toFloat().coerceIn(0f, 1f)
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
 
                     Text(
-                        text = "Otvori Profil → Postavke ciljeva kako bi se izračunali tvoji dnevni ciljevi.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        text = "Preostalo: %.0f kcal".format(
+                            (ciljKalorije - kalorije).coerceAtLeast(0.0)
+                        )
                     )
                 }
             }
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
+        item {
+            Text(
+                text = "Makronutrijenti",
+                style = MaterialTheme.typography.titleLarge
+            )
+        }
 
-        Card(modifier = Modifier.fillMaxWidth()) {
-            Column(modifier = Modifier.padding(12.dp)) {
-                Text("Uneseno kalorija", style = MaterialTheme.typography.titleMedium)
+        item {
+            MacroProgress("Proteini", proteini, ciljProteini, "g")
+        }
 
-                Text(
-                    "%.0f / %.0f kcal".format(kalorije, ciljKalorije),
-                    style = MaterialTheme.typography.headlineMedium
+        item {
+            MacroProgress("Ugljikohidrati", uh, ciljUh, "g")
+        }
+
+        item {
+            MacroProgress("Masti", masti, ciljMasti, "g")
+        }
+
+        item {
+            Text(
+                text = "Brzo dodaj obrok",
+                style = MaterialTheme.typography.titleLarge
+            )
+        }
+
+        item {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                QuickMealButton(
+                    "Doručak",
+                    "DORUCAK",
+                    navController,
+                    Modifier.weight(1f)
                 )
 
-                Spacer(modifier = Modifier.height(10.dp))
-
-                LinearProgressIndicator(
-                    progress = {
-                        (kalorije / ciljKalorije).toFloat().coerceIn(0f, 1f)
-                    },
-                    modifier = Modifier.fillMaxWidth()
+                QuickMealButton(
+                    "Ručak",
+                    "RUCAK",
+                    navController,
+                    Modifier.weight(1f)
                 )
 
-                Spacer(modifier = Modifier.height(8.dp))
+                QuickMealButton(
+                    "Večera",
+                    "VECERA",
+                    navController,
+                    Modifier.weight(1f)
+                )
 
-                Text(
-                    "Preostalo: %.0f kcal".format(
-                        (ciljKalorije - kalorije).coerceAtLeast(0.0)
-                    )
+                QuickMealButton(
+                    "Užina",
+                    "UZINA",
+                    navController,
+                    Modifier.weight(1f)
                 )
             }
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
-
-        Text("Makronutrijenti", style = MaterialTheme.typography.titleLarge)
-
-        Spacer(modifier = Modifier.height(10.dp))
-
-        MacroProgress("Proteini", proteini, ciljProteini, "g")
-        MacroProgress("Ugljikohidrati", uh, ciljUh, "g")
-        MacroProgress("Masti", masti, ciljMasti, "g")
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        Text("Brzo dodaj obrok", style = MaterialTheme.typography.titleLarge)
-
-        Spacer(modifier = Modifier.height(10.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(6.dp)
-        ) {
-            QuickMealButton(
-                "Doručak",
-                "DORUCAK",
-                navController,
-                Modifier.weight(1f)
-            )
-
-            QuickMealButton(
-                "Ručak",
-                "RUCAK",
-                navController,
-                Modifier.weight(1f)
-            )
-
-            QuickMealButton(
-                "Večera",
-                "VECERA",
-                navController,
-                Modifier.weight(1f)
-            )
-
-            QuickMealButton(
-                "Užina",
-                "UZINA",
-                navController,
-                Modifier.weight(1f)
+        item {
+            Text(
+                text = "Današnji obroci",
+                style = MaterialTheme.typography.titleLarge
             )
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
+        val imaObroka = danasnjiObroci?.obroci?.any { (_, stavke) ->
+            stavke.isNotEmpty()
+        } == true
 
-        Text("Današnji obroci", style = MaterialTheme.typography.titleLarge)
-
-        Spacer(modifier = Modifier.height(10.dp))
-
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(170.dp)
-        ) {
-            LazyColumn(
-                modifier = Modifier.padding(12.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                val imaObroka = danasnjiObroci?.obroci?.any { (_, stavke) ->
-                    stavke.isNotEmpty()
-                } == true
-
-                if (!imaObroka) {
-                    item {
+        if (!imaObroka) {
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp)
+                    ) {
                         Text(
                             text = "Nema današnjih obroka.",
                             style = MaterialTheme.typography.bodyMedium
                         )
-                    }
 
-                    item {
+                        Spacer(modifier = Modifier.height(4.dp))
+
                         Text(
                             text = "Dodaj doručak, ručak, večeru ili užinu.",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
-                } else {
-                    danasnjiObroci?.obroci?.forEach { (tip, stavke) ->
-                        if (stavke.isNotEmpty()) {
-                            item {
-                                Text(
-                                    text = tip,
-                                    style = MaterialTheme.typography.titleMedium
-                                )
-                            }
+                }
+            }
+        } else {
+            danasnjiObroci?.obroci?.forEach { (tip, stavke) ->
+                if (stavke.isNotEmpty()) {
+                    item {
+                        Text(
+                            text = tip,
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                    }
 
-                            items(stavke) { stavka ->
-                                DanasnjiObrokItem(stavka)
-                            }
-                        }
+                    items(stavke) { stavka ->
+                        DanasnjiObrokItem(stavka)
                     }
                 }
             }
         }
-
     }
 }
 
@@ -228,17 +254,21 @@ fun MacroProgress(
     jedinica: String
 ) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(bottom = 10.dp)
+        modifier = Modifier.fillMaxWidth()
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(naziv, style = MaterialTheme.typography.titleMedium)
-                Text("%.0f / %.0f %s".format(vrijednost, cilj, jedinica))
+                Text(
+                    text = naziv,
+                    style = MaterialTheme.typography.titleMedium
+                )
+
+                Text(
+                    text = "%.0f / %.0f %s".format(vrijednost, cilj, jedinica)
+                )
             }
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -272,13 +302,18 @@ fun QuickMealButton(
         )
     }
 }
+
 @Composable
 fun DanasnjiObrokItem(stavka: StavkaObroka) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(10.dp)) {
-            Text(stavka.nazivJela)
             Text(
-                "%.0f kcal | P %.0fg | UH %.0fg | M %.0fg".format(
+                text = stavka.nazivJela,
+                style = MaterialTheme.typography.titleMedium
+            )
+
+            Text(
+                text = "%.0f kcal | P %.0fg | UH %.0fg | M %.0fg".format(
                     stavka.kalorije,
                     stavka.proteini,
                     stavka.ugljikohidrati,

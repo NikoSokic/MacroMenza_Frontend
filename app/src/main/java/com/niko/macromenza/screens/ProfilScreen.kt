@@ -25,7 +25,6 @@ import androidx.compose.ui.platform.LocalContext
 import com.niko.macromenza.session.UserSessionManager
 import com.niko.macromenza.viewmodel.AuthViewModel
 import com.niko.macromenza.viewmodel.AuthViewModelFactory
-import androidx.compose.ui.platform.LocalContext
 
 
 @Composable
