@@ -14,6 +14,7 @@ import com.niko.macromenza.model.ProfilPodaci
 import com.niko.macromenza.model.Mjerenje
 import com.niko.macromenza.model.Preporuka
 import com.niko.macromenza.model.RegistracijaProfilRequest
+import com.niko.macromenza.model.OnboardingStatusResponse
 
 import retrofit2.http.PUT
 import retrofit2.http.Path
@@ -115,5 +116,10 @@ interface ApiService {
     suspend fun registracijaProfil(
         @Body request: RegistracijaProfilRequest
     ): Korisnik
+
+    @GET("korisnici/{id}/onboarding-status")
+    suspend fun dohvatiOnboardingStatus(
+        @Path("id") id: Long
+    ): OnboardingStatusResponse
 
 }

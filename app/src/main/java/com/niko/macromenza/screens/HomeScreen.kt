@@ -38,30 +38,6 @@ fun HomeScreen(
 
     val prijavljeniKorisnikId by sessionManager.korisnikId.collectAsState(initial = null)
 
-    if (preporuka == null) {
-        Spacer(modifier = Modifier.height(12.dp))
-
-        Card(
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Column(
-                modifier = Modifier.padding(14.dp)
-            ) {
-                Text(
-                    text = "Preporuka nije postavljena.",
-                    style = MaterialTheme.typography.titleMedium
-                )
-
-                Spacer(modifier = Modifier.height(4.dp))
-
-                Text(
-                    text = "Otvori Profil → Postavke ciljeva kako bi se izračunali tvoji dnevni ciljevi.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-    }
 
     LaunchedEffect(refreshKey, prijavljeniKorisnikId) {
         prijavljeniKorisnikId?.let { id ->
@@ -83,6 +59,31 @@ fun HomeScreen(
     ) {
         Text("Danas", style = MaterialTheme.typography.headlineLarge)
         Text("Pregled dnevnog unosa")
+
+        if (preporuka == null) {
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Card(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(
+                    modifier = Modifier.padding(14.dp)
+                ) {
+                    Text(
+                        text = "Preporuka nije postavljena.",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    Text(
+                        text = "Otvori Profil → Postavke ciljeva kako bi se izračunali tvoji dnevni ciljevi.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        }
 
         Spacer(modifier = Modifier.height(12.dp))
 

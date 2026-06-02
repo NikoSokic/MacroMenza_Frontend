@@ -5,7 +5,6 @@ import androidx.lifecycle.viewModelScope
 import com.niko.macromenza.api.RetrofitInstance
 import com.niko.macromenza.api.SupabaseAuthInstance
 import com.niko.macromenza.model.Korisnik
-import com.niko.macromenza.model.RegistracijaProfilRequest
 import com.niko.macromenza.model.SupabaseAuthRequest
 import com.niko.macromenza.session.UserSessionManager
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,6 +27,9 @@ class AuthViewModel(
     private val _korisnikId = MutableStateFlow<Long?>(null)
     val korisnikId = _korisnikId.asStateFlow()
 
+    private val _onboardingZavrsen = MutableStateFlow<Boolean?>(null)
+    val onboardingZavrsen = _onboardingZavrsen.asStateFlow()
+
     init {
         ucitajSesiju()
     }
@@ -48,50 +50,18 @@ class AuthViewModel(
 
     fun registracija(
         email: String,
-        lozinka: String,
-        ime: String,
-        prezime: String,
-        spol: String,
-        visina: Int,
-        dob: Int,
-        masa: Double,
-        razinaAktivnosti: String,
-        tipCilja: String
+        lozinka: String
     ) {
         viewModelScope.launch {
             _ucitavanje.value = true
             _poruka.value = null
 
             try {
-                val response = SupabaseAuthInstance.api.registracija(
+                SupabaseAuthInstance.api.registracija(
                     apiKey = SupabaseAuthInstance.SUPABASE_ANON_KEY,
                     request = SupabaseAuthRequest(
                         email = email,
                         password = lozinka
-                    )
-                )
-
-                val uid = response.user?.id
-                _poruka.value = "UID: $uid"
-
-
-                if (uid == null) {
-                    _poruka.value = "UID = $uid"
-                    return@launch
-                }
-
-                RetrofitInstance.api.registracijaProfil(
-                    RegistracijaProfilRequest(
-                        supabaseUid = uid,
-                        email = email,
-                        ime = ime,
-                        prezime = prezime,
-                        spol = spol,
-                        visina = visina,
-                        dob = dob,
-                        masa = masa,
-                        razinaAktivnosti = razinaAktivnosti,
-                        tipCilja = tipCilja
                     )
                 )
 
@@ -138,10 +108,18 @@ class AuthViewModel(
 
                 _korisnikId.value = backendKorisnik.id
 
-                sessionManager.spremiSesiju(
-                    korisnikId = backendKorisnik.id ?: 0L,
-                    supabaseUid = uid
+                val status = RetrofitInstance.api.dohvatiOnboardingStatus(
+                    backendKorisnik.id ?: 0L
                 )
+
+                _onboardingZavrsen.value = status.onboardingZavrsen
+
+                if (status.onboardingZavrsen) {
+                    sessionManager.spremiSesiju(
+                        korisnikId = backendKorisnik.id ?: 0L,
+                        supabaseUid = uid
+                    )
+                }
 
                 _poruka.value = "Prijava uspješna"
 
@@ -159,6 +137,7 @@ class AuthViewModel(
 
             _supabaseUid.value = null
             _korisnikId.value = null
+            _onboardingZavrsen.value = null
             _poruka.value = "Odjavljen korisnik"
         }
     }

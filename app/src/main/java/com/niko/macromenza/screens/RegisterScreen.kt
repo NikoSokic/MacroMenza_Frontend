@@ -21,19 +21,9 @@ fun RegisterScreen(
     val poruka by viewModel.poruka.collectAsState()
     val ucitavanje by viewModel.ucitavanje.collectAsState()
 
-    var ime by remember { mutableStateOf("") }
-    var prezime by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var lozinka by remember { mutableStateOf("") }
     var ponovljenaLozinka by remember { mutableStateOf("") }
-
-    var spol by remember { mutableStateOf("M") }
-    var visina by remember { mutableStateOf("") }
-    var dob by remember { mutableStateOf("") }
-    var masa by remember { mutableStateOf("") }
-
-    var aktivnost by remember { mutableStateOf("umjerena") }
-    var cilj by remember { mutableStateOf("odrzavanje") }
 
     val lozinkeSePoklapaju =
         lozinka.isNotBlank() && lozinka == ponovljenaLozinka
@@ -42,7 +32,8 @@ fun RegisterScreen(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(24.dp)
+            .padding(24.dp),
+        verticalArrangement = Arrangement.Center
     ) {
         Icon(
             imageVector = Icons.Default.PersonAdd,
@@ -53,28 +44,17 @@ fun RegisterScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Text("Registracija", style = MaterialTheme.typography.headlineLarge)
-        Text("Unesi podatke za MacroMenza račun")
+        Text(
+            text = "Registracija",
+            style = MaterialTheme.typography.headlineLarge
+        )
+
+        Text(
+            text = "Napravi MacroMenza račun",
+            style = MaterialTheme.typography.bodyMedium
+        )
 
         Spacer(modifier = Modifier.height(24.dp))
-
-        OutlinedTextField(
-            value = ime,
-            onValueChange = { ime = it },
-            label = { Text("Ime") },
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        OutlinedTextField(
-            value = prezime,
-            onValueChange = { prezime = it },
-            label = { Text("Prezime") },
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
 
         OutlinedTextField(
             value = email,
@@ -111,111 +91,14 @@ fun RegisterScreen(
             Spacer(modifier = Modifier.height(6.dp))
             Text(
                 text = "Lozinke se ne poklapaju.",
-                color = MaterialTheme.colorScheme.error
-            )
-        }
-
-        Spacer(modifier = Modifier.height(20.dp))
-
-        Text("Spol", style = MaterialTheme.typography.titleMedium)
-
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            FilterChip(
-                selected = spol == "M",
-                onClick = { spol = "M" },
-                label = { Text("Muško") }
-            )
-
-            FilterChip(
-                selected = spol == "Z",
-                onClick = { spol = "Z" },
-                label = { Text("Žensko") }
-            )
-        }
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        OutlinedTextField(
-            value = visina,
-            onValueChange = { visina = it },
-            label = { Text("Visina (cm)") },
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        OutlinedTextField(
-            value = dob,
-            onValueChange = { dob = it },
-            label = { Text("Dob") },
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        OutlinedTextField(
-            value = masa,
-            onValueChange = { masa = it },
-            label = { Text("Masa (kg)") },
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(modifier = Modifier.height(20.dp))
-
-        Text("Razina aktivnosti", style = MaterialTheme.typography.titleMedium)
-
-        Column {
-            FilterChip(
-                selected = aktivnost == "sjedilacka",
-                onClick = { aktivnost = "sjedilacka" },
-                label = { Text("Sjedilačka") }
-            )
-
-            FilterChip(
-                selected = aktivnost == "lagana",
-                onClick = { aktivnost = "lagana" },
-                label = { Text("Lagana") }
-            )
-
-            FilterChip(
-                selected = aktivnost == "umjerena",
-                onClick = { aktivnost = "umjerena" },
-                label = { Text("Umjerena") }
-            )
-
-            FilterChip(
-                selected = aktivnost == "visoka",
-                onClick = { aktivnost = "visoka" },
-                label = { Text("Visoka") }
-            )
-        }
-
-        Spacer(modifier = Modifier.height(20.dp))
-
-        Text("Cilj", style = MaterialTheme.typography.titleMedium)
-
-        Column {
-            FilterChip(
-                selected = cilj == "mrsavljenje",
-                onClick = { cilj = "mrsavljenje" },
-                label = { Text("Mršavljenje") }
-            )
-
-            FilterChip(
-                selected = cilj == "odrzavanje",
-                onClick = { cilj = "odrzavanje" },
-                label = { Text("Održavanje") }
-            )
-
-            FilterChip(
-                selected = cilj == "dobivanje_mase",
-                onClick = { cilj = "dobivanje_mase" },
-                label = { Text("Dobivanje mase") }
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall
             )
         }
 
         if (poruka != null) {
             Spacer(modifier = Modifier.height(12.dp))
+
             Text(
                 text = poruka ?: "",
                 color = if (poruka?.contains("uspješna", ignoreCase = true) == true)
@@ -231,25 +114,12 @@ fun RegisterScreen(
             onClick = {
                 viewModel.registracija(
                     email = email.trim(),
-                    lozinka = lozinka,
-                    ime = ime.trim(),
-                    prezime = prezime.trim(),
-                    spol = spol,
-                    visina = visina.toInt(),
-                    dob = dob.toInt(),
-                    masa = masa.toDouble(),
-                    razinaAktivnosti = aktivnost,
-                    tipCilja = cilj
+                    lozinka = lozinka
                 )
             },
             enabled =
-                ime.isNotBlank() &&
-                        prezime.isNotBlank() &&
-                        email.isNotBlank() &&
+                email.isNotBlank() &&
                         lozinkeSePoklapaju &&
-                        visina.toIntOrNull() != null &&
-                        dob.toIntOrNull() != null &&
-                        masa.toDoubleOrNull() != null &&
                         !ucitavanje,
             modifier = Modifier
                 .fillMaxWidth()

@@ -51,8 +51,8 @@ fun AppNavigation() {
     val showBottomBar =
         currentRoute != "welcome" &&
                 currentRoute != "login" &&
-                currentRoute != "register"
-
+                currentRoute != "register" &&
+                currentRoute?.startsWith("onboarding") != true
 
     if (isLoggedIn == null) {
         Box(
@@ -120,6 +120,16 @@ fun AppNavigation() {
                 LoginScreen(
                     navController = navController,
                     viewModel = authViewModel
+                )
+            }
+            composable("onboarding/{korisnikId}") { backStackEntry ->
+                val korisnikId = backStackEntry.arguments
+                    ?.getString("korisnikId")
+                    ?.toLongOrNull() ?: 0L
+
+                OnboardingScreen(
+                    navController = navController,
+                    korisnikId = korisnikId
                 )
             }
 

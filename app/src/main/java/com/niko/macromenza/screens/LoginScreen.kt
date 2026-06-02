@@ -21,16 +21,24 @@ fun LoginScreen(
     val poruka by viewModel.poruka.collectAsState()
     val ucitavanje by viewModel.ucitavanje.collectAsState()
     val korisnikId by viewModel.korisnikId.collectAsState()
-
+    val onboardingZavrsen by viewModel.onboardingZavrsen.collectAsState()
 
     var email by remember { mutableStateOf("") }
     var lozinka by remember { mutableStateOf("") }
 
-    LaunchedEffect(korisnikId) {
-        if (korisnikId != null) {
-            navController.navigate("home") {
-                popUpTo("login") {
-                    inclusive = true
+    LaunchedEffect(korisnikId, onboardingZavrsen) {
+        if (korisnikId != null && onboardingZavrsen != null) {
+            if (onboardingZavrsen == true) {
+                navController.navigate("home") {
+                    popUpTo("login") {
+                        inclusive = true
+                    }
+                }
+            } else {
+                navController.navigate("onboarding/$korisnikId") {
+                    popUpTo("login") {
+                        inclusive = true
+                    }
                 }
             }
         }
