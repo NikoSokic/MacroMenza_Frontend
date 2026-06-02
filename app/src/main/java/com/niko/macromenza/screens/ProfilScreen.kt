@@ -37,6 +37,7 @@ fun ProfilScreen(
     val zadnjeMjerenje by viewModel.zadnjeMjerenje.collectAsState()
     val zadnjaPreporuka by viewModel.zadnjaPreporuka.collectAsState()
     var prikaziOdjavaDialog by remember { mutableStateOf(false) }
+    val ucitava by viewModel.ucitava.collectAsState()
 
     val context = LocalContext.current
     val sessionManager = remember {
@@ -51,11 +52,18 @@ fun ProfilScreen(
 
     val prijavljeniKorisnikId by sessionManager.korisnikId.collectAsState(initial = null)
 
+
     LaunchedEffect(refreshKey, prijavljeniKorisnikId) {
         prijavljeniKorisnikId?.let { id ->
             viewModel.ucitajProfil(id)
         }
     }
+
+    if (ucitava) {
+        SplashScreen()
+        return
+    }
+
 
     Column(
         modifier = Modifier

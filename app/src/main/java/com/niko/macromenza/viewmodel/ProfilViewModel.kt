@@ -28,32 +28,41 @@ class ProfilViewModel : ViewModel() {
     private val _zadnjaPreporuka = MutableStateFlow<Preporuka?>(null)
     val zadnjaPreporuka = _zadnjaPreporuka.asStateFlow()
 
+    private val _ucitava = MutableStateFlow(false)
+    val ucitava = _ucitava.asStateFlow()
+
     fun ucitajProfil(idKorisnik: Long = 1) {
         viewModelScope.launch {
+            _ucitava.value = true
+            _poruka.value = null
+
             try {
                 _korisnik.value = RetrofitInstance.api.dohvatiKorisnika(idKorisnik)
-            } catch (e: Exception) {
-                _poruka.value = e.message
-            }
 
-            try {
-                _profil.value = RetrofitInstance.api.dohvatiProfilPoKorisniku(idKorisnik)
-            } catch (e: Exception) {
-                _poruka.value = e.message
-            }
+                try {
+                    _profil.value = RetrofitInstance.api.dohvatiProfilPoKorisniku(idKorisnik)
+                } catch (_: Exception) {
+                    _profil.value = null
+                }
 
-            try {
-                val mjerenja = RetrofitInstance.api.dohvatiMjerenjaZaKorisnika(idKorisnik)
-                _zadnjeMjerenje.value = mjerenja.maxByOrNull { it.id ?: 0 }
-            } catch (e: Exception) {
-                _poruka.value = e.message
-            }
+                try {
+                    val mjerenja = RetrofitInstance.api.dohvatiMjerenjaZaKorisnika(idKorisnik)
+                    _zadnjeMjerenje.value = mjerenja.maxByOrNull { it.id ?: 0 }
+                } catch (_: Exception) {
+                    _zadnjeMjerenje.value = null
+                }
 
-            try {
-                val preporuke = RetrofitInstance.api.dohvatiPreporukeZaKorisnika(idKorisnik)
-                _zadnjaPreporuka.value = preporuke.maxByOrNull { it.id ?: 0 }
+                try {
+                    val preporuke = RetrofitInstance.api.dohvatiPreporukeZaKorisnika(idKorisnik)
+                    _zadnjaPreporuka.value = preporuke.maxByOrNull { it.id ?: 0 }
+                } catch (_: Exception) {
+                    _zadnjaPreporuka.value = null
+                }
+
             } catch (e: Exception) {
                 _poruka.value = e.message
+            } finally {
+                _ucitava.value = false
             }
         }
     }

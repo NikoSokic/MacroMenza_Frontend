@@ -11,9 +11,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.niko.macromenza.session.UserSessionManager
 import com.niko.macromenza.viewmodel.AuthViewModel
 import com.niko.macromenza.viewmodel.AuthViewModelFactory
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.ui.Alignment
 
 
 @Composable
@@ -55,12 +52,7 @@ fun AppNavigation() {
                 currentRoute?.startsWith("onboarding") != true
 
     if (isLoggedIn == null) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            CircularProgressIndicator()
-        }
+        SplashScreen()
         return
     }
 

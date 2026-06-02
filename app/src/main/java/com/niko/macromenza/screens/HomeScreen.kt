@@ -23,6 +23,7 @@ fun HomeScreen(
     val ukupniUnos by viewModel.ukupniUnos.collectAsState()
     val danasnjiObroci by viewModel.danasnjiObroci.collectAsState()
     val preporuka by viewModel.preporuka.collectAsState()
+    val ucitava by viewModel.ucitava.collectAsState()
 
     val ciljKalorije = preporuka?.kalorije ?: 2400.0
     val ciljProteini = preporuka?.proteini ?: 160.0
@@ -39,9 +40,7 @@ fun HomeScreen(
 
     LaunchedEffect(refreshKey, prijavljeniKorisnikId) {
         prijavljeniKorisnikId?.let { id ->
-            viewModel.ucitajUkupniUnos(id)
-            viewModel.ucitajDanasnjeObroke(id)
-            viewModel.ucitajPreporuku(id)
+            viewModel.ucitajHome(id)
         }
     }
 
@@ -49,6 +48,11 @@ fun HomeScreen(
     val proteini = ukupniUnos?.proteini ?: 0.0
     val uh = ukupniUnos?.ugljikohidrati ?: 0.0
     val masti = ukupniUnos?.masti ?: 0.0
+
+    if (ucitava) {
+        SplashScreen()
+        return
+    }
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),

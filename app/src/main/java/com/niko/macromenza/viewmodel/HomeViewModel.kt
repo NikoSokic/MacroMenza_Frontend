@@ -22,39 +22,35 @@ class HomeViewModel : ViewModel() {
     private val _preporuka = MutableStateFlow<Preporuka?>(null)
     val preporuka = _preporuka.asStateFlow()
 
-    fun ucitajUkupniUnos(idKorisnik: Long) {
-        viewModelScope.launch {
-            try {
-                _ukupniUnos.value =
-                    RetrofitInstance.api.dohvatiUkupniUnos(idKorisnik)
-            } catch (_: Exception) {
-            }
-        }
-    }
 
-    fun ucitajDanasnjeObroke(idKorisnik: Long) {
+    private val _ucitava = MutableStateFlow(false)
+    val ucitava = _ucitava.asStateFlow()
+
+    fun ucitajHome(idKorisnik: Long) {
         viewModelScope.launch {
+            _ucitava.value = true
+
             try {
                 val danas = LocalDate.now().toString()
+
+                _ukupniUnos.value =
+                    RetrofitInstance.api.dohvatiUkupniUnos(idKorisnik)
 
                 _danasnjiObroci.value =
                     RetrofitInstance.api.dohvatiPovijestZaDan(
                         idKorisnik = idKorisnik,
                         datum = danas
                     )
-            } catch (_: Exception) {
-            }
-        }
-    }
 
-    fun ucitajPreporuku(idKorisnik: Long) {
-        viewModelScope.launch {
-            try {
                 val preporuke =
                     RetrofitInstance.api.dohvatiPreporukeZaKorisnika(idKorisnik)
 
-                _preporuka.value = preporuke.maxByOrNull { it.id ?: 0 }
+                _preporuka.value =
+                    preporuke.maxByOrNull { it.id ?: 0 }
+
             } catch (_: Exception) {
+            } finally {
+                _ucitava.value = false
             }
         }
     }
