@@ -1,10 +1,13 @@
 package com.niko.macromenza.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material.icons.filled.TrackChanges
@@ -26,81 +29,96 @@ import com.niko.macromenza.ui.theme.MacroGreen
 import com.niko.macromenza.ui.theme.MacroLightGreen
 import com.niko.macromenza.ui.theme.MacroText
 import com.niko.macromenza.ui.theme.MacroTextSecondary
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.ui.unit.dp
 
 @Composable
 fun WelcomeScreen(
     navController: NavController
 ) {
-    Box(
+    BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
 
+        // Na nižim ekranima automatski koristimo manje razmake
+        val compactScreen = maxHeight < 750.dp
+
+        val topSpace = if (compactScreen) 28.dp else 60.dp
+        val sectionSpace = if (compactScreen) 18.dp else 28.dp
+        val logoSize = if (compactScreen) 72.dp else 86.dp
+        val titleSize = if (compactScreen) 36.sp else 42.sp
+
+        // Dekoracija gore lijevo
         Box(
             modifier = Modifier
                 .size(220.dp)
-                .offset(x = (-100).dp, y = (-80).dp)
+                .offset(x = (-100).dp, y = (-90).dp)
                 .clip(CircleShape)
                 .background(
                     MacroLightGreen.copy(alpha = 0.12f)
                 )
         )
 
+        // Dekoracija dolje desno
         Box(
             modifier = Modifier
                 .size(260.dp)
                 .align(Alignment.BottomEnd)
-                .offset(x = 110.dp, y = 100.dp)
+                .offset(x = 120.dp, y = 110.dp)
                 .clip(CircleShape)
                 .background(
-                    MacroGreen.copy(alpha = 0.10f)
+                    MacroGreen.copy(alpha = 0.08f)
                 )
         )
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 24.dp, vertical = 32.dp),
+                .verticalScroll(rememberScrollState())
+                .windowInsetsPadding(WindowInsets.safeDrawing)
+                .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
-            Spacer(modifier = Modifier.height(80.dp))
+            Spacer(modifier = Modifier.height(topSpace))
 
-            // Logo placeholder
+            // Privremeni logo
             Box(
                 modifier = Modifier
-                    .size(86.dp)
+                    .size(logoSize)
                     .clip(RoundedCornerShape(24.dp))
-                    .background(MacroLightGreen.copy(alpha = 0.18f)),
+                    .background(
+                        MacroLightGreen.copy(alpha = 0.18f)
+                    ),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = "M",
-                    fontSize = 42.sp,
+                    fontSize = if (compactScreen) 36.sp else 42.sp,
                     fontWeight = FontWeight.Bold,
                     color = MacroGreen
                 )
             }
 
-            Spacer(modifier = Modifier.height(28.dp))
+            Spacer(
+                modifier = Modifier.height(
+                    if (compactScreen) 18.dp else 28.dp
+                )
+            )
 
             Text(
                 text = "Dobrodošao u",
-                style = MaterialTheme.typography.headlineMedium,
+                fontSize = if (compactScreen) 26.sp else 30.sp,
                 color = MacroText,
                 textAlign = TextAlign.Center
             )
 
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(2.dp))
 
             Text(
                 text = buildAnnotatedString {
                     withStyle(
-                        style = SpanStyle(
+                        SpanStyle(
                             color = MacroText,
                             fontWeight = FontWeight.Bold
                         )
@@ -109,7 +127,7 @@ fun WelcomeScreen(
                     }
 
                     withStyle(
-                        style = SpanStyle(
+                        SpanStyle(
                             color = MacroGreen,
                             fontWeight = FontWeight.Bold
                         )
@@ -117,11 +135,11 @@ fun WelcomeScreen(
                         append("Menza")
                     }
                 },
-                fontSize = 42.sp,
+                fontSize = titleSize,
                 textAlign = TextAlign.Center
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
             Box(
                 modifier = Modifier
@@ -131,7 +149,7 @@ fun WelcomeScreen(
                     .background(MacroGreen)
             )
 
-            Spacer(modifier = Modifier.height(28.dp))
+            Spacer(modifier = Modifier.height(sectionSpace))
 
             Text(
                 text = "Prati prehranu i makronutrijente u menzi na jednostavan način.",
@@ -140,11 +158,11 @@ fun WelcomeScreen(
                 textAlign = TextAlign.Center
             )
 
-            Spacer(modifier = Modifier.height(36.dp))
+            Spacer(modifier = Modifier.height(sectionSpace))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 FeatureItem(
                     icon = Icons.Default.BarChart,
@@ -163,9 +181,9 @@ fun WelcomeScreen(
             }
 
             Spacer(
-                modifier = Modifier
-                    .weight(1f)
-                    .heightIn(min = 32.dp)
+                modifier = Modifier.height(
+                    if (compactScreen) 30.dp else 50.dp
+                )
             )
 
             Button(
@@ -201,7 +219,7 @@ fun WelcomeScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             OutlinedButton(
                 onClick = {
@@ -224,6 +242,7 @@ fun WelcomeScreen(
                 )
             }
 
+            // Da zadnji gumb nikad ne završi ispod navigation bara
             Spacer(modifier = Modifier.height(24.dp))
         }
     }
@@ -238,11 +257,14 @@ private fun FeatureItem(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.width(100.dp)
     ) {
+
         Box(
             modifier = Modifier
                 .size(58.dp)
                 .clip(RoundedCornerShape(18.dp))
-                .background(MacroLightGreen.copy(alpha = 0.18f)),
+                .background(
+                    MacroLightGreen.copy(alpha = 0.18f)
+                ),
             contentAlignment = Alignment.Center
         ) {
             Icon(
@@ -258,7 +280,7 @@ private fun FeatureItem(
         Text(
             text = title,
             style = MaterialTheme.typography.bodyMedium,
-            color = MacroText,
+            color = MacroTextSecondary,
             textAlign = TextAlign.Center
         )
     }
