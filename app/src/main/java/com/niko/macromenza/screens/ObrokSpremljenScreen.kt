@@ -1,69 +1,215 @@
 package com.niko.macromenza.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.niko.macromenza.ui.theme.MacroGreen
+import com.niko.macromenza.ui.theme.MacroLightGreen
+import com.niko.macromenza.ui.theme.MacroText
+import com.niko.macromenza.ui.theme.MacroTextSecondary
 
 @Composable
 fun ObrokSpremljenScreen(
     tipObroka: String,
     navController: NavController
 ) {
-    Column(
+    val nazivObroka = formatTipObrokaSpremljen(tipObroka)
+
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+            .background(MaterialTheme.colorScheme.background)
     ) {
-        Icon(
-            imageVector = Icons.Default.CheckCircle,
-            contentDescription = null,
-            modifier = Modifier.size(80.dp),
-            tint = MaterialTheme.colorScheme.primary
+
+        // Dekoracija gore lijevo
+        Box(
+            modifier = Modifier
+                .size(220.dp)
+                .offset(x = (-120).dp, y = (-100).dp)
+                .clip(CircleShape)
+                .background(
+                    MacroLightGreen.copy(alpha = 0.10f)
+                )
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Text(
-            text = "$tipObroka je spremljen",
-            style = MaterialTheme.typography.headlineMedium
+        // Dekoracija dolje desno
+        Box(
+            modifier = Modifier
+                .size(260.dp)
+                .align(Alignment.BottomEnd)
+                .offset(x = 120.dp, y = 120.dp)
+                .clip(CircleShape)
+                .background(
+                    MacroGreen.copy(alpha = 0.07f)
+                )
         )
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 28.dp)
+                .padding(top = 72.dp, bottom = 40.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
 
-        Button(
-            onClick = {
-                navController.navigate("unos_obroka/$tipObroka") {
-                    popUpTo("unos_obroka/$tipObroka") {
-                        inclusive = true
+            Spacer(modifier = Modifier.weight(1f))
+
+            Surface(
+                shape = RoundedCornerShape(30.dp),
+                color = MaterialTheme.colorScheme.surface,
+                tonalElevation = 1.dp,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(
+                    modifier = Modifier.padding(
+                        horizontal = 28.dp,
+                        vertical = 34.dp
+                    ),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+
+                    Box(
+                        modifier = Modifier
+                            .size(92.dp)
+                            .clip(CircleShape)
+                            .background(
+                                MacroGreen.copy(alpha = 0.14f)
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(64.dp)
+                                .clip(CircleShape)
+                                .background(MacroGreen),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Check,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(34.dp)
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    Text(
+                        text = "Obrok spremljen",
+                        color = MacroText,
+                        fontSize = 28.sp,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text(
+                        text = "$nazivObroka je uspješno dodan u današnji unos.",
+                        color = MacroTextSecondary,
+                        style = MaterialTheme.typography.bodyLarge,
+                        textAlign = TextAlign.Center
+                    )
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    Surface(
+                        shape = RoundedCornerShape(16.dp),
+                        color = MacroLightGreen.copy(alpha = 0.16f)
+                    ) {
+                        Text(
+                            text = "Sve promjene možeš odmah vidjeti na početnom zaslonu.",
+                            color = MacroTextSecondary,
+                            style = MaterialTheme.typography.bodySmall,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.padding(
+                                horizontal = 16.dp,
+                                vertical = 12.dp
+                            )
+                        )
                     }
                 }
-            },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Dodaj još")
-        }
+            }
 
-        Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.weight(1f))
 
-        OutlinedButton(
-            onClick = {
-                navController.navigate("konzumacija") {
-                    popUpTo("konzumacija") {
-                        inclusive = true
+            Button(
+                onClick = {
+                    navController.navigate("unos_obroka/$tipObroka") {
+                        popUpTo("unos_obroka/$tipObroka") {
+                            inclusive = true
+                        }
                     }
-                }
-            },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Povratak")
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(58.dp),
+                shape = RoundedCornerShape(18.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MacroGreen,
+                    contentColor = Color.White
+                )
+            ) {
+                Text(
+                    text = "Dodaj još",
+                    fontSize = 17.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            OutlinedButton(
+                onClick = {
+                    navController.navigate("home") {
+                        popUpTo("home") {
+                            inclusive = false
+                        }
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(58.dp),
+                shape = RoundedCornerShape(18.dp),
+                border = androidx.compose.foundation.BorderStroke(
+                    width = 1.5.dp,
+                    color = MacroGreen
+                )
+            ) {
+                Text(
+                    text = "Natrag na početnu",
+                    color = MacroGreen,
+                    fontSize = 17.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
         }
+    }
+}
+
+private fun formatTipObrokaSpremljen(
+    tip: String
+): String {
+    return when (tip.uppercase()) {
+        "DORUCAK" -> "Doručak"
+        "RUCAK" -> "Ručak"
+        "VECERA" -> "Večera"
+        "UZINA" -> "Užina"
+        else -> tip
     }
 }
