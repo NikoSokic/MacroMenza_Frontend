@@ -26,6 +26,14 @@ fun LoginScreen(
     var email by remember { mutableStateOf("") }
     var lozinka by remember { mutableStateOf("") }
 
+    DisposableEffect(Unit) {
+        viewModel.ocistiPoruku()
+
+        onDispose {
+            viewModel.ocistiPoruku()
+        }
+    }
+
     LaunchedEffect(korisnikId, onboardingZavrsen) {
         if (korisnikId != null && onboardingZavrsen != null) {
             if (onboardingZavrsen == true) {
@@ -131,6 +139,7 @@ fun LoginScreen(
 
         TextButton(
             onClick = {
+                viewModel.ocistiPoruku()
                 navController.navigate("register")
             },
             modifier = Modifier.fillMaxWidth()

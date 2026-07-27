@@ -28,6 +28,14 @@ fun RegisterScreen(
     val lozinkeSePoklapaju =
         lozinka.isNotBlank() && lozinka == ponovljenaLozinka
 
+    DisposableEffect(Unit) {
+        viewModel.ocistiPoruku()
+
+        onDispose {
+            viewModel.ocistiPoruku()
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -139,6 +147,7 @@ fun RegisterScreen(
 
         TextButton(
             onClick = {
+                viewModel.ocistiPoruku()
                 navController.navigate("login")
             },
             modifier = Modifier.fillMaxWidth()

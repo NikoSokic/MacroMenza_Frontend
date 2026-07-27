@@ -2,10 +2,16 @@ package com.niko.macromenza.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val Purple80 = Color(0xFFD0BCFF)
-val PurpleGrey80 = Color(0xFFCCC2DC)
-val Pink80 = Color(0xFFEFB8C8)
+val MacroGreen = Color(0xFF7CB342)
+val MacroLightGreen = Color(0xFFA4D65E)
 
-val Purple40 = Color(0xFF6650a4)
-val PurpleGrey40 = Color(0xFF625b71)
-val Pink40 = Color(0xFF7D5260)
+val MacroBackground = Color(0xFFF7F9F5)
+val MacroSurface = Color(0xFFFFFFFF)
+
+val MacroDark = Color(0xFF101411)
+val MacroDarkSurface = Color(0xFF191E1A)
+
+val MacroText = Color(0xFF171A17)
+val MacroTextSecondary = Color(0xFF6F766F)
+
+val MacroError = Color(0xFFBA1A1A)

@@ -56,19 +56,59 @@ class AuthViewModel(
             _ucitavanje.value = true
             _poruka.value = null
 
+            val emailTrim = email.trim()
+            val lozinkaTrim = lozinka.trim()
+
+            if (emailTrim.isBlank()) {
+                _poruka.value = "📧 Unesi email adresu."
+                _ucitavanje.value = false
+                return@launch
+            }
+
+            if (!android.util.Patterns.EMAIL_ADDRESS.matcher(emailTrim).matches()) {
+                _poruka.value = "📧 Ovo ne izgleda kao pravi email. Probaj nešto tipa ime@email.com."
+                _ucitavanje.value = false
+                return@launch
+            }
+
+            if (lozinkaTrim.isBlank()) {
+                _poruka.value = "🔒 Unesi lozinku."
+                _ucitavanje.value = false
+                return@launch
+            }
+
+            if (lozinkaTrim.length < 6) {
+                _poruka.value = "🔒 Lozinka mora imati barem 6 znakova. Nije CIA, ali ipak treba malo sigurnosti 😄"
+                _ucitavanje.value = false
+                return@launch
+            }
+
             try {
                 SupabaseAuthInstance.api.registracija(
                     apiKey = SupabaseAuthInstance.SUPABASE_ANON_KEY,
                     request = SupabaseAuthRequest(
-                        email = email,
-                        password = lozinka
+                        email = emailTrim,
+                        password = lozinkaTrim
                     )
                 )
 
-                _poruka.value = "Registracija uspješna. Provjeri email i potvrdi račun."
+                _poruka.value = "📩 Poslali smo ti email za potvrdu računa. Otvori mail i potvrdi registraciju."
 
+            } catch (e: retrofit2.HttpException) {
+                _poruka.value = when (e.code()) {
+                    400 -> "Podaci nisu ispravni. Provjeri email i lozinku."
+                    401 -> "Nemaš dozvolu za ovu akciju."
+                    409 -> "Korisnik s ovom email adresom već postoji."
+                    422 -> "📧 Email ili lozinka nisu ispravni. Provjeri format emaila i duljinu lozinke."
+                    429 -> "Previše pokušaja. Pričekaj malo pa pokušaj ponovno."
+                    else -> "Došlo je do greške (${e.code()}). Pokušaj ponovno."
+                }
+            } catch (e: java.net.UnknownHostException) {
+                _poruka.value = "Nema internetske veze. Spoji se na internet pa pokušaj ponovno."
+            } catch (e: java.net.SocketTimeoutException) {
+                _poruka.value = "Server se malo uspavao. Pričekaj par sekundi pa pokušaj ponovno."
             } catch (e: Exception) {
-                _poruka.value = e.message ?: "Greška pri registraciji"
+                _poruka.value = "Greška pri registraciji. Pokušaj ponovno."
             } finally {
                 _ucitavanje.value = false
             }
@@ -83,19 +123,40 @@ class AuthViewModel(
             _ucitavanje.value = true
             _poruka.value = null
 
+            val emailTrim = email.trim()
+            val lozinkaTrim = lozinka.trim()
+
+            if (emailTrim.isBlank()) {
+                _poruka.value = "📧 Unesi email adresu."
+                _ucitavanje.value = false
+                return@launch
+            }
+
+            if (!android.util.Patterns.EMAIL_ADDRESS.matcher(emailTrim).matches()) {
+                _poruka.value = "📧 Ovo ne izgleda kao pravi email."
+                _ucitavanje.value = false
+                return@launch
+            }
+
+            if (lozinkaTrim.isBlank()) {
+                _poruka.value = "🔒 Unesi lozinku."
+                _ucitavanje.value = false
+                return@launch
+            }
+
             try {
                 val response = SupabaseAuthInstance.api.prijava(
                     apiKey = SupabaseAuthInstance.SUPABASE_ANON_KEY,
                     request = SupabaseAuthRequest(
-                        email = email,
-                        password = lozinka
+                        email = emailTrim,
+                        password = lozinkaTrim
                     )
                 )
 
                 val uid = response.user?.id
 
                 if (uid == null) {
-                    _poruka.value = "Prijava nije uspjela."
+                    _poruka.value = "Prijava nije uspjela. Pokušaj ponovno."
                     return@launch
                 }
 
@@ -103,7 +164,7 @@ class AuthViewModel(
 
                 val backendKorisnik = poveziKorisnikaSBackendom(
                     supabaseUid = uid,
-                    email = email
+                    email = emailTrim
                 )
 
                 _korisnikId.value = backendKorisnik.id
@@ -121,10 +182,40 @@ class AuthViewModel(
                     )
                 }
 
-                _poruka.value = "Prijava uspješna"
+
+            } catch (e: retrofit2.HttpException) {
+
+                _poruka.value = when (e.code()) {
+                    400 -> "📧 Email ili lozinka nisu ispravni."
+                    401 -> "🔒 Pogrešan email ili lozinka."
+                    403 -> "📩 Prvo potvrdi svoj račun putem emaila."
+                    422 -> "📧 Provjeri email i lozinku."
+                    429 -> "⏳ Previše pokušaja prijave. Pričekaj malo."
+                    else -> "Došlo je do greške (${e.code()}). Pokušaj ponovno."
+                }
+
+            } catch (e: java.net.UnknownHostException) {
+
+                _poruka.value = "📡 Nema internetske veze."
+
+            } catch (e: java.net.SocketTimeoutException) {
+
+                _poruka.value = "😴 Server se upravo budi. Pokušaj ponovno za nekoliko sekundi."
 
             } catch (e: Exception) {
-                _poruka.value = e.message ?: "Greška pri prijavi"
+
+                val poruka = e.message?.lowercase() ?: ""
+
+                _poruka.value = when {
+                    "email not confirmed" in poruka ->
+                        "📩 Potvrdi račun putem emaila prije prijave."
+
+                    "invalid login credentials" in poruka ->
+                        "🔒 Pogrešan email ili lozinka."
+
+                    else ->
+                        "Prijava nije uspjela. Pokušaj ponovno."
+                }
             } finally {
                 _ucitavanje.value = false
             }
@@ -156,4 +247,9 @@ class AuthViewModel(
 
         return RetrofitInstance.api.pronadiIliDodajKorisnikaPrekoSupabase(korisnik)
     }
+
+    fun ocistiPoruku() {
+        _poruka.value = null
+    }
+
 }
