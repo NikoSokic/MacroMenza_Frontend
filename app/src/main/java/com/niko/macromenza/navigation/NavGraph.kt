@@ -60,36 +60,29 @@ fun AppNavigation() {
     Scaffold(
         bottomBar = {
             if (showBottomBar) {
-                NavigationBar {
-                    items.forEach { item ->
-                        NavigationBarItem(
-                            selected = currentRoute == item.route,
-                            onClick = {
-                                if (item == BottomNavItem.Home) {
-                                    homeRefreshKey++
-                                }
+                MacroBottomBar(
+                    items = items,
+                    currentRoute = currentRoute,
+                    onItemClick = { item ->
 
-                                if (item == BottomNavItem.Profil) {
-                                    profileRefreshKey++
-                                }
+                        if (item == BottomNavItem.Home) {
+                            homeRefreshKey++
+                        }
 
-                                navController.navigate(item.route) {
-                                    popUpTo(BottomNavItem.Home.route) {
-                                        saveState = false
-                                    }
-                                    launchSingleTop = true
-                                    restoreState = false
-                                }
-                            },
-                            icon = {
-                                Icon(item.icon, contentDescription = item.title)
-                            },
-                            label = {
-                                Text(item.title)
+                        if (item == BottomNavItem.Profil) {
+                            profileRefreshKey++
+                        }
+
+                        navController.navigate(item.route) {
+                            popUpTo(BottomNavItem.Home.route) {
+                                saveState = false
                             }
-                        )
+
+                            launchSingleTop = true
+                            restoreState = false
+                        }
                     }
-                }
+                )
             }
         }
     ) { innerPadding ->
