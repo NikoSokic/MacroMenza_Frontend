@@ -17,8 +17,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -63,10 +65,14 @@ fun MojeMjereScreen(
             .background(MaterialTheme.colorScheme.background)
     ) {
 
+        // Dekoracija u pozadini
         Box(
             modifier = Modifier
                 .size(230.dp)
-                .offset(x = 190.dp, y = (-110).dp)
+                .offset(
+                    x = 190.dp,
+                    y = (-110).dp
+                )
                 .clip(CircleShape)
                 .background(
                     MacroLightGreen.copy(alpha = 0.10f)
@@ -81,12 +87,16 @@ fun MojeMjereScreen(
                 top = 22.dp,
                 bottom = 110.dp
             ),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement =
+                Arrangement.spacedBy(16.dp)
         ) {
 
+            // HEADER
             item {
                 Row(
-                    verticalAlignment = Alignment.CenterVertically
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment =
+                        Alignment.CenterVertically
                 ) {
 
                     Surface(
@@ -95,87 +105,136 @@ fun MojeMjereScreen(
                         },
                         modifier = Modifier.size(46.dp),
                         shape = CircleShape,
-                        color = MacroLightGreen.copy(alpha = 0.16f)
+                        color = MacroLightGreen.copy(
+                            alpha = 0.16f
+                        )
                     ) {
                         Box(
-                            contentAlignment = Alignment.Center
+                            contentAlignment =
+                                Alignment.Center
                         ) {
                             Icon(
                                 imageVector =
-                                    Icons.AutoMirrored.Filled.ArrowBack,
+                                    Icons.AutoMirrored
+                                        .Filled
+                                        .ArrowBack,
                                 contentDescription = "Nazad",
                                 tint = MacroGreen
                             )
                         }
                     }
 
-                    Spacer(modifier = Modifier.width(14.dp))
+                    Spacer(
+                        modifier = Modifier.width(14.dp)
+                    )
 
-                    Column {
+                    Column(
+                        modifier = Modifier.weight(1f)
+                    ) {
+
                         Text(
                             text = "Moje mjere",
                             fontSize = 30.sp,
                             fontWeight = FontWeight.Bold,
-                            color = MacroText
+                            color = MacroText,
+                            maxLines = 1,
+                            overflow =
+                                TextOverflow.Ellipsis
                         )
 
                         Text(
-                            text = "Prati promjene kroz vrijeme",
+                            text =
+                                "Prati promjene kroz vrijeme",
                             color = MacroTextSecondary,
-                            style = MaterialTheme.typography.bodyMedium
+                            style =
+                                MaterialTheme.typography
+                                    .bodyMedium,
+                            maxLines = 2,
+                            overflow =
+                                TextOverflow.Ellipsis
                         )
                     }
                 }
             }
 
+            // ZADNJE MJERENJE
             item {
                 LatestMeasurementCard(
                     measurement = zadnjeMjerenje
                 )
             }
 
+            // GREŠKA
             if (greska != null) {
                 item {
                     Surface(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(16.dp),
+                        modifier =
+                            Modifier.fillMaxWidth(),
+                        shape =
+                            RoundedCornerShape(16.dp),
                         color =
-                            MaterialTheme.colorScheme.error
+                            MaterialTheme
+                                .colorScheme
+                                .error
                                 .copy(alpha = 0.08f)
                     ) {
                         Text(
-                            text = greska ?: "Došlo je do greške.",
-                            color = MaterialTheme.colorScheme.error,
-                            modifier = Modifier.padding(14.dp)
+                            text =
+                                greska
+                                    ?: "Došlo je do greške.",
+                            color =
+                                MaterialTheme
+                                    .colorScheme
+                                    .error,
+                            modifier =
+                                Modifier.padding(14.dp),
+                            style =
+                                MaterialTheme.typography
+                                    .bodyMedium
                         )
                     }
                 }
             }
 
+            // POVIJEST HEADER
             item {
                 Column {
                     Text(
                         text = "Povijest mjerenja",
                         fontSize = 22.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MacroText
+                        color = MacroText,
+                        maxLines = 1,
+                        overflow =
+                            TextOverflow.Ellipsis
                     )
 
-                    Spacer(modifier = Modifier.height(3.dp))
+                    Spacer(
+                        modifier = Modifier.height(3.dp)
+                    )
 
                     Text(
-                        text = "Pregled prethodnih mjerenja i ciljeva.",
+                        text =
+                            "Pregled prethodnih mjerenja i ciljeva.",
                         color = MacroTextSecondary,
-                        style = MaterialTheme.typography.bodySmall
+                        style =
+                            MaterialTheme.typography
+                                .bodySmall,
+                        maxLines = 2,
+                        overflow =
+                            TextOverflow.Ellipsis
                     )
                 }
             }
 
             if (mjerenja.isEmpty()) {
+
                 item {
                     EmptyMeasurementsCard()
                 }
+
             } else {
+
                 items(
                     mjerenja.sortedByDescending {
                         it.id ?: 0
@@ -202,14 +261,19 @@ private fun LatestMeasurementCard(
     ) {
 
         Row(
-            modifier = Modifier.padding(22.dp),
-            verticalAlignment = Alignment.CenterVertically
+            modifier = Modifier.padding(
+                horizontal = 20.dp,
+                vertical = 20.dp
+            ),
+            verticalAlignment =
+                Alignment.CenterVertically
         ) {
 
             Surface(
-                modifier = Modifier.size(70.dp),
-                shape = RoundedCornerShape(22.dp),
-                color = Color.White.copy(alpha = 0.16f)
+                modifier = Modifier.size(64.dp),
+                shape = RoundedCornerShape(20.dp),
+                color =
+                    Color.White.copy(alpha = 0.16f)
             ) {
                 Box(
                     contentAlignment = Alignment.Center
@@ -218,43 +282,68 @@ private fun LatestMeasurementCard(
                         imageVector = Icons.Default.Scale,
                         contentDescription = null,
                         tint = Color.White,
-                        modifier = Modifier.size(34.dp)
+                        modifier = Modifier.size(31.dp)
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.width(18.dp))
+            Spacer(
+                modifier = Modifier.width(16.dp)
+            )
 
-            Column {
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
 
                 Text(
                     text = "Zadnja masa",
-                    color = Color.White.copy(alpha = 0.75f),
-                    style = MaterialTheme.typography.bodyMedium
+                    color =
+                        Color.White.copy(alpha = 0.75f),
+                    style =
+                        MaterialTheme.typography.bodyMedium,
+                    maxLines = 1
                 )
 
-                Spacer(modifier = Modifier.height(3.dp))
+                Spacer(
+                    modifier = Modifier.height(3.dp)
+                )
 
                 Text(
                     text =
                         if (measurement != null) {
-                            "%.1f kg".format(measurement.masa)
+                            "%.1f kg".format(
+                                measurement.masa
+                            )
                         } else {
                             "Nema mjerenja"
                         },
                     color = Color.White,
-                    fontSize = 32.sp,
-                    fontWeight = FontWeight.Bold
+                    fontSize = 30.sp,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow =
+                        TextOverflow.Ellipsis
                 )
 
                 if (measurement?.datum != null) {
 
-                    Spacer(modifier = Modifier.height(3.dp))
+                    Spacer(
+                        modifier = Modifier.height(3.dp)
+                    )
 
                     Text(
-                        text = measurement.datum ?: "",
-                        color = Color.White.copy(alpha = 0.70f),
-                        style = MaterialTheme.typography.bodySmall
+                        text =
+                            measurement.datum ?: "",
+                        color =
+                            Color.White.copy(
+                                alpha = 0.70f
+                            ),
+                        style =
+                            MaterialTheme.typography
+                                .bodySmall,
+                        maxLines = 1,
+                        overflow =
+                            TextOverflow.Ellipsis
                     )
                 }
             }
@@ -279,7 +368,8 @@ fun MjerenjeItem(
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment =
+                    Alignment.CenterVertically
             ) {
 
                 Column(
@@ -287,51 +377,85 @@ fun MjerenjeItem(
                 ) {
 
                     Text(
-                        text = mjerenje.datum ?: "Bez datuma",
+                        text =
+                            mjerenje.datum
+                                ?: "Bez datuma",
                         fontSize = 15.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MacroTextSecondary
+                        fontWeight =
+                            FontWeight.SemiBold,
+                        color = MacroTextSecondary,
+                        maxLines = 1,
+                        overflow =
+                            TextOverflow.Ellipsis
                     )
 
-                    Spacer(modifier = Modifier.height(5.dp))
+                    Spacer(
+                        modifier = Modifier.height(5.dp)
+                    )
 
                     Text(
-                        text = "%.1f kg".format(mjerenje.masa),
+                        text =
+                            "%.1f kg".format(
+                                mjerenje.masa
+                            ),
                         fontSize = 25.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MacroText
+                        color = MacroText,
+                        maxLines = 1,
+                        overflow =
+                            TextOverflow.Ellipsis
                     )
                 }
+
+                Spacer(
+                    modifier = Modifier.width(12.dp)
+                )
 
                 Surface(
                     modifier = Modifier.size(46.dp),
                     shape = RoundedCornerShape(15.dp),
-                    color = MacroLightGreen.copy(alpha = 0.18f)
+                    color =
+                        MacroLightGreen.copy(
+                            alpha = 0.18f
+                        )
                 ) {
                     Box(
-                        contentAlignment = Alignment.Center
+                        contentAlignment =
+                            Alignment.Center
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Scale,
+                            imageVector =
+                                Icons.Default.Scale,
                             contentDescription = null,
                             tint = MacroGreen,
-                            modifier = Modifier.size(22.dp)
+                            modifier =
+                                Modifier.size(22.dp)
                         )
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(14.dp))
-
-            HorizontalDivider(
-                color = MacroTextSecondary.copy(alpha = 0.10f)
+            Spacer(
+                modifier = Modifier.height(14.dp)
             )
 
-            Spacer(modifier = Modifier.height(13.dp))
+            HorizontalDivider(
+                color =
+                    MacroTextSecondary.copy(
+                        alpha = 0.10f
+                    )
+            )
+
+            Spacer(
+                modifier = Modifier.height(13.dp)
+            )
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement =
+                    Arrangement.spacedBy(10.dp),
+                verticalAlignment =
+                    Alignment.Top
             ) {
 
                 MeasurementMeta(
@@ -339,7 +463,8 @@ fun MjerenjeItem(
                     label = "Aktivnost",
                     value = formatAktivnost(
                         mjerenje.razinaAktivnosti
-                    )
+                    ),
+                    modifier = Modifier.weight(1f)
                 )
 
                 MeasurementMeta(
@@ -347,7 +472,8 @@ fun MjerenjeItem(
                     label = "Cilj",
                     value = formatCiljMjerenja(
                         mjerenje.tipCilja
-                    )
+                    ),
+                    modifier = Modifier.weight(1f)
                 )
             }
         }
@@ -356,18 +482,24 @@ fun MjerenjeItem(
 
 @Composable
 private fun MeasurementMeta(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    icon: ImageVector,
     label: String,
-    value: String
+    value: String,
+    modifier: Modifier = Modifier
 ) {
     Row(
-        verticalAlignment = Alignment.CenterVertically
+        modifier = modifier,
+        verticalAlignment =
+            Alignment.CenterVertically
     ) {
 
         Surface(
             modifier = Modifier.size(34.dp),
             shape = RoundedCornerShape(11.dp),
-            color = MacroLightGreen.copy(alpha = 0.16f)
+            color =
+                MacroLightGreen.copy(
+                    alpha = 0.16f
+                )
         ) {
             Box(
                 contentAlignment = Alignment.Center
@@ -381,21 +513,31 @@ private fun MeasurementMeta(
             }
         }
 
-        Spacer(modifier = Modifier.width(8.dp))
+        Spacer(
+            modifier = Modifier.width(8.dp)
+        )
 
-        Column {
+        Column(
+            modifier = Modifier.weight(1f)
+        ) {
 
             Text(
                 text = label,
                 color = MacroTextSecondary,
-                fontSize = 11.sp
+                fontSize = 11.sp,
+                maxLines = 1,
+                overflow =
+                    TextOverflow.Ellipsis
             )
 
             Text(
                 text = value,
                 color = MacroText,
                 fontSize = 13.sp,
-                fontWeight = FontWeight.SemiBold
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 2,
+                overflow =
+                    TextOverflow.Ellipsis
             )
         }
     }
@@ -406,7 +548,8 @@ private fun EmptyMeasurementsCard() {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(22.dp),
-        color = MacroLightGreen.copy(alpha = 0.12f)
+        color =
+            MacroLightGreen.copy(alpha = 0.12f)
     ) {
 
         Column(
@@ -417,15 +560,22 @@ private fun EmptyMeasurementsCard() {
                 text = "Još nema mjerenja",
                 color = MacroText,
                 fontWeight = FontWeight.Bold,
-                fontSize = 17.sp
+                fontSize = 17.sp,
+                maxLines = 1,
+                overflow =
+                    TextOverflow.Ellipsis
             )
 
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(
+                modifier = Modifier.height(4.dp)
+            )
 
             Text(
-                text = "Postavi ili promijeni cilj kako bi se spremilo novo mjerenje.",
+                text =
+                    "Postavi ili promijeni cilj kako bi se spremilo novo mjerenje.",
                 color = MacroTextSecondary,
-                style = MaterialTheme.typography.bodyMedium
+                style =
+                    MaterialTheme.typography.bodyMedium
             )
         }
     }
@@ -447,9 +597,16 @@ private fun formatCiljMjerenja(
     cilj: String?
 ): String {
     return when (cilj) {
-        "mrsavljenje" -> "Mršavljenje"
-        "odrzavanje" -> "Održavanje"
-        "dobivanje_mase" -> "Dobivanje mase"
-        else -> cilj ?: "—"
+        "mrsavljenje" ->
+            "Mršavljenje"
+
+        "odrzavanje" ->
+            "Održavanje"
+
+        "dobivanje_mase" ->
+            "Dobivanje mase"
+
+        else ->
+            cilj ?: "—"
     }
 }

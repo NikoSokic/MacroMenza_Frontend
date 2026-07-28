@@ -20,17 +20,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.niko.macromenza.session.ThemeManager
+import com.niko.macromenza.ui.theme.AppTheme
 import com.niko.macromenza.ui.theme.MacroGreen
 import com.niko.macromenza.ui.theme.MacroLightGreen
 import com.niko.macromenza.ui.theme.MacroText
 import com.niko.macromenza.ui.theme.MacroTextSecondary
-import androidx.compose.ui.platform.LocalContext
-import com.niko.macromenza.session.ThemeManager
-import com.niko.macromenza.ui.theme.AppTheme
 import kotlinx.coroutines.launch
 
 @Composable
@@ -56,11 +58,14 @@ fun PostavkeAplikacijeScreen(
             .background(MaterialTheme.colorScheme.background)
     ) {
 
-        // Suptilna dekoracija u pozadini
+        // Dekoracija
         Box(
             modifier = Modifier
                 .size(230.dp)
-                .offset(x = 190.dp, y = (-110).dp)
+                .offset(
+                    x = 190.dp,
+                    y = (-110).dp
+                )
                 .clip(CircleShape)
                 .background(
                     MacroLightGreen.copy(alpha = 0.10f)
@@ -70,22 +75,31 @@ fun PostavkeAplikacijeScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(
+                    rememberScrollState()
+                )
                 .padding(horizontal = 22.dp)
-                .padding(top = 22.dp, bottom = 110.dp)
+                .padding(
+                    top = 22.dp,
+                    bottom = 110.dp
+                )
         ) {
 
             // HEADER
             Row(
+                modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
+
                 Surface(
                     onClick = {
                         navController.popBackStack()
                     },
                     modifier = Modifier.size(46.dp),
                     shape = CircleShape,
-                    color = MacroLightGreen.copy(alpha = 0.16f)
+                    color = MacroLightGreen.copy(
+                        alpha = 0.16f
+                    )
                 ) {
                     Box(
                         contentAlignment = Alignment.Center
@@ -99,25 +113,36 @@ fun PostavkeAplikacijeScreen(
                     }
                 }
 
-                Spacer(modifier = Modifier.width(14.dp))
+                Spacer(
+                    modifier = Modifier.width(14.dp)
+                )
 
-                Column {
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
+
                     Text(
                         text = "Postavke aplikacije",
                         fontSize = 28.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MacroText
+                        color = MacroText,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
 
                     Text(
                         text = "Prilagodi MacroMenzu sebi",
                         color = MacroTextSecondary,
-                        style = MaterialTheme.typography.bodyMedium
+                        style = MaterialTheme.typography.bodyMedium,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(28.dp))
+            Spacer(
+                modifier = Modifier.height(28.dp)
+            )
 
             // TEMA
             AppSettingsCard(
@@ -128,14 +153,16 @@ fun PostavkeAplikacijeScreen(
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement =
+                        Arrangement.spacedBy(8.dp)
                 ) {
 
                     ThemeOption(
                         title = "Sustav",
                         icon = Icons.Default.SettingsSuggest,
                         selected =
-                            spremljenaTema == AppTheme.SYSTEM,
+                            spremljenaTema ==
+                                    AppTheme.SYSTEM,
                         onClick = {
                             scope.launch {
                                 themeManager.saveTheme(
@@ -150,7 +177,8 @@ fun PostavkeAplikacijeScreen(
                         title = "Svijetla",
                         icon = Icons.Default.LightMode,
                         selected =
-                            spremljenaTema == AppTheme.LIGHT,
+                            spremljenaTema ==
+                                    AppTheme.LIGHT,
                         onClick = {
                             scope.launch {
                                 themeManager.saveTheme(
@@ -165,7 +193,8 @@ fun PostavkeAplikacijeScreen(
                         title = "Tamna",
                         icon = Icons.Default.DarkMode,
                         selected =
-                            spremljenaTema == AppTheme.DARK,
+                            spremljenaTema ==
+                                    AppTheme.DARK,
                         onClick = {
                             scope.launch {
                                 themeManager.saveTheme(
@@ -178,7 +207,9 @@ fun PostavkeAplikacijeScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(
+                modifier = Modifier.height(16.dp)
+            )
 
             // STATUS
             AppSettingsCard(
@@ -193,13 +224,20 @@ fun PostavkeAplikacijeScreen(
                     status = "Online"
                 )
 
-                Spacer(modifier = Modifier.height(14.dp))
-
-                HorizontalDivider(
-                    color = MacroTextSecondary.copy(alpha = 0.10f)
+                Spacer(
+                    modifier = Modifier.height(14.dp)
                 )
 
-                Spacer(modifier = Modifier.height(14.dp))
+                HorizontalDivider(
+                    color =
+                        MacroTextSecondary.copy(
+                            alpha = 0.10f
+                        )
+                )
+
+                Spacer(
+                    modifier = Modifier.height(14.dp)
+                )
 
                 StatusRow(
                     title = "Baza podataka",
@@ -207,13 +245,20 @@ fun PostavkeAplikacijeScreen(
                     status = "Povezano"
                 )
 
-                Spacer(modifier = Modifier.height(14.dp))
-
-                HorizontalDivider(
-                    color = MacroTextSecondary.copy(alpha = 0.10f)
+                Spacer(
+                    modifier = Modifier.height(14.dp)
                 )
 
-                Spacer(modifier = Modifier.height(14.dp))
+                HorizontalDivider(
+                    color =
+                        MacroTextSecondary.copy(
+                            alpha = 0.10f
+                        )
+                )
+
+                Spacer(
+                    modifier = Modifier.height(14.dp)
+                )
 
                 StatusRow(
                     title = "Autentifikacija",
@@ -222,7 +267,9 @@ fun PostavkeAplikacijeScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(
+                modifier = Modifier.height(16.dp)
+            )
 
             // O APLIKACIJI
             AppSettingsCard(
@@ -232,17 +279,22 @@ fun PostavkeAplikacijeScreen(
             ) {
 
                 Row(
+                    modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
 
                     Surface(
                         modifier = Modifier.size(58.dp),
                         shape = RoundedCornerShape(18.dp),
-                        color = MacroLightGreen.copy(alpha = 0.20f)
+                        color =
+                            MacroLightGreen.copy(
+                                alpha = 0.20f
+                            )
                     ) {
                         Box(
                             contentAlignment = Alignment.Center
                         ) {
+
                             Text(
                                 text = "M",
                                 fontSize = 26.sp,
@@ -252,40 +304,58 @@ fun PostavkeAplikacijeScreen(
                         }
                     }
 
-                    Spacer(modifier = Modifier.width(14.dp))
+                    Spacer(
+                        modifier = Modifier.width(14.dp)
+                    )
 
-                    Column {
+                    Column(
+                        modifier = Modifier.weight(1f)
+                    ) {
+
                         Text(
                             text = "MacroMenza",
                             fontSize = 19.sp,
                             fontWeight = FontWeight.Bold,
-                            color = MacroText
+                            color = MacroText,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
 
                         Text(
                             text = "Verzija 1.0",
                             color = MacroTextSecondary,
-                            style = MaterialTheme.typography.bodySmall
+                            style =
+                                MaterialTheme.typography
+                                    .bodySmall,
+                            maxLines = 1
                         )
                     }
                 }
 
-                Spacer(modifier = Modifier.height(18.dp))
-
-                Text(
-                    text = "Aplikacija za praćenje prehrane, kalorija i makronutrijenata u menzi.",
-                    color = MacroTextSecondary,
-                    style = MaterialTheme.typography.bodyMedium
+                Spacer(
+                    modifier = Modifier.height(18.dp)
                 )
 
-                Spacer(modifier = Modifier.height(18.dp))
+                Text(
+                    text =
+                        "Aplikacija za praćenje prehrane, kalorija i makronutrijenata u menzi.",
+                    color = MacroTextSecondary,
+                    style =
+                        MaterialTheme.typography.bodyMedium
+                )
+
+                Spacer(
+                    modifier = Modifier.height(18.dp)
+                )
 
                 InfoRow(
                     title = "Platforma",
                     value = "Android"
                 )
 
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(
+                    modifier = Modifier.height(10.dp)
+                )
 
                 InfoRow(
                     title = "Aplikacija",
@@ -309,22 +379,28 @@ private fun AppSettingsCard(
         color = MaterialTheme.colorScheme.surface,
         tonalElevation = 1.dp
     ) {
+
         Column(
             modifier = Modifier.padding(18.dp)
         ) {
 
             Row(
+                modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
 
                 Surface(
                     modifier = Modifier.size(46.dp),
                     shape = RoundedCornerShape(15.dp),
-                    color = MacroLightGreen.copy(alpha = 0.18f)
+                    color =
+                        MacroLightGreen.copy(
+                            alpha = 0.18f
+                        )
                 ) {
                     Box(
                         contentAlignment = Alignment.Center
                     ) {
+
                         Icon(
                             imageVector = icon,
                             contentDescription = null,
@@ -334,27 +410,41 @@ private fun AppSettingsCard(
                     }
                 }
 
-                Spacer(modifier = Modifier.width(12.dp))
+                Spacer(
+                    modifier = Modifier.width(12.dp)
+                )
 
-                Column {
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
+
                     Text(
                         text = title,
                         fontSize = 18.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = MacroText
+                        color = MacroText,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
 
-                    Spacer(modifier = Modifier.height(2.dp))
+                    Spacer(
+                        modifier = Modifier.height(2.dp)
+                    )
 
                     Text(
                         text = subtitle,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MacroTextSecondary
+                        style =
+                            MaterialTheme.typography.bodySmall,
+                        color = MacroTextSecondary,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(
+                modifier = Modifier.height(20.dp)
+            )
 
             content()
         }
@@ -371,11 +461,15 @@ private fun ThemeOption(
 ) {
     Surface(
         onClick = onClick,
-        modifier = modifier.height(90.dp),
+        modifier = modifier.heightIn(
+            min = 90.dp
+        ),
         shape = RoundedCornerShape(18.dp),
         color =
             if (selected) {
-                MacroLightGreen.copy(alpha = 0.22f)
+                MacroLightGreen.copy(
+                    alpha = 0.22f
+                )
             } else {
                 MaterialTheme.colorScheme.background
             },
@@ -388,14 +482,25 @@ private fun ThemeOption(
             } else {
                 androidx.compose.foundation.BorderStroke(
                     width = 1.dp,
-                    color = MacroTextSecondary.copy(alpha = 0.15f)
+                    color =
+                        MacroTextSecondary.copy(
+                            alpha = 0.15f
+                        )
                 )
             }
     ) {
+
         Column(
-            modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(
+                    horizontal = 6.dp,
+                    vertical = 14.dp
+                ),
+            horizontalAlignment =
+                Alignment.CenterHorizontally,
+            verticalArrangement =
+                Arrangement.Center
         ) {
 
             Icon(
@@ -410,7 +515,9 @@ private fun ThemeOption(
                 modifier = Modifier.size(25.dp)
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(
+                modifier = Modifier.height(8.dp)
+            )
 
             Text(
                 text = title,
@@ -426,7 +533,10 @@ private fun ThemeOption(
                     } else {
                         MacroText
                     },
-                fontSize = 13.sp
+                fontSize = 13.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                textAlign = TextAlign.Center
             )
         }
     }
@@ -446,26 +556,41 @@ private fun StatusRow(
         Column(
             modifier = Modifier.weight(1f)
         ) {
+
             Text(
                 text = title,
                 color = MacroTextSecondary,
-                fontSize = 12.sp
+                fontSize = 12.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
 
-            Spacer(modifier = Modifier.height(2.dp))
+            Spacer(
+                modifier = Modifier.height(2.dp)
+            )
 
             Text(
                 text = value,
                 color = MacroText,
                 fontWeight = FontWeight.SemiBold,
-                fontSize = 15.sp
+                fontSize = 15.sp,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
             )
         }
 
+        Spacer(
+            modifier = Modifier.width(10.dp)
+        )
+
         Surface(
             shape = RoundedCornerShape(50),
-            color = MacroLightGreen.copy(alpha = 0.22f)
+            color =
+                MacroLightGreen.copy(
+                    alpha = 0.22f
+                )
         ) {
+
             Row(
                 modifier = Modifier.padding(
                     horizontal = 10.dp,
@@ -481,13 +606,16 @@ private fun StatusRow(
                         .background(MacroGreen)
                 )
 
-                Spacer(modifier = Modifier.width(6.dp))
+                Spacer(
+                    modifier = Modifier.width(6.dp)
+                )
 
                 Text(
                     text = status,
                     color = MacroGreen,
                     fontSize = 11.sp,
-                    fontWeight = FontWeight.SemiBold
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1
                 )
             }
         }
@@ -501,20 +629,31 @@ private fun InfoRow(
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween
+        verticalAlignment = Alignment.Top
     ) {
 
         Text(
             text = title,
+            modifier = Modifier.weight(1f),
             color = MacroTextSecondary,
-            fontSize = 13.sp
+            fontSize = 13.sp,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis
+        )
+
+        Spacer(
+            modifier = Modifier.width(12.dp)
         )
 
         Text(
             text = value,
+            modifier = Modifier.weight(1f),
             color = MacroText,
             fontWeight = FontWeight.Medium,
-            fontSize = 13.sp
+            fontSize = 13.sp,
+            textAlign = TextAlign.End,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis
         )
     }
 }

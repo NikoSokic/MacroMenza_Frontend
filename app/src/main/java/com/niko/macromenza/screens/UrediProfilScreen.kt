@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -17,6 +18,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -78,7 +81,10 @@ fun UrediProfilScreen(
         Box(
             modifier = Modifier
                 .size(230.dp)
-                .offset(x = 190.dp, y = (-110).dp)
+                .offset(
+                    x = 190.dp,
+                    y = (-110).dp
+                )
                 .clip(CircleShape)
                 .background(
                     MacroLightGreen.copy(alpha = 0.10f)
@@ -88,21 +94,31 @@ fun UrediProfilScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(
+                    rememberScrollState()
+                )
                 .padding(horizontal = 22.dp)
-                .padding(top = 22.dp, bottom = 110.dp)
+                .padding(
+                    top = 22.dp,
+                    bottom = 110.dp
+                )
         ) {
 
+            // HEADER
             Row(
+                modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
+
                 Surface(
                     onClick = {
                         navController.popBackStack()
                     },
                     modifier = Modifier.size(46.dp),
                     shape = CircleShape,
-                    color = MacroLightGreen.copy(alpha = 0.16f)
+                    color = MacroLightGreen.copy(
+                        alpha = 0.16f
+                    )
                 ) {
                     Box(
                         contentAlignment = Alignment.Center
@@ -116,45 +132,60 @@ fun UrediProfilScreen(
                     }
                 }
 
-                Spacer(modifier = Modifier.width(14.dp))
+                Spacer(
+                    modifier = Modifier.width(14.dp)
+                )
 
-                Column {
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
+
                     Text(
                         text = "Uredi profil",
                         fontSize = 30.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MacroText
+                        color = MacroText,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
 
                     Text(
                         text = "Ažuriraj svoje osobne podatke",
                         color = MacroTextSecondary,
-                        style = MaterialTheme.typography.bodyMedium
+                        style = MaterialTheme.typography.bodyMedium,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(28.dp))
+            Spacer(
+                modifier = Modifier.height(28.dp)
+            )
 
+            // OSOBNI PODACI
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(24.dp),
                 color = MaterialTheme.colorScheme.surface,
                 tonalElevation = 1.dp
             ) {
+
                 Column(
                     modifier = Modifier.padding(18.dp)
                 ) {
 
                     Row(
+                        modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
 
                         Surface(
                             modifier = Modifier.size(44.dp),
                             shape = RoundedCornerShape(14.dp),
-                            color =
-                                MacroLightGreen.copy(alpha = 0.18f)
+                            color = MacroLightGreen.copy(
+                                alpha = 0.18f
+                            )
                         ) {
                             Box(
                                 contentAlignment = Alignment.Center
@@ -168,17 +199,24 @@ fun UrediProfilScreen(
                             }
                         }
 
-                        Spacer(modifier = Modifier.width(12.dp))
+                        Spacer(
+                            modifier = Modifier.width(12.dp)
+                        )
 
                         Text(
                             text = "Osobni podaci",
+                            modifier = Modifier.weight(1f),
                             fontSize = 19.sp,
                             fontWeight = FontWeight.SemiBold,
-                            color = MacroText
+                            color = MacroText,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(20.dp))
+                    Spacer(
+                        modifier = Modifier.height(20.dp)
+                    )
 
                     OutlinedTextField(
                         value = ime,
@@ -194,7 +232,9 @@ fun UrediProfilScreen(
                         colors = editProfileFieldColors()
                     )
 
-                    Spacer(modifier = Modifier.height(14.dp))
+                    Spacer(
+                        modifier = Modifier.height(14.dp)
+                    )
 
                     OutlinedTextField(
                         value = prezime,
@@ -210,7 +250,9 @@ fun UrediProfilScreen(
                         colors = editProfileFieldColors()
                     )
 
-                    Spacer(modifier = Modifier.height(14.dp))
+                    Spacer(
+                        modifier = Modifier.height(14.dp)
+                    )
 
                     OutlinedTextField(
                         value = email,
@@ -221,6 +263,9 @@ fun UrediProfilScreen(
                             Text("Email")
                         },
                         singleLine = true,
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Email
+                        ),
                         shape = RoundedCornerShape(16.dp),
                         modifier = Modifier.fillMaxWidth(),
                         colors = editProfileFieldColors()
@@ -228,8 +273,11 @@ fun UrediProfilScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(
+                modifier = Modifier.height(24.dp)
+            )
 
+            // SPOL
             Text(
                 text = "Spol",
                 fontSize = 20.sp,
@@ -237,11 +285,14 @@ fun UrediProfilScreen(
                 color = MacroText
             )
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(
+                modifier = Modifier.height(10.dp)
+            )
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                horizontalArrangement =
+                    Arrangement.spacedBy(10.dp)
             ) {
 
                 GenderOption(
@@ -263,8 +314,12 @@ fun UrediProfilScreen(
                 )
             }
 
+            // PORUKA
             poruka?.let {
-                Spacer(modifier = Modifier.height(18.dp))
+
+                Spacer(
+                    modifier = Modifier.height(18.dp)
+                )
 
                 val uspjesno =
                     it.contains(
@@ -277,7 +332,9 @@ fun UrediProfilScreen(
                     shape = RoundedCornerShape(16.dp),
                     color =
                         if (uspjesno) {
-                            MacroLightGreen.copy(alpha = 0.18f)
+                            MacroLightGreen.copy(
+                                alpha = 0.18f
+                            )
                         } else {
                             MaterialTheme.colorScheme.error
                                 .copy(alpha = 0.08f)
@@ -291,13 +348,17 @@ fun UrediProfilScreen(
                                 MacroGreen
                             } else {
                                 MaterialTheme.colorScheme.error
-                            }
+                            },
+                        style = MaterialTheme.typography.bodyMedium
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(30.dp))
+            Spacer(
+                modifier = Modifier.height(30.dp)
+            )
 
+            // SPREMI
             Button(
                 onClick = {
                     viewModel.spremiProfil(
@@ -312,17 +373,23 @@ fun UrediProfilScreen(
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(58.dp),
+                    .heightIn(min = 56.dp),
                 shape = RoundedCornerShape(18.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MacroGreen,
                     contentColor = Color.White
+                ),
+                contentPadding = PaddingValues(
+                    horizontal = 18.dp,
+                    vertical = 14.dp
                 )
             ) {
                 Text(
                     text = "Spremi promjene",
                     fontSize = 17.sp,
-                    fontWeight = FontWeight.SemiBold
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
         }
@@ -338,28 +405,40 @@ private fun GenderOption(
 ) {
     Surface(
         onClick = onClick,
-        modifier = modifier.height(56.dp),
+        modifier = modifier.heightIn(
+            min = 56.dp
+        ),
         shape = RoundedCornerShape(17.dp),
         color =
             if (selected) {
-                MacroLightGreen.copy(alpha = 0.22f)
+                MacroLightGreen.copy(
+                    alpha = 0.22f
+                )
             } else {
                 MaterialTheme.colorScheme.surface
             },
         border =
             if (selected) {
                 androidx.compose.foundation.BorderStroke(
-                    1.5.dp,
-                    MacroGreen
+                    width = 1.5.dp,
+                    color = MacroGreen
                 )
             } else {
                 androidx.compose.foundation.BorderStroke(
-                    1.dp,
-                    MacroTextSecondary.copy(alpha = 0.20f)
+                    width = 1.dp,
+                    color =
+                        MacroTextSecondary.copy(
+                            alpha = 0.20f
+                        )
                 )
             }
     ) {
+
         Box(
+            modifier = Modifier.padding(
+                horizontal = 10.dp,
+                vertical = 14.dp
+            ),
             contentAlignment = Alignment.Center
         ) {
             Text(
@@ -375,7 +454,9 @@ private fun GenderOption(
                         MacroGreen
                     } else {
                         MacroText
-                    }
+                    },
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
         }
     }

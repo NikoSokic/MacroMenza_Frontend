@@ -20,6 +20,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -72,7 +73,10 @@ fun PostavkeCiljevaScreen(
         Box(
             modifier = Modifier
                 .size(230.dp)
-                .offset(x = 190.dp, y = (-110).dp)
+                .offset(
+                    x = 190.dp,
+                    y = (-110).dp
+                )
                 .clip(CircleShape)
                 .background(
                     MacroLightGreen.copy(alpha = 0.10f)
@@ -82,12 +86,19 @@ fun PostavkeCiljevaScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(
+                    rememberScrollState()
+                )
                 .padding(horizontal = 22.dp)
-                .padding(top = 22.dp, bottom = 110.dp)
+                .padding(
+                    top = 22.dp,
+                    bottom = 110.dp
+                )
         ) {
 
+            // HEADER
             Row(
+                modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
 
@@ -97,7 +108,9 @@ fun PostavkeCiljevaScreen(
                     },
                     modifier = Modifier.size(46.dp),
                     shape = CircleShape,
-                    color = MacroLightGreen.copy(alpha = 0.16f)
+                    color = MacroLightGreen.copy(
+                        alpha = 0.16f
+                    )
                 ) {
                     Box(
                         contentAlignment = Alignment.Center
@@ -111,25 +124,36 @@ fun PostavkeCiljevaScreen(
                     }
                 }
 
-                Spacer(modifier = Modifier.width(14.dp))
+                Spacer(
+                    modifier = Modifier.width(14.dp)
+                )
 
-                Column {
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
+
                     Text(
                         text = "Postavke ciljeva",
                         fontSize = 29.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MacroText
+                        color = MacroText,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
 
                     Text(
                         text = "Prilagodi dnevnu preporuku",
                         color = MacroTextSecondary,
-                        style = MaterialTheme.typography.bodyMedium
+                        style = MaterialTheme.typography.bodyMedium,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(28.dp))
+            Spacer(
+                modifier = Modifier.height(28.dp)
+            )
 
             // PODACI ZA PREPORUKU
             SettingsSectionCard(
@@ -156,7 +180,9 @@ fun PostavkeCiljevaScreen(
                     colors = goalFieldColors()
                 )
 
-                Spacer(modifier = Modifier.height(14.dp))
+                Spacer(
+                    modifier = Modifier.height(14.dp)
+                )
 
                 OutlinedTextField(
                     value = dob,
@@ -177,7 +203,9 @@ fun PostavkeCiljevaScreen(
                     colors = goalFieldColors()
                 )
 
-                Spacer(modifier = Modifier.height(14.dp))
+                Spacer(
+                    modifier = Modifier.height(14.dp)
+                )
 
                 OutlinedTextField(
                     value = masa,
@@ -205,7 +233,9 @@ fun PostavkeCiljevaScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(22.dp))
+            Spacer(
+                modifier = Modifier.height(22.dp)
+            )
 
             // CILJ
             Text(
@@ -215,15 +245,20 @@ fun PostavkeCiljevaScreen(
                 color = MacroText
             )
 
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(
+                modifier = Modifier.height(4.dp)
+            )
 
             Text(
                 text = "Odaberi što želiš postići.",
                 color = MacroTextSecondary,
-                style = MaterialTheme.typography.bodySmall
+                style = MaterialTheme.typography.bodySmall,
+                maxLines = 2
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(
+                modifier = Modifier.height(12.dp)
+            )
 
             GoalChoiceCard(
                 title = "Mršavljenje",
@@ -234,7 +269,9 @@ fun PostavkeCiljevaScreen(
                 }
             )
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(
+                modifier = Modifier.height(10.dp)
+            )
 
             GoalChoiceCard(
                 title = "Održavanje težine",
@@ -245,7 +282,9 @@ fun PostavkeCiljevaScreen(
                 }
             )
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(
+                modifier = Modifier.height(10.dp)
+            )
 
             GoalChoiceCard(
                 title = "Dobivanje mase",
@@ -256,18 +295,26 @@ fun PostavkeCiljevaScreen(
                 }
             )
 
-            Spacer(modifier = Modifier.height(26.dp))
+            Spacer(
+                modifier = Modifier.height(26.dp)
+            )
 
             // AKTIVNOST
             Row(
+                modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
+
                 Box(
                     modifier = Modifier
                         .size(40.dp)
-                        .clip(RoundedCornerShape(13.dp))
+                        .clip(
+                            RoundedCornerShape(13.dp)
+                        )
                         .background(
-                            MacroLightGreen.copy(alpha = 0.18f)
+                            MacroLightGreen.copy(
+                                alpha = 0.18f
+                            )
                         ),
                     contentAlignment = Alignment.Center
                 ) {
@@ -279,34 +326,47 @@ fun PostavkeCiljevaScreen(
                     )
                 }
 
-                Spacer(modifier = Modifier.width(10.dp))
+                Spacer(
+                    modifier = Modifier.width(10.dp)
+                )
 
-                Column {
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
+
                     Text(
                         text = "Razina aktivnosti",
                         fontSize = 21.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MacroText
+                        color = MacroText,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
 
                     Text(
                         text = "Koliko si aktivan tijekom tjedna?",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MacroTextSecondary
+                        color = MacroTextSecondary,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(
+                modifier = Modifier.height(14.dp)
+            )
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                horizontalArrangement =
+                    Arrangement.spacedBy(10.dp)
             ) {
 
                 ActivityChoice(
                     title = "Sjedilačka",
-                    selected = aktivnost == "sjedilacka",
+                    selected =
+                        aktivnost == "sjedilacka",
                     onClick = {
                         aktivnost = "sjedilacka"
                     },
@@ -315,7 +375,8 @@ fun PostavkeCiljevaScreen(
 
                 ActivityChoice(
                     title = "Lagana",
-                    selected = aktivnost == "lagana",
+                    selected =
+                        aktivnost == "lagana",
                     onClick = {
                         aktivnost = "lagana"
                     },
@@ -323,16 +384,20 @@ fun PostavkeCiljevaScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(
+                modifier = Modifier.height(10.dp)
+            )
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                horizontalArrangement =
+                    Arrangement.spacedBy(10.dp)
             ) {
 
                 ActivityChoice(
                     title = "Umjerena",
-                    selected = aktivnost == "umjerena",
+                    selected =
+                        aktivnost == "umjerena",
                     onClick = {
                         aktivnost = "umjerena"
                     },
@@ -341,7 +406,8 @@ fun PostavkeCiljevaScreen(
 
                 ActivityChoice(
                     title = "Visoka",
-                    selected = aktivnost == "visoka",
+                    selected =
+                        aktivnost == "visoka",
                     onClick = {
                         aktivnost = "visoka"
                     },
@@ -350,7 +416,10 @@ fun PostavkeCiljevaScreen(
             }
 
             greska?.let {
-                Spacer(modifier = Modifier.height(18.dp))
+
+                Spacer(
+                    modifier = Modifier.height(18.dp)
+                )
 
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
@@ -359,42 +428,64 @@ fun PostavkeCiljevaScreen(
                         MaterialTheme.colorScheme.error
                             .copy(alpha = 0.08f)
                 ) {
+
                     Text(
                         text = it,
-                        color = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.padding(14.dp)
+                        color =
+                            MaterialTheme.colorScheme.error,
+                        modifier = Modifier.padding(14.dp),
+                        style =
+                            MaterialTheme.typography.bodyMedium
                     )
                 }
             }
 
             poruka?.let {
-                Spacer(modifier = Modifier.height(18.dp))
+
+                Spacer(
+                    modifier = Modifier.height(18.dp)
+                )
 
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(16.dp),
                     color =
-                        MacroLightGreen.copy(alpha = 0.18f)
+                        MacroLightGreen.copy(
+                            alpha = 0.18f
+                        )
                 ) {
+
                     Text(
                         text = it,
                         color = MacroGreen,
-                        modifier = Modifier.padding(14.dp)
+                        modifier = Modifier.padding(14.dp),
+                        style =
+                            MaterialTheme.typography.bodyMedium
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(28.dp))
+            Spacer(
+                modifier = Modifier.height(28.dp)
+            )
 
             Button(
                 onClick = {
 
-                    val visinaBroj = visina.toIntOrNull()
-                    val dobBroj = dob.toIntOrNull()
-                    val masaBroj = masa.toDoubleOrNull()
+                    val visinaBroj =
+                        visina.toIntOrNull()
 
-                    if (prijavljeniKorisnikId == null) {
-                        greska = "Korisnik nije prijavljen."
+                    val dobBroj =
+                        dob.toIntOrNull()
+
+                    val masaBroj =
+                        masa.toDoubleOrNull()
+
+                    if (
+                        prijavljeniKorisnikId == null
+                    ) {
+                        greska =
+                            "Korisnik nije prijavljen."
                         return@Button
                     }
 
@@ -428,27 +519,39 @@ fun PostavkeCiljevaScreen(
                     greska = null
 
                     viewModel.spremiCilj(
-                        idKorisnik = prijavljeniKorisnikId!!,
+                        idKorisnik =
+                            prijavljeniKorisnikId!!,
                         visina = visinaBroj,
                         dob = dobBroj,
                         masa = masaBroj,
-                        razinaAktivnosti = aktivnost,
-                        tipCilja = tipCilja
+                        razinaAktivnosti =
+                            aktivnost,
+                        tipCilja =
+                            tipCilja
                     )
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(58.dp),
+                    .heightIn(min = 58.dp),
                 shape = RoundedCornerShape(18.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MacroGreen,
-                    contentColor = Color.White
+                colors =
+                    ButtonDefaults.buttonColors(
+                        containerColor = MacroGreen,
+                        contentColor = Color.White
+                    ),
+                contentPadding = PaddingValues(
+                    horizontal = 16.dp,
+                    vertical = 14.dp
                 )
             ) {
+
                 Text(
-                    text = "Izračunaj novu preporuku",
+                    text =
+                        "Izračunaj novu preporuku",
                     fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
         }
@@ -461,29 +564,37 @@ private fun SettingsSectionCard(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     content: @Composable ColumnScope.() -> Unit
 ) {
+
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
         color = MaterialTheme.colorScheme.surface,
         tonalElevation = 1.dp
     ) {
+
         Column(
             modifier = Modifier.padding(18.dp)
         ) {
 
             Row(
+                modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
 
                 Box(
                     modifier = Modifier
                         .size(44.dp)
-                        .clip(RoundedCornerShape(14.dp))
+                        .clip(
+                            RoundedCornerShape(14.dp)
+                        )
                         .background(
-                            MacroLightGreen.copy(alpha = 0.18f)
+                            MacroLightGreen.copy(
+                                alpha = 0.18f
+                            )
                         ),
                     contentAlignment = Alignment.Center
                 ) {
+
                     Icon(
                         imageVector = icon,
                         contentDescription = null,
@@ -492,17 +603,24 @@ private fun SettingsSectionCard(
                     )
                 }
 
-                Spacer(modifier = Modifier.width(12.dp))
+                Spacer(
+                    modifier = Modifier.width(12.dp)
+                )
 
                 Text(
                     text = title,
+                    modifier = Modifier.weight(1f),
                     fontSize = 19.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = MacroText
+                    color = MacroText,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
 
-            Spacer(modifier = Modifier.height(18.dp))
+            Spacer(
+                modifier = Modifier.height(18.dp)
+            )
 
             content()
         }
@@ -516,45 +634,60 @@ private fun GoalChoiceCard(
     selected: Boolean,
     onClick: () -> Unit
 ) {
+
     Surface(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
         color =
             if (selected) {
-                MacroLightGreen.copy(alpha = 0.18f)
+                MacroLightGreen.copy(
+                    alpha = 0.18f
+                )
             } else {
                 MaterialTheme.colorScheme.surface
             },
         border =
             if (selected) {
                 androidx.compose.foundation.BorderStroke(
-                    1.5.dp,
-                    MacroGreen
+                    width = 1.5.dp,
+                    color = MacroGreen
                 )
             } else {
                 null
             },
         tonalElevation =
-            if (selected) 0.dp else 1.dp
+            if (selected) {
+                0.dp
+            } else {
+                1.dp
+            }
     ) {
 
         Row(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(
+                horizontal = 14.dp,
+                vertical = 14.dp
+            ),
             verticalAlignment = Alignment.CenterVertically
         ) {
 
             RadioButton(
                 selected = selected,
                 onClick = onClick,
-                colors = RadioButtonDefaults.colors(
-                    selectedColor = MacroGreen
-                )
+                colors =
+                    RadioButtonDefaults.colors(
+                        selectedColor = MacroGreen
+                    )
             )
 
-            Spacer(modifier = Modifier.width(10.dp))
+            Spacer(
+                modifier = Modifier.width(8.dp)
+            )
 
-            Column {
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
 
                 Text(
                     text = title,
@@ -564,15 +697,22 @@ private fun GoalChoiceCard(
                             MacroGreen
                         } else {
                             MacroText
-                        }
+                        },
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
 
-                Spacer(modifier = Modifier.height(2.dp))
+                Spacer(
+                    modifier = Modifier.height(2.dp)
+                )
 
                 Text(
                     text = subtitle,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MacroTextSecondary
+                    style =
+                        MaterialTheme.typography.bodySmall,
+                    color = MacroTextSecondary,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
         }
@@ -586,32 +726,46 @@ private fun ActivityChoice(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+
     Surface(
         onClick = onClick,
-        modifier = modifier.height(58.dp),
+        modifier = modifier.heightIn(
+            min = 58.dp
+        ),
         shape = RoundedCornerShape(17.dp),
         color =
             if (selected) {
-                MacroLightGreen.copy(alpha = 0.22f)
+                MacroLightGreen.copy(
+                    alpha = 0.22f
+                )
             } else {
                 MaterialTheme.colorScheme.surface
             },
         border =
             if (selected) {
                 androidx.compose.foundation.BorderStroke(
-                    1.5.dp,
-                    MacroGreen
+                    width = 1.5.dp,
+                    color = MacroGreen
                 )
             } else {
                 null
             },
         tonalElevation =
-            if (selected) 0.dp else 1.dp
+            if (selected) {
+                0.dp
+            } else {
+                1.dp
+            }
     ) {
 
         Box(
+            modifier = Modifier.padding(
+                horizontal = 10.dp,
+                vertical = 14.dp
+            ),
             contentAlignment = Alignment.Center
         ) {
+
             Text(
                 text = title,
                 fontWeight = FontWeight.SemiBold,
@@ -620,7 +774,9 @@ private fun ActivityChoice(
                         MacroGreen
                     } else {
                         MacroText
-                    }
+                    },
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
         }
     }

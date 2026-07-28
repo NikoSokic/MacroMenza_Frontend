@@ -20,6 +20,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -94,7 +95,9 @@ fun HomeScreen(
         )
 
         LazyColumn(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .statusBarsPadding(),
             contentPadding = PaddingValues(
                 start = 20.dp,
                 top = 22.dp,
@@ -615,23 +618,22 @@ private fun QuickMealCard(
             navController.navigate("unos_obroka/$tipObroka")
         },
         modifier = modifier,
-        shape = RoundedCornerShape(20.dp),
+        shape = RoundedCornerShape(18.dp),
         color = MaterialTheme.colorScheme.surface,
         tonalElevation = 1.dp
     ) {
-
         Row(
             modifier = Modifier.padding(
-                horizontal = 15.dp,
-                vertical = 15.dp
+                horizontal = 10.dp,
+                vertical = 13.dp
             ),
             verticalAlignment = Alignment.CenterVertically
         ) {
 
             Box(
                 modifier = Modifier
-                    .size(44.dp)
-                    .clip(RoundedCornerShape(14.dp))
+                    .size(38.dp)
+                    .clip(RoundedCornerShape(12.dp))
                     .background(
                         MacroLightGreen.copy(alpha = 0.20f)
                     ),
@@ -641,23 +643,28 @@ private fun QuickMealCard(
                     imageVector = Icons.Default.Restaurant,
                     contentDescription = null,
                     tint = MacroGreen,
-                    modifier = Modifier.size(22.dp)
+                    modifier = Modifier.size(20.dp)
                 )
             }
 
-            Spacer(modifier = Modifier.width(11.dp))
+            Spacer(modifier = Modifier.width(8.dp))
 
             Text(
                 text = label,
                 modifier = Modifier.weight(1f),
                 color = MacroText,
                 fontWeight = FontWeight.SemiBold,
-                fontSize = 15.sp
+                fontSize = 14.sp,
+                maxLines = 1,
+                softWrap = false,
+                overflow = TextOverflow.Ellipsis
             )
+
+            Spacer(modifier = Modifier.width(6.dp))
 
             Box(
                 modifier = Modifier
-                    .size(30.dp)
+                    .size(26.dp)
                     .clip(CircleShape)
                     .background(MacroGreen),
                 contentAlignment = Alignment.Center
@@ -666,13 +673,12 @@ private fun QuickMealCard(
                     imageVector = Icons.Default.Add,
                     contentDescription = "Dodaj $label",
                     tint = Color.White,
-                    modifier = Modifier.size(18.dp)
+                    modifier = Modifier.size(16.dp)
                 )
             }
         }
     }
 }
-
 @Composable
 private fun EmptyMealsCard() {
     Surface(

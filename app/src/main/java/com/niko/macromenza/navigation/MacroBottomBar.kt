@@ -22,11 +22,13 @@ import androidx.compose.runtime.getValue
 fun MacroBottomBar(
     items: List<BottomNavItem>,
     currentRoute: String?,
-    onItemClick: (BottomNavItem) -> Unit
+    onItemClick: (BottomNavItem) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
+            .navigationBarsPadding()
             .padding(
                 horizontal = 16.dp,
                 vertical = 10.dp

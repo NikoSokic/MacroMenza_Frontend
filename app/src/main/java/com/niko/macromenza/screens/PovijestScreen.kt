@@ -28,6 +28,8 @@
     import java.time.LocalDate
     import androidx.compose.ui.platform.LocalContext
     import com.niko.macromenza.model.StavkaObroka
+    import androidx.compose.ui.text.style.TextAlign
+    import androidx.compose.ui.text.style.TextOverflow
     
     enum class PovijestTab {
         TJEDNI,
@@ -85,7 +87,7 @@
                     start = 22.dp,
                     end = 22.dp,
                     top = 28.dp,
-                    bottom = 110.dp
+                    bottom = 170.dp
                 ),
                 verticalArrangement = Arrangement.spacedBy(18.dp)
             ) {
@@ -434,27 +436,24 @@
             }
         }
     }
-    
+
     @Composable
     private fun WeekSelector(
         datumOd: String,
         datumDo: String
     ) {
-    
         Row(
             modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement =
-                Arrangement.SpaceBetween
+            verticalAlignment = Alignment.CenterVertically
         ) {
-    
+
             Surface(
                 shape = CircleShape,
                 color = MacroLightGreen.copy(alpha = 0.18f)
             ) {
-    
-                IconButton(onClick = {}) {
-    
+                IconButton(
+                    onClick = {}
+                ) {
                     Icon(
                         Icons.Default.ChevronLeft,
                         contentDescription = "Prethodni tjedan",
@@ -462,31 +461,36 @@
                     )
                 }
             }
-    
+
             Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-    
                 Text(
                     text = "$datumOd  –  $datumDo",
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
-    
+
                 Text(
                     text = "Ovaj tjedan",
                     style = MaterialTheme.typography.bodySmall,
                     color = MacroTextSecondary
                 )
             }
-    
+
             Surface(
                 shape = CircleShape,
                 color = MacroLightGreen.copy(alpha = 0.18f)
             ) {
-    
-                IconButton(onClick = {}) {
-    
+                IconButton(
+                    onClick = {}
+                ) {
                     Icon(
                         Icons.Default.ChevronRight,
                         contentDescription = "Sljedeći tjedan",
@@ -496,7 +500,6 @@
             }
         }
     }
-    
     @Composable
     private fun WeeklyOverviewCard(
         prosjekKalorija: Double,

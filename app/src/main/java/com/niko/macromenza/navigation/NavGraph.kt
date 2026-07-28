@@ -11,7 +11,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.niko.macromenza.session.UserSessionManager
 import com.niko.macromenza.viewmodel.AuthViewModel
 import com.niko.macromenza.viewmodel.AuthViewModelFactory
-
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.Alignment
 
 @Composable
 fun AppNavigation() {
@@ -56,36 +59,9 @@ fun AppNavigation() {
         return
     }
 
-
-    Scaffold(
-        bottomBar = {
-            if (showBottomBar) {
-                MacroBottomBar(
-                    items = items,
-                    currentRoute = currentRoute,
-                    onItemClick = { item ->
-
-                        if (item == BottomNavItem.Home) {
-                            homeRefreshKey++
-                        }
-
-                        if (item == BottomNavItem.Profil) {
-                            profileRefreshKey++
-                        }
-
-                        navController.navigate(item.route) {
-                            popUpTo(BottomNavItem.Home.route) {
-                                saveState = false
-                            }
-
-                            launchSingleTop = true
-                            restoreState = false
-                        }
-                    }
-                )
-            }
-        }
-    ) { innerPadding ->
+    Box(
+        modifier = Modifier.fillMaxSize()
+    ) {
 
         NavHost(
             navController = navController,
@@ -94,7 +70,7 @@ fun AppNavigation() {
             } else {
                 "welcome"
             },
-            modifier = Modifier.padding(innerPadding)
+            modifier = Modifier.fillMaxSize()
         ) {
 
             composable("welcome") {
@@ -107,6 +83,7 @@ fun AppNavigation() {
                     viewModel = authViewModel
                 )
             }
+
             composable("onboarding/{korisnikId}") { backStackEntry ->
                 val korisnikId = backStackEntry.arguments
                     ?.getString("korisnikId")
@@ -118,12 +95,12 @@ fun AppNavigation() {
                 )
             }
 
-
             composable("register") {
                 RegisterScreen(
                     navController = navController,
                     viewModel = authViewModel
-                )            }
+                )
+            }
 
             composable(BottomNavItem.Home.route) {
                 HomeScreen(
@@ -165,7 +142,8 @@ fun AppNavigation() {
 
             composable("unos_obroka/{tipObroka}") { backStackEntry ->
                 val tipObroka =
-                    backStackEntry.arguments?.getString("tipObroka") ?: "RUCAK"
+                    backStackEntry.arguments?.getString("tipObroka")
+                        ?: "RUCAK"
 
                 UnosObrokaScreen(
                     tipObroka = tipObroka,
@@ -175,7 +153,8 @@ fun AppNavigation() {
 
             composable("obrok_spremljen/{tipObroka}") { backStackEntry ->
                 val tipObroka =
-                    backStackEntry.arguments?.getString("tipObroka") ?: "RUCAK"
+                    backStackEntry.arguments?.getString("tipObroka")
+                        ?: "RUCAK"
 
                 ObrokSpremljenScreen(
                     tipObroka = tipObroka,
@@ -187,8 +166,38 @@ fun AppNavigation() {
                 val datum =
                     backStackEntry.arguments?.getString("datum") ?: ""
 
-                DetaljDanaScreen(datum = datum)
+                DetaljDanaScreen(
+                    datum = datum
+                )
             }
+        }
+
+        // FLOATING NAVIGATION BAR PREKO SADRŽAJA
+        if (showBottomBar) {
+            MacroBottomBar(
+                items = items,
+                currentRoute = currentRoute,
+                onItemClick = { item ->
+
+                    if (item == BottomNavItem.Home) {
+                        homeRefreshKey++
+                    }
+
+                    if (item == BottomNavItem.Profil) {
+                        profileRefreshKey++
+                    }
+
+                    navController.navigate(item.route) {
+                        popUpTo(BottomNavItem.Home.route) {
+                            saveState = false
+                        }
+
+                        launchSingleTop = true
+                        restoreState = false
+                    }
+                },
+                modifier = Modifier.align(Alignment.BottomCenter)
+            )
         }
     }
 }

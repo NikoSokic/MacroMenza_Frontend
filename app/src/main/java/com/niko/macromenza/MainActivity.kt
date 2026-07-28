@@ -7,11 +7,15 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.core.view.WindowCompat
 import com.niko.macromenza.navigation.AppNavigation
 import com.niko.macromenza.session.ThemeManager
 import com.niko.macromenza.ui.theme.AppTheme
 import com.niko.macromenza.ui.theme.MacroMenzaTheme
+import androidx.activity.enableEdgeToEdge
+import androidx.activity.SystemBarStyle
+import androidx.compose.ui.graphics.toArgb
+import com.niko.macromenza.ui.theme.MacroBackground
+import com.niko.macromenza.ui.theme.MacroDark
 
 class MainActivity : ComponentActivity() {
 
@@ -20,10 +24,17 @@ class MainActivity : ComponentActivity() {
     ) {
         super.onCreate(savedInstanceState)
 
-        WindowCompat.setDecorFitsSystemWindows(
-            window,
-            false
+        enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.auto(
+                lightScrim = android.graphics.Color.TRANSPARENT,
+                darkScrim = android.graphics.Color.TRANSPARENT
+            ),
+            navigationBarStyle = SystemBarStyle.auto(
+                lightScrim = MacroBackground.toArgb(),
+                darkScrim = MacroDark.toArgb()
+            )
         )
+
 
         setContent {
 

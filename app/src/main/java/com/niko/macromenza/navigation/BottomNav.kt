@@ -13,7 +13,7 @@ sealed class BottomNavItem(
     val icon: ImageVector
 ) {
     object Home : BottomNavItem("home", "Početna", Icons.Default.Home)
-    object Konzumacija : BottomNavItem("konzumacija", "Konzumacija", Icons.Default.Restaurant)
+    object Konzumacija : BottomNavItem("konzumacija", "Unos", Icons.Default.Restaurant)
     object Povijest : BottomNavItem("povijest", "Povijest", Icons.Default.BarChart)
     object Profil : BottomNavItem("profil", "Profil", Icons.Default.Person)
 }

@@ -19,9 +19,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -65,7 +65,10 @@ fun ProfilScreen(
     val prijavljeniKorisnikId by
     sessionManager.korisnikId.collectAsState(initial = null)
 
-    LaunchedEffect(refreshKey, prijavljeniKorisnikId) {
+    LaunchedEffect(
+        refreshKey,
+        prijavljeniKorisnikId
+    ) {
         prijavljeniKorisnikId?.let { id ->
             viewModel.ucitajProfil(id)
         }
@@ -82,11 +85,14 @@ fun ProfilScreen(
             .background(MaterialTheme.colorScheme.background)
     ) {
 
-        // dekorativni krug
+        // Dekorativni krug
         Box(
             modifier = Modifier
                 .size(230.dp)
-                .offset(x = 190.dp, y = (-100).dp)
+                .offset(
+                    x = 190.dp,
+                    y = (-100).dp
+                )
                 .clip(CircleShape)
                 .background(
                     MacroLightGreen.copy(alpha = 0.10f)
@@ -96,9 +102,16 @@ fun ProfilScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 24.dp)
-                .padding(top = 28.dp, bottom = 110.dp)
+                .verticalScroll(
+                    rememberScrollState()
+                )
+                .padding(
+                    horizontal = 24.dp
+                )
+                .padding(
+                    top = 28.dp,
+                    bottom = 110.dp
+                )
         ) {
 
             Text(
@@ -114,7 +127,9 @@ fun ProfilScreen(
                 color = MacroTextSecondary
             )
 
-            Spacer(modifier = Modifier.height(28.dp))
+            Spacer(
+                modifier = Modifier.height(28.dp)
+            )
 
             // USER HEADER
             Row(
@@ -125,15 +140,22 @@ fun ProfilScreen(
                 ProfileAvatar(
                     initials = buildString {
                         append(
-                            korisnik?.ime?.firstOrNull() ?: 'K'
+                            korisnik?.ime
+                                ?.firstOrNull()
+                                ?: 'K'
                         )
+
                         append(
-                            korisnik?.prezime?.firstOrNull() ?: 'R'
+                            korisnik?.prezime
+                                ?.firstOrNull()
+                                ?: 'R'
                         )
                     }
                 )
 
-                Spacer(modifier = Modifier.width(18.dp))
+                Spacer(
+                    modifier = Modifier.width(16.dp)
+                )
 
                 Column(
                     modifier = Modifier.weight(1f)
@@ -142,19 +164,29 @@ fun ProfilScreen(
                     Text(
                         text =
                             "${korisnik?.ime ?: ""} ${korisnik?.prezime ?: ""}"
-                                .ifBlank { "Korisnik" },
+                                .ifBlank {
+                                    "Korisnik"
+                                },
                         fontSize = 23.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MacroText
+                        color = MacroText,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
 
-                    Spacer(modifier = Modifier.height(5.dp))
+                    Spacer(
+                        modifier = Modifier.height(5.dp)
+                    )
 
                     Row(
                         modifier = Modifier
-                            .clip(RoundedCornerShape(10.dp))
+                            .clip(
+                                RoundedCornerShape(10.dp)
+                            )
                             .clickable {
-                                navController.navigate("uredi_profil")
+                                navController.navigate(
+                                    "uredi_profil"
+                                )
                             }
                             .padding(
                                 vertical = 5.dp,
@@ -170,18 +202,23 @@ fun ProfilScreen(
                             modifier = Modifier.size(16.dp)
                         )
 
-                        Spacer(modifier = Modifier.width(6.dp))
+                        Spacer(
+                            modifier = Modifier.width(6.dp)
+                        )
 
                         Text(
                             text = "Uredi profil",
                             color = MacroGreen,
-                            fontWeight = FontWeight.SemiBold
+                            fontWeight = FontWeight.SemiBold,
+                            maxLines = 1
                         )
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(
+                modifier = Modifier.height(32.dp)
+            )
 
             Text(
                 text = "Tvoj cilj",
@@ -190,17 +227,23 @@ fun ProfilScreen(
                 color = MacroText
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(
+                modifier = Modifier.height(12.dp)
+            )
 
             ProfileGoalCard(
                 title = prikaziCilj(
                     zadnjeMjerenje?.tipCilja
                 ),
                 calories =
-                    zadnjaPreporuka?.kalorije?.toInt()
+                    zadnjaPreporuka
+                        ?.kalorije
+                        ?.toInt()
             )
 
-            Spacer(modifier = Modifier.height(30.dp))
+            Spacer(
+                modifier = Modifier.height(30.dp)
+            )
 
             Text(
                 text = "Postavke",
@@ -209,40 +252,54 @@ fun ProfilScreen(
                 color = MacroText
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(
+                modifier = Modifier.height(12.dp)
+            )
 
             ProfileMenuItem(
                 title = "Postavke ciljeva",
                 subtitle = "Prilagodi svoj dnevni cilj",
                 iconType = ProfileIconType.Goal,
                 onClick = {
-                    navController.navigate("postavke_ciljeva")
+                    navController.navigate(
+                        "postavke_ciljeva"
+                    )
                 }
             )
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(
+                modifier = Modifier.height(10.dp)
+            )
 
             ProfileMenuItem(
                 title = "Moje mjere",
                 subtitle = "Prati težinu i tjelesne podatke",
                 iconType = ProfileIconType.Measurements,
                 onClick = {
-                    navController.navigate("moje_mjere")
+                    navController.navigate(
+                        "moje_mjere"
+                    )
                 }
             )
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(
+                modifier = Modifier.height(10.dp)
+            )
 
             ProfileMenuItem(
                 title = "Postavke aplikacije",
                 subtitle = "Prilagodi MacroMenzu",
                 iconType = ProfileIconType.Settings,
                 onClick = {
-                    navController.navigate("postavke_aplikacije")
+                    navController.navigate(
+                        "postavke_aplikacije"
+                    )
                 }
             )
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(
+                modifier = Modifier.height(24.dp)
+            )
 
             LogoutItem(
                 onClick = {
@@ -253,6 +310,7 @@ fun ProfilScreen(
     }
 
     if (prikaziOdjavaDialog) {
+
         AlertDialog(
             onDismissRequest = {
                 prikaziOdjavaDialog = false
@@ -268,7 +326,8 @@ fun ProfilScreen(
 
             text = {
                 Text(
-                    text = "Jesi li siguran da se želiš odjaviti iz MacroMenze?"
+                    text =
+                        "Jesi li siguran da se želiš odjaviti iz MacroMenze?"
                 )
             },
 
@@ -310,18 +369,21 @@ fun ProfileAvatar(
     initials: String
 ) {
     Surface(
-        modifier = Modifier.size(86.dp),
+        modifier = Modifier.size(80.dp),
         shape = CircleShape,
-        color = MacroLightGreen.copy(alpha = 0.20f)
+        color = MacroLightGreen.copy(
+            alpha = 0.20f
+        )
     ) {
         Box(
             contentAlignment = Alignment.Center
         ) {
             Text(
                 text = initials.uppercase(),
-                fontSize = 27.sp,
+                fontSize = 25.sp,
                 fontWeight = FontWeight.Bold,
-                color = MacroGreen
+                color = MacroGreen,
+                maxLines = 1
             )
         }
     }
@@ -335,18 +397,22 @@ private fun ProfileGoalCard(
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
-        color = MacroLightGreen.copy(alpha = 0.16f)
+        color = MacroLightGreen.copy(
+            alpha = 0.16f
+        )
     ) {
 
         Row(
-            modifier = Modifier.padding(20.dp),
+            modifier = Modifier.padding(18.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
 
             Surface(
-                modifier = Modifier.size(54.dp),
-                shape = RoundedCornerShape(17.dp),
-                color = MacroLightGreen.copy(alpha = 0.28f)
+                modifier = Modifier.size(50.dp),
+                shape = RoundedCornerShape(16.dp),
+                color = MacroLightGreen.copy(
+                    alpha = 0.28f
+                )
             ) {
                 Box(
                     contentAlignment = Alignment.Center
@@ -355,32 +421,43 @@ private fun ProfileGoalCard(
                         imageVector = Icons.Default.Flag,
                         contentDescription = null,
                         tint = MacroGreen,
-                        modifier = Modifier.size(27.dp)
+                        modifier = Modifier.size(25.dp)
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.width(16.dp))
+            Spacer(
+                modifier = Modifier.width(14.dp)
+            )
 
-            Column {
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
 
                 Text(
                     text = title,
                     fontSize = 17.sp,
                     fontWeight = FontWeight.Bold,
-                    color = MacroText
+                    color = MacroText,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
 
-                Spacer(modifier = Modifier.height(3.dp))
+                Spacer(
+                    modifier = Modifier.height(3.dp)
+                )
 
                 Text(
                     text =
-                        if (calories != null)
+                        if (calories != null) {
                             "$calories kcal dnevno"
-                        else
-                            "Dnevna preporuka nije postavljena",
+                        } else {
+                            "Dnevna preporuka nije postavljena"
+                        },
                     color = MacroTextSecondary,
-                    fontSize = 14.sp
+                    fontSize = 14.sp,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
         }
@@ -403,46 +480,59 @@ fun ProfileMenuItem(
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(22.dp))
-            .clickable { onClick() },
+            .clip(
+                RoundedCornerShape(22.dp)
+            )
+            .clickable {
+                onClick()
+            },
         shape = RoundedCornerShape(22.dp),
         color = MaterialTheme.colorScheme.surface,
         tonalElevation = 1.dp
     ) {
 
         Row(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(
+                horizontal = 15.dp,
+                vertical = 16.dp
+            ),
             verticalAlignment = Alignment.CenterVertically
         ) {
 
             Surface(
-                modifier = Modifier.size(48.dp),
-                shape = RoundedCornerShape(15.dp),
-                color = MacroLightGreen.copy(alpha = 0.18f)
+                modifier = Modifier.size(46.dp),
+                shape = RoundedCornerShape(14.dp),
+                color = MacroLightGreen.copy(
+                    alpha = 0.18f
+                )
             ) {
                 Box(
                     contentAlignment = Alignment.Center
                 ) {
 
                     Icon(
-                        imageVector = when (iconType) {
-                            ProfileIconType.Goal ->
-                                Icons.Default.Flag
+                        imageVector =
+                            when (iconType) {
 
-                            ProfileIconType.Measurements ->
-                                Icons.Default.Straighten
+                                ProfileIconType.Goal ->
+                                    Icons.Default.Flag
 
-                            ProfileIconType.Settings ->
-                                Icons.Default.Settings
-                        },
+                                ProfileIconType.Measurements ->
+                                    Icons.Default.Straighten
+
+                                ProfileIconType.Settings ->
+                                    Icons.Default.Settings
+                            },
                         contentDescription = null,
                         tint = MacroGreen,
-                        modifier = Modifier.size(23.dp)
+                        modifier = Modifier.size(22.dp)
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.width(14.dp))
+            Spacer(
+                modifier = Modifier.width(13.dp)
+            )
 
             Column(
                 modifier = Modifier.weight(1f)
@@ -452,24 +542,34 @@ fun ProfileMenuItem(
                     text = title,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = MacroText
+                    color = MacroText,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
 
-                Spacer(modifier = Modifier.height(2.dp))
+                Spacer(
+                    modifier = Modifier.height(2.dp)
+                )
 
                 Text(
                     text = subtitle,
                     fontSize = 13.sp,
-                    color = MacroTextSecondary
+                    color = MacroTextSecondary,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
+
+            Spacer(
+                modifier = Modifier.width(8.dp)
+            )
 
             Icon(
                 imageVector =
                     Icons.AutoMirrored.Filled.ArrowForwardIos,
                 contentDescription = null,
                 tint = MacroTextSecondary,
-                modifier = Modifier.size(16.dp)
+                modifier = Modifier.size(15.dp)
             )
         }
     }
@@ -479,55 +579,81 @@ fun ProfileMenuItem(
 private fun LogoutItem(
     onClick: () -> Unit
 ) {
-    val errorColor = MaterialTheme.colorScheme.error
+    val errorColor =
+        MaterialTheme.colorScheme.error
 
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(22.dp))
-            .clickable { onClick() },
+            .clip(
+                RoundedCornerShape(22.dp)
+            )
+            .clickable {
+                onClick()
+            },
         shape = RoundedCornerShape(22.dp),
-        color = errorColor.copy(alpha = 0.07f)
+        color = errorColor.copy(
+            alpha = 0.07f
+        )
     ) {
 
         Row(
-            modifier = Modifier.padding(17.dp),
+            modifier = Modifier.padding(
+                horizontal = 15.dp,
+                vertical = 16.dp
+            ),
             verticalAlignment = Alignment.CenterVertically
         ) {
 
             Surface(
                 modifier = Modifier.size(46.dp),
-                shape = RoundedCornerShape(15.dp),
-                color = errorColor.copy(alpha = 0.10f)
+                shape = RoundedCornerShape(14.dp),
+                color = errorColor.copy(
+                    alpha = 0.10f
+                )
             ) {
                 Box(
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector =
-                            Icons.AutoMirrored.Filled.ExitToApp,
+                            Icons.AutoMirrored
+                                .Filled
+                                .ExitToApp,
                         contentDescription = null,
-                        tint = errorColor
+                        tint = errorColor,
+                        modifier = Modifier.size(22.dp)
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.width(14.dp))
+            Spacer(
+                modifier = Modifier.width(13.dp)
+            )
 
             Text(
                 text = "Odjavi se",
                 modifier = Modifier.weight(1f),
                 fontSize = 16.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = errorColor
+                color = errorColor,
+                maxLines = 1
+            )
+
+            Spacer(
+                modifier = Modifier.width(8.dp)
             )
 
             Icon(
                 imageVector =
-                    Icons.AutoMirrored.Filled.ArrowForwardIos,
+                    Icons.AutoMirrored
+                        .Filled
+                        .ArrowForwardIos,
                 contentDescription = null,
-                tint = errorColor.copy(alpha = 0.7f),
-                modifier = Modifier.size(16.dp)
+                tint = errorColor.copy(
+                    alpha = 0.7f
+                ),
+                modifier = Modifier.size(15.dp)
             )
         }
     }
@@ -537,6 +663,7 @@ fun prikaziCilj(
     tipCilja: String?
 ): String {
     return when (tipCilja) {
+
         "mrsavljenje" ->
             "Mršavljenje"
 
