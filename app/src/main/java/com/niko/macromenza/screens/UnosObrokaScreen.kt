@@ -27,6 +27,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.niko.macromenza.model.Jelo
 import com.niko.macromenza.session.UserSessionManager
+import com.niko.macromenza.ui.components.screenBottomPadding
+import com.niko.macromenza.ui.components.screenTopPadding
 import com.niko.macromenza.ui.theme.MacroGreen
 import com.niko.macromenza.ui.theme.MacroLightGreen
 import com.niko.macromenza.ui.theme.MacroText
@@ -122,9 +124,9 @@ fun UnosObrokaScreen(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(
                 start = 20.dp,
-                top = 22.dp,
+                top = screenTopPadding(),
                 end = 20.dp,
-                bottom = 120.dp
+                bottom = screenBottomPadding()
             ),
             verticalArrangement = Arrangement.spacedBy(0.dp)
         ) {

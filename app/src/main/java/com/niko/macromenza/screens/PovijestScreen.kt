@@ -30,7 +30,9 @@
     import com.niko.macromenza.model.StavkaObroka
     import androidx.compose.ui.text.style.TextAlign
     import androidx.compose.ui.text.style.TextOverflow
-    
+    import com.niko.macromenza.ui.components.screenBottomPadding
+    import com.niko.macromenza.ui.components.screenTopPadding
+
     enum class PovijestTab {
         TJEDNI,
         DNEVNI
@@ -86,8 +88,8 @@
                 contentPadding = PaddingValues(
                     start = 22.dp,
                     end = 22.dp,
-                    top = 28.dp,
-                    bottom = 170.dp
+                    top = screenTopPadding(),
+                    bottom = screenBottomPadding()
                 ),
                 verticalArrangement = Arrangement.spacedBy(18.dp)
             ) {

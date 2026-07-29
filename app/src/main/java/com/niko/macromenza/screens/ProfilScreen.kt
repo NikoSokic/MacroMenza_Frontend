@@ -27,6 +27,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.niko.macromenza.session.UserSessionManager
+import com.niko.macromenza.ui.components.screenBottomPadding
+import com.niko.macromenza.ui.components.screenTopPadding
 import com.niko.macromenza.ui.theme.MacroGreen
 import com.niko.macromenza.ui.theme.MacroLightGreen
 import com.niko.macromenza.ui.theme.MacroText
@@ -102,15 +104,11 @@ fun ProfilScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(
-                    rememberScrollState()
-                )
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 22.dp)
                 .padding(
-                    horizontal = 24.dp
-                )
-                .padding(
-                    top = 28.dp,
-                    bottom = 110.dp
+                    top = screenTopPadding(),
+                    bottom = screenBottomPadding()
                 )
         ) {
 

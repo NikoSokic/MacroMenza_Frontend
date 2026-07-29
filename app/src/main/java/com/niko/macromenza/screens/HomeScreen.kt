@@ -27,6 +27,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.niko.macromenza.model.StavkaObroka
 import com.niko.macromenza.session.UserSessionManager
+import com.niko.macromenza.ui.components.screenBottomPadding
+import com.niko.macromenza.ui.components.screenTopPadding
 import com.niko.macromenza.ui.theme.MacroGreen
 import com.niko.macromenza.ui.theme.MacroLightGreen
 import com.niko.macromenza.ui.theme.MacroText
@@ -96,13 +98,12 @@ fun HomeScreen(
 
         LazyColumn(
             modifier = Modifier
-                .fillMaxSize()
-                .statusBarsPadding(),
+                .fillMaxSize(),
             contentPadding = PaddingValues(
                 start = 20.dp,
-                top = 22.dp,
+                top = screenTopPadding(),
                 end = 20.dp,
-                bottom = 110.dp
+                bottom = screenBottomPadding()
             ),
             verticalArrangement = Arrangement.spacedBy(18.dp)
         ) {

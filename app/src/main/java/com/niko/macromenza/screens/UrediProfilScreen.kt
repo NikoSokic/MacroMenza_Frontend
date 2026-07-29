@@ -25,6 +25,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.niko.macromenza.session.UserSessionManager
+import com.niko.macromenza.ui.components.screenBottomPadding
+import com.niko.macromenza.ui.components.screenTopPadding
 import com.niko.macromenza.ui.theme.MacroGreen
 import com.niko.macromenza.ui.theme.MacroLightGreen
 import com.niko.macromenza.ui.theme.MacroText
@@ -99,8 +101,8 @@ fun UrediProfilScreen(
                 )
                 .padding(horizontal = 22.dp)
                 .padding(
-                    top = 22.dp,
-                    bottom = 110.dp
+                    top = screenTopPadding(),
+                    bottom = screenBottomPadding()
                 )
         ) {
 
@@ -142,10 +144,10 @@ fun UrediProfilScreen(
 
                     Text(
                         text = "Uredi profil",
-                        fontSize = 30.sp,
+                        fontSize = 24.sp,
                         fontWeight = FontWeight.Bold,
                         color = MacroText,
-                        maxLines = 1,
+                        maxLines = 2,
                         overflow = TextOverflow.Ellipsis
                     )
 
