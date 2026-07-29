@@ -16,7 +16,8 @@ import androidx.activity.SystemBarStyle
 import androidx.compose.ui.graphics.toArgb
 import com.niko.macromenza.ui.theme.MacroBackground
 import com.niko.macromenza.ui.theme.MacroDark
-
+import androidx.core.view.WindowCompat
+import androidx.compose.runtime.SideEffect
 class MainActivity : ComponentActivity() {
 
     override fun onCreate(
@@ -62,6 +63,14 @@ class MainActivity : ComponentActivity() {
                     AppTheme.DARK ->
                         true
                 }
+            SideEffect {
+                WindowCompat
+                    .getInsetsController(
+                        window,
+                        window.decorView
+                    )
+                    .isAppearanceLightStatusBars = !useDarkTheme
+            }
 
             MacroMenzaTheme(
                 darkTheme = useDarkTheme
