@@ -31,8 +31,6 @@ import com.niko.macromenza.ui.components.screenBottomPadding
 import com.niko.macromenza.ui.components.screenTopPadding
 import com.niko.macromenza.ui.theme.MacroGreen
 import com.niko.macromenza.ui.theme.MacroLightGreen
-import com.niko.macromenza.ui.theme.MacroText
-import com.niko.macromenza.ui.theme.MacroTextSecondary
 import com.niko.macromenza.viewmodel.AuthViewModel
 import com.niko.macromenza.viewmodel.AuthViewModelFactory
 import com.niko.macromenza.viewmodel.ProfilViewModel
@@ -97,7 +95,7 @@ fun ProfilScreen(
                 )
                 .clip(CircleShape)
                 .background(
-                    MacroLightGreen.copy(alpha = 0.10f)
+                    MaterialTheme.colorScheme.primary.copy(alpha = 0.10f)
                 )
         )
 
@@ -116,13 +114,13 @@ fun ProfilScreen(
                 text = "Profil",
                 fontSize = 34.sp,
                 fontWeight = FontWeight.Bold,
-                color = MacroText
+                color = MaterialTheme.colorScheme.onSurface
             )
 
             Text(
                 text = "Tvoj račun i postavke",
                 fontSize = 17.sp,
-                color = MacroTextSecondary
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             Spacer(
@@ -167,7 +165,7 @@ fun ProfilScreen(
                                 },
                         fontSize = 23.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MacroText,
+                        color = MaterialTheme.colorScheme.onSurface,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -222,7 +220,7 @@ fun ProfilScreen(
                 text = "Tvoj cilj",
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Bold,
-                color = MacroText
+                color = MaterialTheme.colorScheme.onSurface
             )
 
             Spacer(
@@ -247,7 +245,7 @@ fun ProfilScreen(
                 text = "Postavke",
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Bold,
-                color = MacroText
+                color = MaterialTheme.colorScheme.onSurface
             )
 
             Spacer(
@@ -369,7 +367,7 @@ fun ProfileAvatar(
     Surface(
         modifier = Modifier.size(80.dp),
         shape = CircleShape,
-        color = MacroLightGreen.copy(
+        color = MaterialTheme.colorScheme.primary.copy(
             alpha = 0.20f
         )
     ) {
@@ -395,7 +393,7 @@ private fun ProfileGoalCard(
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
-        color = MacroLightGreen.copy(
+        color = MaterialTheme.colorScheme.primary.copy(
             alpha = 0.16f
         )
     ) {
@@ -408,7 +406,7 @@ private fun ProfileGoalCard(
             Surface(
                 modifier = Modifier.size(50.dp),
                 shape = RoundedCornerShape(16.dp),
-                color = MacroLightGreen.copy(
+                color = MaterialTheme.colorScheme.primary.copy(
                     alpha = 0.28f
                 )
             ) {
@@ -436,7 +434,7 @@ private fun ProfileGoalCard(
                     text = title,
                     fontSize = 17.sp,
                     fontWeight = FontWeight.Bold,
-                    color = MacroText,
+                    color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -452,7 +450,7 @@ private fun ProfileGoalCard(
                         } else {
                             "Dnevna preporuka nije postavljena"
                         },
-                    color = MacroTextSecondary,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = 14.sp,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
@@ -500,7 +498,7 @@ fun ProfileMenuItem(
             Surface(
                 modifier = Modifier.size(46.dp),
                 shape = RoundedCornerShape(14.dp),
-                color = MacroLightGreen.copy(
+                color = MaterialTheme.colorScheme.primary.copy(
                     alpha = 0.18f
                 )
             ) {
@@ -540,7 +538,7 @@ fun ProfileMenuItem(
                     text = title,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = MacroText,
+                    color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -552,7 +550,7 @@ fun ProfileMenuItem(
                 Text(
                     text = subtitle,
                     fontSize = 13.sp,
-                    color = MacroTextSecondary,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -566,7 +564,7 @@ fun ProfileMenuItem(
                 imageVector =
                     Icons.AutoMirrored.Filled.ArrowForwardIos,
                 contentDescription = null,
-                tint = MacroTextSecondary,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(15.dp)
             )
         }

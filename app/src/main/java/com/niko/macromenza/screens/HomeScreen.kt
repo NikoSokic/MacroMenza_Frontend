@@ -31,8 +31,6 @@ import com.niko.macromenza.ui.components.screenBottomPadding
 import com.niko.macromenza.ui.components.screenTopPadding
 import com.niko.macromenza.ui.theme.MacroGreen
 import com.niko.macromenza.ui.theme.MacroLightGreen
-import com.niko.macromenza.ui.theme.MacroText
-import com.niko.macromenza.ui.theme.MacroTextSecondary
 import com.niko.macromenza.viewmodel.HomeViewModel
 
 // Boje koristimo samo za razlikovanje makronutrijenata
@@ -93,7 +91,7 @@ fun HomeScreen(
                 .size(230.dp)
                 .offset(x = 150.dp, y = (-110).dp)
                 .clip(CircleShape)
-                .background(MacroLightGreen.copy(alpha = 0.08f))
+                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.08f))
         )
 
         LazyColumn(
@@ -115,7 +113,7 @@ fun HomeScreen(
                         text = "Danas",
                         fontSize = 34.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MacroText
+                        color = MaterialTheme.colorScheme.onSurface
                     )
 
                     Spacer(modifier = Modifier.height(3.dp))
@@ -123,7 +121,7 @@ fun HomeScreen(
                     Text(
                         text = "Tvoj dnevni pregled",
                         style = MaterialTheme.typography.bodyLarge,
-                        color = MacroTextSecondary
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -134,7 +132,7 @@ fun HomeScreen(
                     Surface(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(20.dp),
-                        color = MacroLightGreen.copy(alpha = 0.14f)
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)
                     ) {
                         Column(
                             modifier = Modifier.padding(18.dp)
@@ -142,7 +140,7 @@ fun HomeScreen(
                             Text(
                                 text = "Postavi svoje ciljeve",
                                 fontWeight = FontWeight.SemiBold,
-                                color = MacroText
+                                color = MaterialTheme.colorScheme.onSurface
                             )
 
                             Spacer(modifier = Modifier.height(5.dp))
@@ -150,7 +148,7 @@ fun HomeScreen(
                             Text(
                                 text = "Otvori Profil → Postavke ciljeva kako bismo izračunali tvoju dnevnu preporuku.",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MacroTextSecondary
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
@@ -484,7 +482,7 @@ private fun MacroMiniCard(
 
             Text(
                 text = naziv,
-                color = MacroTextSecondary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontSize = 12.sp,
                 maxLines = 1
             )
@@ -493,14 +491,14 @@ private fun MacroMiniCard(
 
             Text(
                 text = "%.0fg".format(vrijednost),
-                color = MacroText,
+                color = MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.Bold,
                 fontSize = 20.sp
             )
 
             Text(
                 text = "/ %.0fg".format(cilj),
-                color = MacroTextSecondary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontSize = 11.sp
             )
 
@@ -564,7 +562,7 @@ private fun InsightCard(
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(22.dp),
-        color = MacroLightGreen.copy(alpha = 0.14f)
+        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)
     ) {
         Row(
             modifier = Modifier.padding(18.dp),
@@ -590,7 +588,7 @@ private fun InsightCard(
             Column {
                 Text(
                     text = naslov,
-                    color = MacroText,
+                    color = MaterialTheme.colorScheme.onSurface,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 16.sp
                 )
@@ -599,7 +597,7 @@ private fun InsightCard(
 
                 Text(
                     text = poruka,
-                    color = MacroTextSecondary,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.bodySmall
                 )
             }
@@ -636,14 +634,14 @@ private fun QuickMealCard(
                     .size(38.dp)
                     .clip(RoundedCornerShape(12.dp))
                     .background(
-                        MacroLightGreen.copy(alpha = 0.20f)
+                        MaterialTheme.colorScheme.primary.copy(alpha = 0.20f)
                     ),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Default.Restaurant,
                     contentDescription = null,
-                    tint = MacroGreen,
+                    tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -653,7 +651,7 @@ private fun QuickMealCard(
             Text(
                 text = label,
                 modifier = Modifier.weight(1f),
-                color = MacroText,
+                color = MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 14.sp,
                 maxLines = 1,
@@ -703,14 +701,14 @@ private fun EmptyMealsCard() {
                     .size(58.dp)
                     .clip(CircleShape)
                     .background(
-                        MacroLightGreen.copy(alpha = 0.18f)
+                        MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)
                     ),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Default.Restaurant,
                     contentDescription = null,
-                    tint = MacroGreen,
+                    tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(27.dp)
                 )
             }
@@ -719,7 +717,7 @@ private fun EmptyMealsCard() {
 
             Text(
                 text = "Još nema obroka",
-                color = MacroText,
+                color = MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 17.sp
             )
@@ -728,7 +726,7 @@ private fun EmptyMealsCard() {
 
             Text(
                 text = "Dodaj prvi današnji obrok i počni pratiti svoj unos.",
-                color = MacroTextSecondary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 style = MaterialTheme.typography.bodySmall,
                 textAlign = TextAlign.Center
             )
@@ -744,7 +742,7 @@ private fun SectionTitle(
     Column {
         Text(
             text = title,
-            color = MacroText,
+            color = MaterialTheme.colorScheme.onSurface,
             fontSize = 22.sp,
             fontWeight = FontWeight.Bold
         )
@@ -753,7 +751,7 @@ private fun SectionTitle(
 
         Text(
             text = subtitle,
-            color = MacroTextSecondary,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             style = MaterialTheme.typography.bodySmall
         )
     }
@@ -765,7 +763,7 @@ private fun MealTypeHeader(
 ) {
     Text(
         text = formatMealType(tip),
-        color = MacroText,
+        color = MaterialTheme.colorScheme.onSurface,
         fontSize = 16.sp,
         fontWeight = FontWeight.SemiBold
     )
@@ -805,14 +803,14 @@ fun DanasnjiObrokItem(
                         .size(50.dp)
                         .clip(RoundedCornerShape(16.dp))
                         .background(
-                            MacroLightGreen.copy(alpha = 0.18f)
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)
                         ),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Default.Restaurant,
                         contentDescription = null,
-                        tint = MacroGreen,
+                        tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(24.dp)
                     )
                 }
@@ -824,7 +822,7 @@ fun DanasnjiObrokItem(
                 ) {
                     Text(
                         text = stavka.nazivJela,
-                        color = MacroText,
+                        color = MaterialTheme.colorScheme.onSurface,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 17.sp
                     )
@@ -833,7 +831,7 @@ fun DanasnjiObrokItem(
 
                     Text(
                         text = "Evidentirani obrok",
-                        color = MacroTextSecondary,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontSize = 12.sp
                     )
                 }
@@ -850,7 +848,7 @@ fun DanasnjiObrokItem(
 
                     Text(
                         text = "kcal",
-                        color = MacroTextSecondary,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontSize = 11.sp
                     )
                 }
@@ -859,7 +857,9 @@ fun DanasnjiObrokItem(
             Spacer(modifier = Modifier.height(14.dp))
 
             HorizontalDivider(
-                color = MacroTextSecondary.copy(alpha = 0.10f)
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(
+                    alpha = 0.12f
+                )
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -908,7 +908,7 @@ private fun MacroValue(
 
         Text(
             text = label,
-            color = MacroTextSecondary,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             fontSize = 11.sp
         )
     }

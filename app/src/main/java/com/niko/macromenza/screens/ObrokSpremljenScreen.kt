@@ -19,8 +19,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.niko.macromenza.ui.theme.MacroGreen
 import com.niko.macromenza.ui.theme.MacroLightGreen
-import com.niko.macromenza.ui.theme.MacroText
-import com.niko.macromenza.ui.theme.MacroTextSecondary
+
 
 @Composable
 fun ObrokSpremljenScreen(
@@ -42,7 +41,7 @@ fun ObrokSpremljenScreen(
                 .offset(x = (-120).dp, y = (-100).dp)
                 .clip(CircleShape)
                 .background(
-                    MacroLightGreen.copy(alpha = 0.10f)
+                    MaterialTheme.colorScheme.primary.copy(alpha = 0.10f)
                 )
         )
 
@@ -111,7 +110,7 @@ fun ObrokSpremljenScreen(
 
                     Text(
                         text = "Obrok spremljen",
-                        color = MacroText,
+                        color = MaterialTheme.colorScheme.onSurface,
                         fontSize = 28.sp,
                         fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Center
@@ -121,7 +120,7 @@ fun ObrokSpremljenScreen(
 
                     Text(
                         text = "$nazivObroka je uspješno dodan u današnji unos.",
-                        color = MacroTextSecondary,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         style = MaterialTheme.typography.bodyLarge,
                         textAlign = TextAlign.Center
                     )
@@ -130,11 +129,11 @@ fun ObrokSpremljenScreen(
 
                     Surface(
                         shape = RoundedCornerShape(16.dp),
-                        color = MacroLightGreen.copy(alpha = 0.16f)
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.16f)
                     ) {
                         Text(
                             text = "Sve promjene možeš odmah vidjeti na početnom zaslonu.",
-                            color = MacroTextSecondary,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             style = MaterialTheme.typography.bodySmall,
                             textAlign = TextAlign.Center,
                             modifier = Modifier.padding(

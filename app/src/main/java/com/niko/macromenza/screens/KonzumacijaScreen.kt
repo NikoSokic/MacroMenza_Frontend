@@ -19,8 +19,6 @@ import com.niko.macromenza.ui.components.screenBottomPadding
 import com.niko.macromenza.ui.components.screenTopPadding
 import com.niko.macromenza.ui.theme.MacroGreen
 import com.niko.macromenza.ui.theme.MacroLightGreen
-import com.niko.macromenza.ui.theme.MacroText
-import com.niko.macromenza.ui.theme.MacroTextSecondary
 
 @Composable
 fun KonzumacijaScreen(
@@ -39,7 +37,7 @@ fun KonzumacijaScreen(
                 .offset(x = 150.dp, y = (-110).dp)
                 .clip(CircleShape)
                 .background(
-                    MacroLightGreen.copy(alpha = 0.08f)
+                    MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)
                 )
         )
 
@@ -54,7 +52,7 @@ fun KonzumacijaScreen(
                 text = "Što jedeš?",
                 fontSize = 34.sp,
                 fontWeight = FontWeight.Bold,
-                color = MacroText
+                color = MaterialTheme.colorScheme.onSurface
             )
 
             Spacer(modifier = Modifier.height(4.dp))
@@ -62,7 +60,7 @@ fun KonzumacijaScreen(
             Text(
                 text = "Odaberi vrstu obroka koju želiš evidentirati.",
                 style = MaterialTheme.typography.bodyLarge,
-                color = MacroTextSecondary
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             Spacer(modifier = Modifier.height(30.dp))
@@ -128,7 +126,7 @@ private fun MealSelectionCard(
         },
         modifier = modifier.height(165.dp),
         shape = RoundedCornerShape(24.dp),
-        color = MacroLightGreen.copy(alpha = 0.13f),
+        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.13f),
         tonalElevation = 0.dp
     ) {
         Column(
@@ -160,7 +158,7 @@ private fun MealSelectionCard(
 
             Text(
                 text = title,
-                color = MacroText,
+                color = MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.Bold,
                 fontSize = 19.sp
             )
@@ -169,7 +167,7 @@ private fun MealSelectionCard(
 
             Text(
                 text = subtitle,
-                color = MacroTextSecondary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontSize = 12.sp
             )
         }

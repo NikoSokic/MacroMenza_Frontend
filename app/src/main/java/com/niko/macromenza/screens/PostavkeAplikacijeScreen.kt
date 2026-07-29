@@ -33,8 +33,7 @@ import com.niko.macromenza.ui.components.screenTopPadding
 import com.niko.macromenza.ui.theme.AppTheme
 import com.niko.macromenza.ui.theme.MacroGreen
 import com.niko.macromenza.ui.theme.MacroLightGreen
-import com.niko.macromenza.ui.theme.MacroText
-import com.niko.macromenza.ui.theme.MacroTextSecondary
+
 import kotlinx.coroutines.launch
 
 @Composable
@@ -70,7 +69,7 @@ fun PostavkeAplikacijeScreen(
                 )
                 .clip(CircleShape)
                 .background(
-                    MacroLightGreen.copy(alpha = 0.10f)
+                    MaterialTheme.colorScheme.primary.copy(alpha = 0.10f)
                 )
         )
 
@@ -99,7 +98,7 @@ fun PostavkeAplikacijeScreen(
                     },
                     modifier = Modifier.size(46.dp),
                     shape = CircleShape,
-                    color = MacroLightGreen.copy(
+                    color = MaterialTheme.colorScheme.primary.copy(
                         alpha = 0.16f
                     )
                 ) {
@@ -127,14 +126,14 @@ fun PostavkeAplikacijeScreen(
                         text = "Postavke aplikacije",
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MacroText,
+                        color = MaterialTheme.colorScheme.onSurface,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis
                     )
 
                     Text(
                         text = "Prilagodi MacroMenzu sebi",
-                        color = MacroTextSecondary,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         style = MaterialTheme.typography.bodyMedium,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis
@@ -232,7 +231,7 @@ fun PostavkeAplikacijeScreen(
 
                 HorizontalDivider(
                     color =
-                        MacroTextSecondary.copy(
+                        MaterialTheme.colorScheme.onSurfaceVariant.copy(
                             alpha = 0.10f
                         )
                 )
@@ -253,7 +252,7 @@ fun PostavkeAplikacijeScreen(
 
                 HorizontalDivider(
                     color =
-                        MacroTextSecondary.copy(
+                        MaterialTheme.colorScheme.onSurfaceVariant.copy(
                             alpha = 0.10f
                         )
                 )
@@ -289,7 +288,7 @@ fun PostavkeAplikacijeScreen(
                         modifier = Modifier.size(58.dp),
                         shape = RoundedCornerShape(18.dp),
                         color =
-                            MacroLightGreen.copy(
+                            MaterialTheme.colorScheme.primary.copy(
                                 alpha = 0.20f
                             )
                     ) {
@@ -318,14 +317,14 @@ fun PostavkeAplikacijeScreen(
                             text = "MacroMenza",
                             fontSize = 19.sp,
                             fontWeight = FontWeight.Bold,
-                            color = MacroText,
+                            color = MaterialTheme.colorScheme.onSurface,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
 
                         Text(
                             text = "Verzija 1.0",
-                            color = MacroTextSecondary,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             style =
                                 MaterialTheme.typography
                                     .bodySmall,
@@ -341,7 +340,7 @@ fun PostavkeAplikacijeScreen(
                 Text(
                     text =
                         "Aplikacija za praćenje prehrane, kalorija i makronutrijenata u menzi.",
-                    color = MacroTextSecondary,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     style =
                         MaterialTheme.typography.bodyMedium
                 )
@@ -395,7 +394,7 @@ private fun AppSettingsCard(
                     modifier = Modifier.size(46.dp),
                     shape = RoundedCornerShape(15.dp),
                     color =
-                        MacroLightGreen.copy(
+                        MaterialTheme.colorScheme.primary.copy(
                             alpha = 0.18f
                         )
                 ) {
@@ -424,7 +423,7 @@ private fun AppSettingsCard(
                         text = title,
                         fontSize = 18.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = MacroText,
+                        color = MaterialTheme.colorScheme.onSurface,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -437,7 +436,7 @@ private fun AppSettingsCard(
                         text = subtitle,
                         style =
                             MaterialTheme.typography.bodySmall,
-                        color = MacroTextSecondary,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -469,7 +468,7 @@ private fun ThemeOption(
         shape = RoundedCornerShape(18.dp),
         color =
             if (selected) {
-                MacroLightGreen.copy(
+                MaterialTheme.colorScheme.primary.copy(
                     alpha = 0.22f
                 )
             } else {
@@ -485,7 +484,7 @@ private fun ThemeOption(
                 androidx.compose.foundation.BorderStroke(
                     width = 1.dp,
                     color =
-                        MacroTextSecondary.copy(
+                        MaterialTheme.colorScheme.onSurfaceVariant.copy(
                             alpha = 0.15f
                         )
                 )
@@ -512,7 +511,7 @@ private fun ThemeOption(
                     if (selected) {
                         MacroGreen
                     } else {
-                        MacroTextSecondary
+                        MaterialTheme.colorScheme.onSurfaceVariant
                     },
                 modifier = Modifier.size(25.dp)
             )
@@ -533,7 +532,7 @@ private fun ThemeOption(
                     if (selected) {
                         MacroGreen
                     } else {
-                        MacroText
+                        MaterialTheme.colorScheme.onSurface
                     },
                 fontSize = 13.sp,
                 maxLines = 1,
@@ -561,7 +560,7 @@ private fun StatusRow(
 
             Text(
                 text = title,
-                color = MacroTextSecondary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontSize = 12.sp,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
@@ -573,7 +572,7 @@ private fun StatusRow(
 
             Text(
                 text = value,
-                color = MacroText,
+                color = MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 15.sp,
                 maxLines = 2,
@@ -588,7 +587,7 @@ private fun StatusRow(
         Surface(
             shape = RoundedCornerShape(50),
             color =
-                MacroLightGreen.copy(
+                MaterialTheme.colorScheme.primary.copy(
                     alpha = 0.22f
                 )
         ) {
@@ -637,7 +636,7 @@ private fun InfoRow(
         Text(
             text = title,
             modifier = Modifier.weight(1f),
-            color = MacroTextSecondary,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             fontSize = 13.sp,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis
@@ -650,7 +649,7 @@ private fun InfoRow(
         Text(
             text = value,
             modifier = Modifier.weight(1f),
-            color = MacroText,
+            color = MaterialTheme.colorScheme.onSurface,
             fontWeight = FontWeight.Medium,
             fontSize = 13.sp,
             textAlign = TextAlign.End,

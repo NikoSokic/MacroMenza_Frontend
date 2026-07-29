@@ -31,8 +31,6 @@ import com.niko.macromenza.ui.components.screenBottomPadding
 import com.niko.macromenza.ui.components.screenTopPadding
 import com.niko.macromenza.ui.theme.MacroGreen
 import com.niko.macromenza.ui.theme.MacroLightGreen
-import com.niko.macromenza.ui.theme.MacroText
-import com.niko.macromenza.ui.theme.MacroTextSecondary
 import com.niko.macromenza.viewmodel.MjereViewModel
 
 @Composable
@@ -77,7 +75,7 @@ fun MojeMjereScreen(
                 )
                 .clip(CircleShape)
                 .background(
-                    MacroLightGreen.copy(alpha = 0.10f)
+                    MaterialTheme.colorScheme.primary.copy(alpha = 0.10f)
                 )
         )
 
@@ -107,7 +105,7 @@ fun MojeMjereScreen(
                         },
                         modifier = Modifier.size(46.dp),
                         shape = CircleShape,
-                        color = MacroLightGreen.copy(
+                        color = MaterialTheme.colorScheme.primary.copy(
                             alpha = 0.16f
                         )
                     ) {
@@ -138,7 +136,7 @@ fun MojeMjereScreen(
                             text = "Moje mjere",
                             fontSize = 24.sp,
                             fontWeight = FontWeight.Bold,
-                            color = MacroText,
+                            color = MaterialTheme.colorScheme.onSurface,
                             maxLines = 2,
                             overflow =
                                 TextOverflow.Ellipsis
@@ -147,7 +145,7 @@ fun MojeMjereScreen(
                         Text(
                             text =
                                 "Prati promjene kroz vrijeme",
-                            color = MacroTextSecondary,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             style =
                                 MaterialTheme.typography
                                     .bodyMedium,
@@ -205,7 +203,7 @@ fun MojeMjereScreen(
                         text = "Povijest mjerenja",
                         fontSize = 22.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MacroText,
+                        color = MaterialTheme.colorScheme.onSurface,
                         maxLines = 1,
                         overflow =
                             TextOverflow.Ellipsis
@@ -218,7 +216,7 @@ fun MojeMjereScreen(
                     Text(
                         text =
                             "Pregled prethodnih mjerenja i ciljeva.",
-                        color = MacroTextSecondary,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         style =
                             MaterialTheme.typography
                                 .bodySmall,
@@ -385,7 +383,7 @@ fun MjerenjeItem(
                         fontSize = 15.sp,
                         fontWeight =
                             FontWeight.SemiBold,
-                        color = MacroTextSecondary,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,
                         overflow =
                             TextOverflow.Ellipsis
@@ -402,7 +400,7 @@ fun MjerenjeItem(
                             ),
                         fontSize = 25.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MacroText,
+                        color = MaterialTheme.colorScheme.onSurface,
                         maxLines = 1,
                         overflow =
                             TextOverflow.Ellipsis
@@ -417,7 +415,7 @@ fun MjerenjeItem(
                     modifier = Modifier.size(46.dp),
                     shape = RoundedCornerShape(15.dp),
                     color =
-                        MacroLightGreen.copy(
+                        MaterialTheme.colorScheme.primary.copy(
                             alpha = 0.18f
                         )
                 ) {
@@ -443,7 +441,7 @@ fun MjerenjeItem(
 
             HorizontalDivider(
                 color =
-                    MacroTextSecondary.copy(
+                    MaterialTheme.colorScheme.onSurfaceVariant.copy(
                         alpha = 0.10f
                     )
             )
@@ -499,7 +497,7 @@ private fun MeasurementMeta(
             modifier = Modifier.size(34.dp),
             shape = RoundedCornerShape(11.dp),
             color =
-                MacroLightGreen.copy(
+                MaterialTheme.colorScheme.primary.copy(
                     alpha = 0.16f
                 )
         ) {
@@ -525,7 +523,7 @@ private fun MeasurementMeta(
 
             Text(
                 text = label,
-                color = MacroTextSecondary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontSize = 11.sp,
                 maxLines = 1,
                 overflow =
@@ -534,7 +532,7 @@ private fun MeasurementMeta(
 
             Text(
                 text = value,
-                color = MacroText,
+                color = MaterialTheme.colorScheme.onSurface,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.SemiBold,
                 maxLines = 2,
@@ -551,7 +549,7 @@ private fun EmptyMeasurementsCard() {
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(22.dp),
         color =
-            MacroLightGreen.copy(alpha = 0.12f)
+            MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
     ) {
 
         Column(
@@ -560,7 +558,7 @@ private fun EmptyMeasurementsCard() {
 
             Text(
                 text = "Još nema mjerenja",
-                color = MacroText,
+                color = MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.Bold,
                 fontSize = 17.sp,
                 maxLines = 1,
@@ -575,7 +573,7 @@ private fun EmptyMeasurementsCard() {
             Text(
                 text =
                     "Postavi ili promijeni cilj kako bi se spremilo novo mjerenje.",
-                color = MacroTextSecondary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 style =
                     MaterialTheme.typography.bodyMedium
             )

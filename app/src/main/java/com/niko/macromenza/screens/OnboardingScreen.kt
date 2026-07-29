@@ -29,8 +29,6 @@ import com.niko.macromenza.model.RegistracijaProfilRequest
 import com.niko.macromenza.session.UserSessionManager
 import com.niko.macromenza.ui.theme.MacroGreen
 import com.niko.macromenza.ui.theme.MacroLightGreen
-import com.niko.macromenza.ui.theme.MacroText
-import com.niko.macromenza.ui.theme.MacroTextSecondary
 import kotlinx.coroutines.launch
 
 @Composable
@@ -68,7 +66,7 @@ fun OnboardingScreen(
                 .size(220.dp)
                 .offset(x = (-120).dp, y = (-90).dp)
                 .clip(CircleShape)
-                .background(MacroLightGreen.copy(alpha = 0.12f))
+                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f))
         )
 
         Box(
@@ -92,7 +90,7 @@ fun OnboardingScreen(
                 modifier = Modifier
                     .size(68.dp)
                     .clip(RoundedCornerShape(20.dp))
-                    .background(MacroLightGreen.copy(alpha = 0.18f)),
+                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
@@ -109,7 +107,7 @@ fun OnboardingScreen(
                 text = "Još samo par detalja",
                 fontSize = 30.sp,
                 fontWeight = FontWeight.Bold,
-                color = MacroText
+                color = MaterialTheme.colorScheme.onSurface
             )
 
             Spacer(modifier = Modifier.height(6.dp))
@@ -117,7 +115,7 @@ fun OnboardingScreen(
             Text(
                 text = "Ovi podaci služe za izračun tvoje dnevne preporuke.",
                 style = MaterialTheme.typography.bodyLarge,
-                color = MacroTextSecondary
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -131,7 +129,7 @@ fun OnboardingScreen(
                     text = "Postavljanje profila",
                     style = MaterialTheme.typography.bodySmall,
                     fontWeight = FontWeight.Medium,
-                    color = MacroTextSecondary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
                 Text(
@@ -151,7 +149,7 @@ fun OnboardingScreen(
                     .height(6.dp)
                     .clip(RoundedCornerShape(50)),
                 color = MacroGreen,
-                trackColor = MacroLightGreen.copy(alpha = 0.18f)
+                trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)
             )
 
             Spacer(modifier = Modifier.height(30.dp))
@@ -187,7 +185,7 @@ fun OnboardingScreen(
                 Text(
                     text = "Spol",
                     fontWeight = FontWeight.SemiBold,
-                    color = MacroText
+                    color = MaterialTheme.colorScheme.onSurface
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -483,7 +481,7 @@ private fun SectionCard(
                     modifier = Modifier
                         .size(42.dp)
                         .clip(RoundedCornerShape(13.dp))
-                        .background(MacroLightGreen.copy(alpha = 0.18f)),
+                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
@@ -500,7 +498,7 @@ private fun SectionCard(
                     text = title,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = MacroText
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
 
@@ -541,7 +539,7 @@ private fun GoalOption(
         shape = RoundedCornerShape(16.dp),
         color =
             if (selected) {
-                MacroLightGreen.copy(alpha = 0.18f)
+                MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)
             } else {
                 MaterialTheme.colorScheme.background
             },
@@ -554,7 +552,7 @@ private fun GoalOption(
             } else {
                 androidx.compose.foundation.BorderStroke(
                     1.dp,
-                    MacroTextSecondary.copy(alpha = 0.20f)
+                    MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.20f)
                 )
             }
     ) {
@@ -576,7 +574,7 @@ private fun GoalOption(
                 Text(
                     text = title,
                     fontWeight = FontWeight.SemiBold,
-                    color = MacroText
+                    color = MaterialTheme.colorScheme.onSurface
                 )
 
                 Spacer(modifier = Modifier.height(2.dp))
@@ -584,7 +582,7 @@ private fun GoalOption(
                 Text(
                     text = description,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MacroTextSecondary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
@@ -602,6 +600,6 @@ private fun onboardingFieldColors() =
 @Composable
 private fun onboardingChipColors() =
     FilterChipDefaults.filterChipColors(
-        selectedContainerColor = MacroLightGreen.copy(alpha = 0.22f),
+        selectedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.22f),
         selectedLabelColor = MacroGreen
     )

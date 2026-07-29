@@ -30,8 +30,6 @@ import com.niko.macromenza.ui.components.screenBottomPadding
 import com.niko.macromenza.ui.components.screenTopPadding
 import com.niko.macromenza.ui.theme.MacroGreen
 import com.niko.macromenza.ui.theme.MacroLightGreen
-import com.niko.macromenza.ui.theme.MacroText
-import com.niko.macromenza.ui.theme.MacroTextSecondary
 import com.niko.macromenza.viewmodel.CiljeviViewModel
 
 @Composable
@@ -81,7 +79,7 @@ fun PostavkeCiljevaScreen(
                 )
                 .clip(CircleShape)
                 .background(
-                    MacroLightGreen.copy(alpha = 0.10f)
+                    MaterialTheme.colorScheme.primary.copy(alpha = 0.10f)
                 )
         )
 
@@ -110,7 +108,7 @@ fun PostavkeCiljevaScreen(
                     },
                     modifier = Modifier.size(46.dp),
                     shape = CircleShape,
-                    color = MacroLightGreen.copy(
+                    color = MaterialTheme.colorScheme.primary.copy(
                         alpha = 0.16f
                     )
                 ) {
@@ -138,14 +136,14 @@ fun PostavkeCiljevaScreen(
                         text = "Postavke ciljeva",
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MacroText,
+                        color = MaterialTheme.colorScheme.onSurface,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis
                     )
 
                     Text(
                         text = "Prilagodi dnevnu preporuku",
-                        color = MacroTextSecondary,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         style = MaterialTheme.typography.bodyMedium,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis
@@ -244,7 +242,7 @@ fun PostavkeCiljevaScreen(
                 text = "Tvoj cilj",
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Bold,
-                color = MacroText
+                color = MaterialTheme.colorScheme.onSurface
             )
 
             Spacer(
@@ -253,7 +251,7 @@ fun PostavkeCiljevaScreen(
 
             Text(
                 text = "Odaberi što želiš postići.",
-                color = MacroTextSecondary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 style = MaterialTheme.typography.bodySmall,
                 maxLines = 2
             )
@@ -314,7 +312,7 @@ fun PostavkeCiljevaScreen(
                             RoundedCornerShape(13.dp)
                         )
                         .background(
-                            MacroLightGreen.copy(
+                            MaterialTheme.colorScheme.primary.copy(
                                 alpha = 0.18f
                             )
                         ),
@@ -340,7 +338,7 @@ fun PostavkeCiljevaScreen(
                         text = "Razina aktivnosti",
                         fontSize = 21.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MacroText,
+                        color = MaterialTheme.colorScheme.onSurface,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -348,7 +346,7 @@ fun PostavkeCiljevaScreen(
                     Text(
                         text = "Koliko si aktivan tijekom tjedna?",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MacroTextSecondary,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -452,7 +450,7 @@ fun PostavkeCiljevaScreen(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(16.dp),
                     color =
-                        MacroLightGreen.copy(
+                        MaterialTheme.colorScheme.primary.copy(
                             alpha = 0.18f
                         )
                 ) {
@@ -590,7 +588,7 @@ private fun SettingsSectionCard(
                             RoundedCornerShape(14.dp)
                         )
                         .background(
-                            MacroLightGreen.copy(
+                            MaterialTheme.colorScheme.primary.copy(
                                 alpha = 0.18f
                             )
                         ),
@@ -614,7 +612,7 @@ private fun SettingsSectionCard(
                     modifier = Modifier.weight(1f),
                     fontSize = 19.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = MacroText,
+                    color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -643,7 +641,7 @@ private fun GoalChoiceCard(
         shape = RoundedCornerShape(20.dp),
         color =
             if (selected) {
-                MacroLightGreen.copy(
+                MaterialTheme.colorScheme.primary.copy(
                     alpha = 0.18f
                 )
             } else {
@@ -698,7 +696,7 @@ private fun GoalChoiceCard(
                         if (selected) {
                             MacroGreen
                         } else {
-                            MacroText
+                            MaterialTheme.colorScheme.onSurface
                         },
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
@@ -712,7 +710,7 @@ private fun GoalChoiceCard(
                     text = subtitle,
                     style =
                         MaterialTheme.typography.bodySmall,
-                    color = MacroTextSecondary,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -737,7 +735,7 @@ private fun ActivityChoice(
         shape = RoundedCornerShape(17.dp),
         color =
             if (selected) {
-                MacroLightGreen.copy(
+                MaterialTheme.colorScheme.primary.copy(
                     alpha = 0.22f
                 )
             } else {
@@ -775,7 +773,7 @@ private fun ActivityChoice(
                     if (selected) {
                         MacroGreen
                     } else {
-                        MacroText
+                        MaterialTheme.colorScheme.onSurface
                     },
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis

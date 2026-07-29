@@ -24,8 +24,6 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.niko.macromenza.ui.theme.MacroGreen
 import com.niko.macromenza.ui.theme.MacroLightGreen
-import com.niko.macromenza.ui.theme.MacroText
-import com.niko.macromenza.ui.theme.MacroTextSecondary
 import com.niko.macromenza.viewmodel.AuthViewModel
 
 @Composable
@@ -67,7 +65,7 @@ fun RegisterScreen(
                 .offset(x = (-110).dp, y = (-95).dp)
                 .clip(CircleShape)
                 .background(
-                    MacroLightGreen.copy(alpha = 0.12f)
+                    MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
                 )
         )
 
@@ -97,7 +95,7 @@ fun RegisterScreen(
                     .size(72.dp)
                     .clip(RoundedCornerShape(22.dp))
                     .background(
-                        MacroLightGreen.copy(alpha = 0.18f)
+                        MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)
                     ),
                 contentAlignment = Alignment.Center
             ) {
@@ -115,7 +113,7 @@ fun RegisterScreen(
                 text = "Krenimo",
                 fontSize = 32.sp,
                 fontWeight = FontWeight.Bold,
-                color = MacroText
+                color = MaterialTheme.colorScheme.onSurface
             )
 
             Spacer(modifier = Modifier.height(6.dp))
@@ -123,7 +121,7 @@ fun RegisterScreen(
             Text(
                 text = "Napravi svoj MacroMenza račun.",
                 style = MaterialTheme.typography.bodyLarge,
-                color = MacroTextSecondary
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             Spacer(modifier = Modifier.height(32.dp))
@@ -347,7 +345,7 @@ fun RegisterScreen(
 
                 Text(
                     text = "Već imaš račun?",
-                    color = MacroTextSecondary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
                 TextButton(

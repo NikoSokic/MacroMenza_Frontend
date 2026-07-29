@@ -26,9 +26,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.niko.macromenza.ui.theme.MacroGreen
-import com.niko.macromenza.ui.theme.MacroLightGreen
-import com.niko.macromenza.ui.theme.MacroText
-import com.niko.macromenza.ui.theme.MacroTextSecondary
 
 @Composable
 fun WelcomeScreen(
@@ -55,7 +52,7 @@ fun WelcomeScreen(
                 .offset(x = (-100).dp, y = (-90).dp)
                 .clip(CircleShape)
                 .background(
-                    MacroLightGreen.copy(alpha = 0.12f)
+                    MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
                 )
         )
 
@@ -88,7 +85,7 @@ fun WelcomeScreen(
                     .size(logoSize)
                     .clip(RoundedCornerShape(24.dp))
                     .background(
-                        MacroLightGreen.copy(alpha = 0.18f)
+                        MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)
                     ),
                 contentAlignment = Alignment.Center
             ) {
@@ -109,7 +106,7 @@ fun WelcomeScreen(
             Text(
                 text = "Dobrodošao u",
                 fontSize = if (compactScreen) 26.sp else 30.sp,
-                color = MacroText,
+                color = MaterialTheme.colorScheme.onSurface,
                 textAlign = TextAlign.Center
             )
 
@@ -119,7 +116,7 @@ fun WelcomeScreen(
                 text = buildAnnotatedString {
                     withStyle(
                         SpanStyle(
-                            color = MacroText,
+                            color = MaterialTheme.colorScheme.onSurface,
                             fontWeight = FontWeight.Bold
                         )
                     ) {
@@ -154,7 +151,7 @@ fun WelcomeScreen(
             Text(
                 text = "Prati prehranu i makronutrijente u menzi na jednostavan način.",
                 style = MaterialTheme.typography.bodyLarge,
-                color = MacroTextSecondary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
             )
 
@@ -263,7 +260,7 @@ private fun FeatureItem(
                 .size(58.dp)
                 .clip(RoundedCornerShape(18.dp))
                 .background(
-                    MacroLightGreen.copy(alpha = 0.18f)
+                    MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)
                 ),
             contentAlignment = Alignment.Center
         ) {
@@ -280,7 +277,7 @@ private fun FeatureItem(
         Text(
             text = title,
             style = MaterialTheme.typography.bodyMedium,
-            color = MacroTextSecondary,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center
         )
     }

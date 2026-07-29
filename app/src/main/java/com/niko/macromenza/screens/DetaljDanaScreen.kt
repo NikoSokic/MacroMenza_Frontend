@@ -22,8 +22,6 @@ import com.niko.macromenza.model.StavkaObroka
 import com.niko.macromenza.session.UserSessionManager
 import com.niko.macromenza.ui.theme.MacroGreen
 import com.niko.macromenza.ui.theme.MacroLightGreen
-import com.niko.macromenza.ui.theme.MacroText
-import com.niko.macromenza.ui.theme.MacroTextSecondary
 import com.niko.macromenza.viewmodel.PovijestViewModel
 
 private val DetailProteinBlue = Color(0xFF4F8EF7)
@@ -63,7 +61,7 @@ fun DetaljDanaScreen(
                 .offset(x = 170.dp, y = (-100).dp)
                 .clip(CircleShape)
                 .background(
-                    MacroLightGreen.copy(alpha = 0.09f)
+                    MaterialTheme.colorScheme.primary.copy(alpha = 0.09f)
                 )
         )
 
@@ -84,7 +82,7 @@ fun DetaljDanaScreen(
                         text = "Detalj dana",
                         fontSize = 34.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MacroText
+                        color = MaterialTheme.colorScheme.onSurface
                     )
 
                     Spacer(modifier = Modifier.height(3.dp))
@@ -92,7 +90,7 @@ fun DetaljDanaScreen(
                     Text(
                         text = datum,
                         style = MaterialTheme.typography.bodyLarge,
-                        color = MacroTextSecondary
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -124,7 +122,7 @@ fun DetaljDanaScreen(
                             text = "Obroci",
                             fontSize = 22.sp,
                             fontWeight = FontWeight.Bold,
-                            color = MacroText
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                     }
 
@@ -242,7 +240,7 @@ fun SekcijaObrokaDetalj(
             text = formatDetaljTipObroka(naslov),
             fontSize = 18.sp,
             fontWeight = FontWeight.SemiBold,
-            color = MacroText
+            color = MaterialTheme.colorScheme.onSurface
         )
 
         stavke.forEach { stavka ->
@@ -275,7 +273,7 @@ private fun DetaljObrokItem(
                         .size(48.dp)
                         .clip(RoundedCornerShape(15.dp))
                         .background(
-                            MacroLightGreen.copy(alpha = 0.18f)
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)
                         ),
                     contentAlignment = Alignment.Center
                 ) {
@@ -294,7 +292,7 @@ private fun DetaljObrokItem(
                 ) {
                     Text(
                         text = stavka.nazivJela,
-                        color = MacroText,
+                        color = MaterialTheme.colorScheme.onSurface,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 17.sp
                     )
@@ -303,7 +301,7 @@ private fun DetaljObrokItem(
 
                     Text(
                         text = "Evidentirano jelo",
-                        color = MacroTextSecondary,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
@@ -320,7 +318,7 @@ private fun DetaljObrokItem(
 
                     Text(
                         text = "kcal",
-                        color = MacroTextSecondary,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontSize = 11.sp
                     )
                 }
@@ -329,7 +327,7 @@ private fun DetaljObrokItem(
             Spacer(modifier = Modifier.height(14.dp))
 
             HorizontalDivider(
-                color = MacroTextSecondary.copy(alpha = 0.10f)
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.10f)
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -381,7 +379,7 @@ private fun DetaljMacroValue(
 
         Text(
             text = label,
-            color = MacroTextSecondary,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             fontSize = 11.sp
         )
     }
@@ -392,14 +390,14 @@ private fun EmptyDetailDay() {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
-        color = MacroLightGreen.copy(alpha = 0.12f)
+        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
     ) {
         Column(
             modifier = Modifier.padding(22.dp)
         ) {
             Text(
                 text = "Nema evidentiranih obroka",
-                color = MacroText,
+                color = MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.Bold,
                 fontSize = 17.sp
             )
@@ -408,7 +406,7 @@ private fun EmptyDetailDay() {
 
             Text(
                 text = "Za ovaj datum nije evidentirano nijedno jelo.",
-                color = MacroTextSecondary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 style = MaterialTheme.typography.bodyMedium
             )
         }

@@ -30,9 +30,6 @@ import com.niko.macromenza.session.UserSessionManager
 import com.niko.macromenza.ui.components.screenBottomPadding
 import com.niko.macromenza.ui.components.screenTopPadding
 import com.niko.macromenza.ui.theme.MacroGreen
-import com.niko.macromenza.ui.theme.MacroLightGreen
-import com.niko.macromenza.ui.theme.MacroText
-import com.niko.macromenza.ui.theme.MacroTextSecondary
 import com.niko.macromenza.viewmodel.JelaViewModel
 import kotlinx.coroutines.delay
 
@@ -116,7 +113,7 @@ fun UnosObrokaScreen(
                 .offset(x = 150.dp, y = (-110).dp)
                 .clip(CircleShape)
                 .background(
-                    MacroLightGreen.copy(alpha = 0.08f)
+                    MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)
                 )
         )
 
@@ -136,7 +133,7 @@ fun UnosObrokaScreen(
                     text = formatTipObroka(tipObroka),
                     fontSize = 34.sp,
                     fontWeight = FontWeight.Bold,
-                    color = MacroText
+                    color = MaterialTheme.colorScheme.onSurface
                 )
 
                 Spacer(modifier = Modifier.height(4.dp))
@@ -144,7 +141,7 @@ fun UnosObrokaScreen(
                 Text(
                     text = "Odaberi jela i količinu za svoj obrok.",
                     style = MaterialTheme.typography.bodyLarge,
-                    color = MacroTextSecondary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
                 Spacer(modifier = Modifier.height(24.dp))
@@ -187,7 +184,7 @@ fun UnosObrokaScreen(
                         },
                         modifier = Modifier.size(56.dp),
                         shape = RoundedCornerShape(18.dp),
-                        color = MacroLightGreen.copy(alpha = 0.18f)
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)
                     ) {
                         Box(
                             contentAlignment = Alignment.Center
@@ -257,7 +254,7 @@ fun UnosObrokaScreen(
                     text = "Jela",
                     fontSize = 22.sp,
                     fontWeight = FontWeight.Bold,
-                    color = MacroText
+                    color = MaterialTheme.colorScheme.onSurface
                 )
 
                 Spacer(modifier = Modifier.height(2.dp))
@@ -265,7 +262,7 @@ fun UnosObrokaScreen(
                 Text(
                     text = "Odaberi količinu za svako jelo.",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MacroTextSecondary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
                 Spacer(modifier = Modifier.height(14.dp))
@@ -486,7 +483,7 @@ fun JeloKolicinaItem(
         shape = RoundedCornerShape(22.dp),
         color =
             if (selected) {
-                MacroLightGreen.copy(alpha = 0.14f)
+                MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)
             } else {
                 MaterialTheme.colorScheme.surface
             },
@@ -516,7 +513,7 @@ fun JeloKolicinaItem(
                 ) {
                     Text(
                         text = jelo.naziv,
-                        color = MacroText,
+                        color = MaterialTheme.colorScheme.onSurface,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 17.sp
                     )
@@ -544,7 +541,7 @@ fun JeloKolicinaItem(
 
             HorizontalDivider(
                 color =
-                    MacroTextSecondary.copy(
+                    MaterialTheme.colorScheme.onSurfaceVariant.copy(
                         alpha = 0.09f
                     )
             )
@@ -587,7 +584,7 @@ private fun QuantitySelector(
     Surface(
         shape = RoundedCornerShape(50),
         color =
-            MacroLightGreen.copy(alpha = 0.16f)
+            MaterialTheme.colorScheme.primary.copy(alpha = 0.16f)
     ) {
         Row(
             verticalAlignment =
@@ -607,7 +604,7 @@ private fun QuantitySelector(
                         if (quantity > 0) {
                             MacroGreen
                         } else {
-                            MacroTextSecondary
+                            MaterialTheme.colorScheme.onSurfaceVariant
                                 .copy(alpha = 0.30f)
                         }
                 )
@@ -616,7 +613,7 @@ private fun QuantitySelector(
             Text(
                 text = quantity.toString(),
                 modifier = Modifier.width(30.dp),
-                color = MacroText,
+                color = MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.Bold,
                 fontSize = 16.sp,
                 textAlign =
@@ -667,7 +664,7 @@ private fun FoodMacro(
 
         Text(
             text = label,
-            color = MacroTextSecondary,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             fontSize = 11.sp
         )
     }
@@ -685,7 +682,7 @@ private fun EmptyFoodCard() {
         ) {
             Text(
                 text = "Nema pronađenih jela",
-                color = MacroText,
+                color = MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 17.sp
             )
@@ -694,7 +691,7 @@ private fun EmptyFoodCard() {
 
             Text(
                 text = "Pokušaj promijeniti pretragu ili filter.",
-                color = MacroTextSecondary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 style = MaterialTheme.typography.bodySmall
             )
         }
@@ -748,14 +745,14 @@ private fun FilterBottomSheet(
                 text = "Filtriraj jela",
                 fontSize = 26.sp,
                 fontWeight = FontWeight.Bold,
-                color = MacroText
+                color = MaterialTheme.colorScheme.onSurface
             )
 
             Spacer(modifier = Modifier.height(4.dp))
 
             Text(
                 text = "Postavi raspon koji ti odgovara.",
-                color = MacroTextSecondary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 style = MaterialTheme.typography.bodyMedium
             )
 
@@ -858,7 +855,7 @@ private fun FilterBottomSheet(
             ) {
                 Text(
                     text = "Resetiraj filtere",
-                    color = MacroTextSecondary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
@@ -911,7 +908,7 @@ private fun FilterSectionTitle(
 ) {
     Text(
         text = title,
-        color = MacroText,
+        color = MaterialTheme.colorScheme.onSurface,
         fontWeight = FontWeight.SemiBold,
         fontSize = 15.sp
     )
