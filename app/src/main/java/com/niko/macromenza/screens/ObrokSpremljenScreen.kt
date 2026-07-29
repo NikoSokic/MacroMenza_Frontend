@@ -18,7 +18,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.niko.macromenza.ui.theme.MacroGreen
-import com.niko.macromenza.ui.theme.MacroLightGreen
+import com.niko.macromenza.ui.components.screenBottomPadding
+import com.niko.macromenza.ui.components.screenTopPadding
 
 
 @Composable
@@ -60,8 +61,12 @@ fun ObrokSpremljenScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 28.dp)
-                .padding(top = 72.dp, bottom = 40.dp),
+                .padding(
+                    start = 28.dp,
+                    end = 28.dp,
+                    top = screenTopPadding(),
+                    bottom = screenBottomPadding()
+                ),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 

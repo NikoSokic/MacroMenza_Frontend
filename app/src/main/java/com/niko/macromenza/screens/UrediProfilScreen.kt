@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -18,7 +17,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -28,7 +26,6 @@ import com.niko.macromenza.session.UserSessionManager
 import com.niko.macromenza.ui.components.screenBottomPadding
 import com.niko.macromenza.ui.components.screenTopPadding
 import com.niko.macromenza.ui.theme.MacroGreen
-import com.niko.macromenza.ui.theme.MacroLightGreen
 import com.niko.macromenza.viewmodel.ProfilViewModel
 
 @Composable
@@ -256,16 +253,15 @@ fun UrediProfilScreen(
 
                     OutlinedTextField(
                         value = email,
-                        onValueChange = {
-                            email = it
-                        },
+                        onValueChange = {},
+                        readOnly = true,
                         label = {
                             Text("Email")
                         },
+                        supportingText = {
+                            Text("Email adresa se ne može mijenjati.")
+                        },
                         singleLine = true,
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Email
-                        ),
                         shape = RoundedCornerShape(16.dp),
                         modifier = Modifier.fillMaxWidth(),
                         colors = editProfileFieldColors()
