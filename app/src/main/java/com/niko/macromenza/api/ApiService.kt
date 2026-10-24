@@ -15,6 +15,7 @@ import com.niko.macromenza.model.Mjerenje
 import com.niko.macromenza.model.Preporuka
 import com.niko.macromenza.model.RegistracijaProfilRequest
 import com.niko.macromenza.model.OnboardingStatusResponse
+import com.niko.macromenza.model.MeniDTO
 
 import retrofit2.http.PUT
 import retrofit2.http.Path
@@ -43,6 +44,17 @@ interface ApiService {
         @Query("minMasti") minMasti: Double? = null,
         @Query("maxMasti") maxMasti: Double? = null
     ): List<Jelo>
+
+    @GET("api/meniji")
+    suspend fun getMeniji(
+        @Query("tip") tip: String? = null,
+        @Query("vegetarijanski") vegetarijanski: Boolean? = null
+    ): List<MeniDTO>
+
+    @GET("api/meniji/{id}")
+    suspend fun getMeni(
+        @Path("id") id: Long
+    ): MeniDTO
 
     @GET("api/konzumacije/povijest/{idKorisnik}")
     suspend fun dohvatiPovijestZaDan(
