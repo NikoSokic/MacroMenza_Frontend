@@ -1,11 +1,12 @@
 package com.niko.macromenza.api
 
+import com.niko.macromenza.BuildConfig
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 object RetrofitInstance {
 
-    private const val BASE_URL = "https://macromenza.onrender.com/"
+    private const val BASE_URL = BuildConfig.BASE_URL
 
     val api: ApiService by lazy {
         Retrofit.Builder()

@@ -1,8 +1,17 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
 }
+
+// BASE_URL backenda čita se iz local.properties (ključ macromenza.baseUrl), zadano je emulator -> laptop
+val localProperties = Properties().apply {
+    val datoteka = rootProject.file("local.properties")
+    if (datoteka.exists()) datoteka.inputStream().use { load(it) }
+}
+val baseUrl: String = localProperties.getProperty("macromenza.baseUrl") ?: "http://10.0.2.2:8080/"
 
 android {
     namespace = "com.niko.macromenza"
@@ -16,6 +25,8 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField("String", "BASE_URL", "\"$baseUrl\"")
     }
 
     buildTypes {
@@ -36,6 +47,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
