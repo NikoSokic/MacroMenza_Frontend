@@ -34,14 +34,14 @@ interface ApiService {
 
     @GET("api/jela/filter")
     suspend fun filtrirajJela(
-        @Query("minKalorije") minKalorije: Int? = null,
-        @Query("maxKalorije") maxKalorije: Int? = null,
-        @Query("minProteini") minProteini: Int? = null,
-        @Query("maxProteini") maxProteini: Int? = null,
-        @Query("minUgljikohidrati") minUgljikohidrati: Int? = null,
-        @Query("maxUgljikohidrati") maxUgljikohidrati: Int? = null,
-        @Query("minMasti") minMasti: Int? = null,
-        @Query("maxMasti") maxMasti: Int? = null
+        @Query("minKalorije") minKalorije: Double? = null,
+        @Query("maxKalorije") maxKalorije: Double? = null,
+        @Query("minProteini") minProteini: Double? = null,
+        @Query("maxProteini") maxProteini: Double? = null,
+        @Query("minUgljikohidrati") minUgljikohidrati: Double? = null,
+        @Query("maxUgljikohidrati") maxUgljikohidrati: Double? = null,
+        @Query("minMasti") minMasti: Double? = null,
+        @Query("maxMasti") maxMasti: Double? = null
     ): List<Jelo>
 
     @GET("api/konzumacije/povijest/{idKorisnik}")

@@ -1,5 +1,7 @@
 package com.niko.macromenza.screens
 
+import com.niko.macromenza.util.formatKcal
+import com.niko.macromenza.util.formatMakro
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -324,14 +326,14 @@ fun UnosObrokaScreen(
 
             onApply = {
                 viewModel.filtrirajJela(
-                    minKalorije = minKalorije.toIntOrNull(),
-                    maxKalorije = maxKalorije.toIntOrNull(),
-                    minProteini = minProteini.toIntOrNull(),
-                    maxProteini = maxProteini.toIntOrNull(),
-                    minUgljikohidrati = minUgljikohidrati.toIntOrNull(),
-                    maxUgljikohidrati = maxUgljikohidrati.toIntOrNull(),
-                    minMasti = minMasti.toIntOrNull(),
-                    maxMasti = maxMasti.toIntOrNull()
+                    minKalorije = minKalorije.replace(',', '.').toDoubleOrNull(),
+                    maxKalorije = maxKalorije.replace(',', '.').toDoubleOrNull(),
+                    minProteini = minProteini.replace(',', '.').toDoubleOrNull(),
+                    maxProteini = maxProteini.replace(',', '.').toDoubleOrNull(),
+                    minUgljikohidrati = minUgljikohidrati.replace(',', '.').toDoubleOrNull(),
+                    maxUgljikohidrati = maxUgljikohidrati.replace(',', '.').toDoubleOrNull(),
+                    minMasti = minMasti.replace(',', '.').toDoubleOrNull(),
+                    maxMasti = maxMasti.replace(',', '.').toDoubleOrNull()
                 )
 
                 showFilterSheet = false
@@ -386,9 +388,7 @@ private fun MealSummaryCard(
             Spacer(modifier = Modifier.height(5.dp))
 
             Text(
-                text = "%.0f kcal".format(
-                    ukupnoKalorija
-                ),
+                text = "${formatKcal(ukupnoKalorija)} kcal",
                 color = Color.White,
                 fontSize = 30.sp,
                 fontWeight = FontWeight.Bold
@@ -455,7 +455,7 @@ private fun SummaryMacro(
 ) {
     Column {
         Text(
-            text = "%.0f g".format(value),
+            text = "${formatMakro(value)} g",
             color = color,
             fontWeight = FontWeight.SemiBold,
             fontSize = 16.sp
@@ -521,9 +521,7 @@ fun JeloKolicinaItem(
                     Spacer(modifier = Modifier.height(4.dp))
 
                     Text(
-                        text = "%.0f kcal".format(
-                            jelo.kalorije
-                        ),
+                        text = "${formatKcal(jelo.kalorije)} kcal",
                         color = MacroGreen,
                         fontWeight = FontWeight.Bold,
                         fontSize = 15.sp
@@ -654,7 +652,7 @@ private fun FoodMacro(
             Alignment.CenterHorizontally
     ) {
         Text(
-            text = "%.1f g".format(value),
+            text = "${formatMakro(value)} g",
             color = color,
             fontWeight = FontWeight.SemiBold,
             fontSize = 14.sp
@@ -871,7 +869,7 @@ private fun FilterNumberField(
     OutlinedTextField(
         value = value,
         onValueChange = { noviUnos ->
-            if (noviUnos.all { it.isDigit() }) {
+            if (jeDecimalniUnos(noviUnos)) {
                 onValueChange(noviUnos)
             }
         },
@@ -880,7 +878,7 @@ private fun FilterNumberField(
         },
         singleLine = true,
         keyboardOptions = KeyboardOptions(
-            keyboardType = KeyboardType.Number
+            keyboardType = KeyboardType.Decimal
         ),
         shape = RoundedCornerShape(14.dp),
         modifier = Modifier.fillMaxWidth(),
@@ -952,7 +950,7 @@ private fun FilterCompactField(
     OutlinedTextField(
         value = value,
         onValueChange = { noviUnos ->
-            if (noviUnos.all { it.isDigit() }) {
+            if (jeDecimalniUnos(noviUnos)) {
                 onValueChange(noviUnos)
             }
         },
@@ -961,7 +959,7 @@ private fun FilterCompactField(
         },
         singleLine = true,
         keyboardOptions = KeyboardOptions(
-            keyboardType = KeyboardType.Number
+            keyboardType = KeyboardType.Decimal
         ),
         shape = RoundedCornerShape(15.dp),
         modifier = modifier,
@@ -972,3 +970,7 @@ private fun FilterCompactField(
         )
     )
 }
+
+private fun jeDecimalniUnos(unos: String): Boolean =
+    unos.count { it == ',' || it == '.' } <= 1 &&
+            unos.all { it.isDigit() || it == ',' || it == '.' }

@@ -1,5 +1,7 @@
 package com.niko.macromenza.screens
 
+import com.niko.macromenza.util.formatKcal
+import com.niko.macromenza.util.formatMakro
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -213,18 +215,14 @@ fun PovijestScreen(
 
                                 HistoryStatCard(
                                     title = "Kalorije",
-                                    value = "%.0f".format(
-                                        pregled.prosjekKalorija
-                                    ),
+                                    value = formatKcal(pregled.prosjekKalorija),
                                     unit = "prosjek",
                                     modifier = Modifier.weight(1f)
                                 )
 
                                 HistoryStatCard(
                                     title = "Proteini",
-                                    value = "%.0f".format(
-                                        ukupnoProteina / 7.0
-                                    ),
+                                    value = formatMakro(ukupnoProteina / 7.0),
                                     unit = "g / dan",
                                     modifier = Modifier.weight(1f)
                                 )
@@ -289,9 +287,7 @@ fun PovijestScreen(
                                     title = "Najveći unos",
                                     value =
                                         najboljiDan?.let {
-                                            "%.0f kcal".format(
-                                                it.kalorije
-                                            )
+                                            "${formatKcal(it.kalorije)} kcal"
                                         } ?: "—",
                                     subtitle =
                                         najboljiDan?.datum ?: ""
@@ -314,9 +310,7 @@ fun PovijestScreen(
                                     title = "Najviše proteina",
                                     value =
                                         najviseProteina?.let {
-                                            "%.0f g".format(
-                                                it.proteini
-                                            )
+                                            "${formatMakro(it.proteini)} g"
                                         } ?: "—",
                                     subtitle =
                                         najviseProteina?.datum ?: ""
@@ -594,7 +588,7 @@ private fun WeeklyOverviewCard(
 
                 Text(
                     text =
-                        "%.0f".format(prosjekKalorija),
+                        formatKcal(prosjekKalorija),
                     color = Color.White,
                     style =
                         MaterialTheme.typography.headlineLarge,
@@ -645,9 +639,7 @@ private fun WeeklyOverviewCard(
 
                     Text(
                         text =
-                            "%.0f kcal".format(
-                                ukupnoKalorija
-                            ),
+                            "${formatKcal(ukupnoKalorija)} kcal",
                         color = Color.White,
                         fontWeight = FontWeight.Bold
                     )
@@ -811,9 +803,7 @@ private fun WeeklyChart(
 
                             Text(
                                 text =
-                                    "%.0f".format(
-                                        dan.kalorije
-                                    ),
+                                    formatKcal(dan.kalorije),
                                 style =
                                     MaterialTheme.typography.labelSmall,
                                 color =
@@ -1028,7 +1018,7 @@ private fun DailySummaryCard(
             )
 
             Text(
-                text = "%.0f kcal".format(kalorije),
+                text = "${formatKcal(kalorije)} kcal",
                 style =
                     MaterialTheme.typography.headlineLarge,
                 fontWeight = FontWeight.Bold,
@@ -1071,7 +1061,7 @@ private fun DailyMacro(
     Column {
 
         Text(
-            text = "%.0f g".format(value),
+            text = "${formatMakro(value)} g",
             color = Color.White,
             fontWeight = FontWeight.Bold
         )

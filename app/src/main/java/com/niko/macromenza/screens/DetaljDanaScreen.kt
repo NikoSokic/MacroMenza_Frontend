@@ -1,5 +1,7 @@
 package com.niko.macromenza.screens
 
+import com.niko.macromenza.util.formatKcal
+import com.niko.macromenza.util.formatMakro
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -168,7 +170,7 @@ private fun DetailSummaryCard(
             Spacer(modifier = Modifier.height(5.dp))
 
             Text(
-                text = "%.0f kcal".format(kalorije),
+                text = "${formatKcal(kalorije)} kcal",
                 color = Color.White,
                 fontSize = 34.sp,
                 fontWeight = FontWeight.Bold
@@ -213,7 +215,7 @@ private fun DetailSummaryMacro(
 ) {
     Column {
         Text(
-            text = "%.0f g".format(value),
+            text = "${formatMakro(value)} g",
             color = Color.White,
             fontWeight = FontWeight.Bold,
             fontSize = 17.sp
@@ -310,7 +312,7 @@ private fun DetaljObrokItem(
                     horizontalAlignment = Alignment.End
                 ) {
                     Text(
-                        text = "%.0f".format(stavka.kalorije),
+                        text = formatKcal(stavka.kalorije),
                         color = MacroGreen,
                         fontWeight = FontWeight.Bold,
                         fontSize = 19.sp
@@ -369,7 +371,7 @@ private fun DetaljMacroValue(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "%.0f g".format(value),
+            text = "${formatMakro(value)} g",
             fontWeight = FontWeight.SemiBold,
             color = color,
             fontSize = 14.sp

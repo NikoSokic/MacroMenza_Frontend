@@ -1,5 +1,7 @@
 package com.niko.macromenza.screens
 
+import com.niko.macromenza.util.formatKcal
+import com.niko.macromenza.util.formatMakro
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -358,7 +360,7 @@ private fun CaloriesHeroCard(
                         verticalAlignment = Alignment.Bottom
                     ) {
                         Text(
-                            text = "%.0f".format(kalorije),
+                            text = formatKcal(kalorije),
                             fontSize = 42.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color.White
@@ -367,7 +369,7 @@ private fun CaloriesHeroCard(
                         Spacer(modifier = Modifier.width(6.dp))
 
                         Text(
-                            text = "/ %.0f kcal".format(cilj),
+                            text = "/ ${formatKcal(cilj)} kcal",
                             color = Color.White.copy(alpha = 0.70f),
                             fontSize = 15.sp,
                             modifier = Modifier.padding(bottom = 7.dp)
@@ -414,9 +416,9 @@ private fun CaloriesHeroCard(
                 Text(
                     text =
                         if (kalorije <= cilj)
-                            "%.0f kcal".format(preostalo)
+                            "${formatKcal(preostalo)} kcal"
                         else
-                            "%.0f kcal".format(kalorije - cilj),
+                            "${formatKcal(kalorije - cilj)} kcal",
                     color = Color.White,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 14.sp
@@ -490,7 +492,7 @@ private fun MacroMiniCard(
             Spacer(modifier = Modifier.height(3.dp))
 
             Text(
-                text = "%.0fg".format(vrijednost),
+                text = "${formatMakro(vrijednost)}g",
                 color = MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.Bold,
                 fontSize = 20.sp
@@ -840,7 +842,7 @@ fun DanasnjiObrokItem(
                     horizontalAlignment = Alignment.End
                 ) {
                     Text(
-                        text = "%.0f".format(stavka.kalorije),
+                        text = formatKcal(stavka.kalorije),
                         color = MacroGreen,
                         fontWeight = FontWeight.Bold,
                         fontSize = 19.sp
@@ -870,19 +872,19 @@ fun DanasnjiObrokItem(
             ) {
                 MacroValue(
                     label = "Proteini",
-                    value = "%.0f g".format(stavka.proteini),
+                    value = "${formatMakro(stavka.proteini)} g",
                     color = ProteinBlue
                 )
 
                 MacroValue(
                     label = "UH",
-                    value = "%.0f g".format(stavka.ugljikohidrati),
+                    value = "${formatMakro(stavka.ugljikohidrati)} g",
                     color = CarbsOrange
                 )
 
                 MacroValue(
                     label = "Masti",
-                    value = "%.0f g".format(stavka.masti),
+                    value = "${formatMakro(stavka.masti)} g",
                     color = FatPurple
                 )
             }

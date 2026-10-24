@@ -59,14 +59,14 @@ class JelaViewModel : ViewModel() {
     }
 
     fun filtrirajJela(
-        minKalorije: Int?,
-        maxKalorije: Int?,
-        minProteini: Int?,
-        maxProteini: Int?,
-        minUgljikohidrati: Int?,
-        maxUgljikohidrati: Int?,
-        minMasti: Int?,
-        maxMasti: Int?
+        minKalorije: Double?,
+        maxKalorije: Double?,
+        minProteini: Double?,
+        maxProteini: Double?,
+        minUgljikohidrati: Double?,
+        maxUgljikohidrati: Double?,
+        minMasti: Double?,
+        maxMasti: Double?
     ) {
         viewModelScope.launch {
             try {
