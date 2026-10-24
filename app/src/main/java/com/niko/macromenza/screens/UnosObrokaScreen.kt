@@ -1,6 +1,7 @@
 package com.niko.macromenza.screens
 
 import com.niko.macromenza.util.formatKcal
+import com.niko.macromenza.util.formatKolicina
 import com.niko.macromenza.util.formatMakro
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -11,8 +12,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -28,17 +31,31 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.niko.macromenza.model.Jelo
+import com.niko.macromenza.model.StavkaObrokaRequest
 import com.niko.macromenza.session.UserSessionManager
 import com.niko.macromenza.ui.components.screenBottomPadding
 import com.niko.macromenza.ui.components.screenTopPadding
 import com.niko.macromenza.ui.theme.MacroGreen
 import com.niko.macromenza.viewmodel.JelaViewModel
 import kotlinx.coroutines.delay
+import java.time.Instant
+import java.time.LocalDate
+import java.time.LocalTime
+import java.time.ZoneId
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
+
+private val ZAGREB = ZoneId.of("Europe/Zagreb")
+private val FORMAT_DATUMA = DateTimeFormatter.ofPattern("d.M.yyyy.")
+private val FORMAT_VREMENA = DateTimeFormatter.ofPattern("HH:mm")
+private val TIPOVI_OBROKA = listOf("DORUCAK", "RUCAK", "UZINA", "VECERA")
 
 private val ProteinBlue = Color(0xFF4F8EF7)
 private val CarbsOrange = Color(0xFFF4A340)
 private val FatPurple = Color(0xFF9B6DE3)
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UnosObrokaScreen(
     tipObroka: String,
@@ -47,6 +64,21 @@ fun UnosObrokaScreen(
 ) {
     val jela by viewModel.jela.collectAsState()
     val greska by viewModel.greska.collectAsState()
+    val spremanjeUTijeku by viewModel.spremanjeUTijeku.collectAsState()
+    val spremljeniObrok by viewModel.spremljeniObrok.collectAsState()
+    val greskaSpremanja by viewModel.greskaSpremanja.collectAsState()
+
+    val danas = remember { LocalDate.now(ZAGREB) }
+    var datum by remember { mutableStateOf(danas) }
+    var vrijeme by remember {
+        mutableStateOf(LocalTime.now(ZAGREB).truncatedTo(ChronoUnit.MINUTES))
+    }
+    var tip by remember { mutableStateOf(tipObroka.uppercase()) }
+    var tipRucno by remember { mutableStateOf(false) }
+    var showDatePicker by remember { mutableStateOf(false) }
+    var showTimePicker by remember { mutableStateOf(false) }
+
+    val snackbarHostState = remember { SnackbarHostState() }
 
     var search by remember { mutableStateOf("") }
     var showFilterSheet by remember { mutableStateOf(false) }
@@ -64,7 +96,7 @@ fun UnosObrokaScreen(
     var prikaziOstalo by remember { mutableStateOf(false) }
 
     val kolicine = remember {
-        mutableStateMapOf<Long, Int>()
+        mutableStateMapOf<Long, Double>()
     }
 
     val context = LocalContext.current
@@ -83,24 +115,36 @@ fun UnosObrokaScreen(
         )
     }
 
+    LaunchedEffect(spremljeniObrok) {
+        val obrok = spremljeniObrok ?: return@LaunchedEffect
+        viewModel.ocistiRezultatSpremanja()
+        navController.navigate("obrok_spremljen/${obrok.tipObroka}")
+    }
+
+    LaunchedEffect(greskaSpremanja) {
+        val poruka = greskaSpremanja ?: return@LaunchedEffect
+        viewModel.ocistiRezultatSpremanja()
+        snackbarHostState.showSnackbar(poruka)
+    }
+
     val odabranaJela = jela.filter {
-        (kolicine[it.id] ?: 0) > 0
+        (kolicine[it.id] ?: 0.0) > 0.0
     }
 
     val ukupnoKalorija = odabranaJela.sumOf {
-        it.kalorije * (kolicine[it.id] ?: 0)
+        it.kalorije * (kolicine[it.id] ?: 0.0)
     }
 
     val ukupnoProteina = odabranaJela.sumOf {
-        it.proteini * (kolicine[it.id] ?: 0)
+        it.proteini * (kolicine[it.id] ?: 0.0)
     }
 
     val ukupnoUh = odabranaJela.sumOf {
-        it.ugljikohidrati * (kolicine[it.id] ?: 0)
+        it.ugljikohidrati * (kolicine[it.id] ?: 0.0)
     }
 
     val ukupnoMasti = odabranaJela.sumOf {
-        it.masti * (kolicine[it.id] ?: 0)
+        it.masti * (kolicine[it.id] ?: 0.0)
     }
 
     Box(
@@ -132,7 +176,7 @@ fun UnosObrokaScreen(
 
             item {
                 Text(
-                    text = formatTipObroka(tipObroka),
+                    text = formatTipObroka(tip),
                     fontSize = 34.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
@@ -146,7 +190,62 @@ fun UnosObrokaScreen(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(18.dp))
+            }
+
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    DatumVrijemeGumb(
+                        ikona = Icons.Default.CalendarToday,
+                        tekst = if (datum == danas) "Danas" else datum.format(FORMAT_DATUMA),
+                        opis = "Datum",
+                        onClick = { showDatePicker = true },
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    DatumVrijemeGumb(
+                        ikona = Icons.Default.Schedule,
+                        tekst = vrijeme.format(FORMAT_VREMENA),
+                        opis = "Vrijeme",
+                        onClick = { showTimePicker = true },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    TIPOVI_OBROKA.forEach { t ->
+                        FilterChip(
+                            selected = tip == t,
+                            onClick = {
+                                tip = t
+                                tipRucno = true
+                            },
+                            label = {
+                                Text(
+                                    text = formatTipObroka(t),
+                                    maxLines = 1,
+                                    modifier = Modifier.fillMaxWidth(),
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                )
+                            },
+                            modifier = Modifier.weight(1f),
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = MacroGreen.copy(alpha = 0.22f),
+                                selectedLabelColor = MacroGreen
+                            )
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(20.dp))
             }
 
             item {
@@ -210,22 +309,23 @@ fun UnosObrokaScreen(
                     ukupnoProteina = ukupnoProteina,
                     ukupnoUh = ukupnoUh,
                     ukupnoMasti = ukupnoMasti,
-                    enabled = odabranaJela.isNotEmpty(),
+                    enabled = odabranaJela.isNotEmpty() && !spremanjeUTijeku,
+                    spremanjeUTijeku = spremanjeUTijeku,
                     onSave = {
                         val idKorisnik =
                             prijavljeniKorisnikId ?: return@MealSummaryCard
 
-                        odabranaJela.forEach { jelo ->
-                            viewModel.spremiKonzumaciju(
-                                idKorisnik = idKorisnik,
-                                idJelo = jelo.id,
-                                kolicina = (kolicine[jelo.id] ?: 0).toDouble(),
-                                tipObroka = tipObroka
-                            )
-                        }
-
-                        navController.navigate(
-                            "obrok_spremljen/$tipObroka"
+                        viewModel.spremiObrok(
+                            idKorisnik = idKorisnik,
+                            datum = datum.toString(),
+                            vrijeme = vrijeme.format(FORMAT_VREMENA),
+                            tipObroka = tip,
+                            stavke = odabranaJela.map { jelo ->
+                                StavkaObrokaRequest(
+                                    idJelo = jelo.id,
+                                    kolicina = kolicine[jelo.id] ?: 0.0
+                                )
+                            }
                         )
                     }
                 )
@@ -277,17 +377,18 @@ fun UnosObrokaScreen(
             } else {
                 items(jela) { jelo ->
 
-                    val kolicina = kolicine[jelo.id] ?: 0
+                    val kolicina = kolicine[jelo.id] ?: 0.0
 
+                    // Prvi + daje 1 porciju, dalje koraci po 0,5; − s 0,5 miče jelo iz obroka.
                     JeloKolicinaItem(
                         jelo = jelo,
                         kolicina = kolicina,
                         onPlus = {
-                            kolicine[jelo.id] = kolicina + 1
+                            kolicine[jelo.id] = if (kolicina == 0.0) 1.0 else kolicina + 0.5
                         },
                         onMinus = {
-                            if (kolicina > 0) {
-                                kolicine[jelo.id] = kolicina - 1
+                            if (kolicina > 0.0) {
+                                kolicine[jelo.id] = if (kolicina <= 0.5) 0.0 else kolicina - 0.5
                             }
                         }
                     )
@@ -296,6 +397,104 @@ fun UnosObrokaScreen(
                 }
             }
         }
+
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(
+                    start = 16.dp,
+                    end = 16.dp,
+                    bottom = screenBottomPadding()
+                )
+        )
+    }
+
+    if (showDatePicker) {
+        val danasUtcMillis = danas.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
+
+        val datePickerState = rememberDatePickerState(
+            initialSelectedDateMillis =
+                datum.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli(),
+            selectableDates = object : SelectableDates {
+                override fun isSelectableDate(utcTimeMillis: Long): Boolean =
+                    utcTimeMillis <= danasUtcMillis
+
+                override fun isSelectableYear(year: Int): Boolean =
+                    year <= danas.year
+            }
+        )
+
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        datePickerState.selectedDateMillis?.let { millis ->
+                            datum = Instant.ofEpochMilli(millis)
+                                .atZone(ZoneOffset.UTC)
+                                .toLocalDate()
+                        }
+                        showDatePicker = false
+                    }
+                ) {
+                    Text("U redu", color = MacroGreen)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePicker = false }) {
+                    Text("Odustani")
+                }
+            }
+        ) {
+            DatePicker(
+                state = datePickerState,
+                colors = DatePickerDefaults.colors(
+                    selectedDayContainerColor = MacroGreen,
+                    todayDateBorderColor = MacroGreen,
+                    todayContentColor = MacroGreen
+                )
+            )
+        }
+    }
+
+    if (showTimePicker) {
+        val timePickerState = rememberTimePickerState(
+            initialHour = vrijeme.hour,
+            initialMinute = vrijeme.minute,
+            is24Hour = true
+        )
+
+        AlertDialog(
+            onDismissRequest = { showTimePicker = false },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        vrijeme = LocalTime.of(timePickerState.hour, timePickerState.minute)
+                        if (!tipRucno) {
+                            tip = zadaniTipZaVrijeme(vrijeme)
+                        }
+                        showTimePicker = false
+                    }
+                ) {
+                    Text("U redu", color = MacroGreen)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showTimePicker = false }) {
+                    Text("Odustani")
+                }
+            },
+            text = {
+                TimePicker(
+                    state = timePickerState,
+                    colors = TimePickerDefaults.colors(
+                        selectorColor = MacroGreen,
+                        timeSelectorSelectedContainerColor = MacroGreen.copy(alpha = 0.25f)
+                    )
+                )
+            }
+        )
     }
 
     if (showFilterSheet) {
@@ -369,6 +568,7 @@ private fun MealSummaryCard(
     ukupnoUh: Double,
     ukupnoMasti: Double,
     enabled: Boolean,
+    spremanjeUTijeku: Boolean,
     onSave: () -> Unit
 ) {
     Surface(
@@ -439,7 +639,7 @@ private fun MealSummaryCard(
                 )
             ) {
                 Text(
-                    text = "Spremi obrok",
+                    text = if (spremanjeUTijeku) "Spremam..." else "Spremi obrok",
                     fontWeight = FontWeight.SemiBold
                 )
             }
@@ -472,11 +672,11 @@ private fun SummaryMacro(
 @Composable
 fun JeloKolicinaItem(
     jelo: Jelo,
-    kolicina: Int,
+    kolicina: Double,
     onPlus: () -> Unit,
     onMinus: () -> Unit
 ) {
-    val selected = kolicina > 0
+    val selected = kolicina > 0.0
 
     Surface(
         modifier = Modifier.fillMaxWidth(),
@@ -575,7 +775,7 @@ fun JeloKolicinaItem(
 
 @Composable
 private fun QuantitySelector(
-    quantity: Int,
+    quantity: Double,
     onPlus: () -> Unit,
     onMinus: () -> Unit
 ) {
@@ -592,14 +792,14 @@ private fun QuantitySelector(
 
             IconButton(
                 onClick = onMinus,
-                enabled = quantity > 0,
+                enabled = quantity > 0.0,
                 modifier = Modifier.size(34.dp)
             ) {
                 Icon(
                     imageVector = Icons.Default.Remove,
                     contentDescription = "Smanji",
                     tint =
-                        if (quantity > 0) {
+                        if (quantity > 0.0) {
                             MacroGreen
                         } else {
                             MaterialTheme.colorScheme.onSurfaceVariant
@@ -609,8 +809,8 @@ private fun QuantitySelector(
             }
 
             Text(
-                text = quantity.toString(),
-                modifier = Modifier.width(30.dp),
+                text = formatKolicina(quantity),
+                modifier = Modifier.width(36.dp),
                 color = MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.Bold,
                 fontSize = 16.sp,
@@ -888,6 +1088,59 @@ private fun FilterNumberField(
             cursorColor = MacroGreen
         )
     )
+}
+
+/** Zadani tip prema vremenu: do 10:30 doručak, do 15:00 ručak, do 18:00 užina, inače večera. */
+private fun zadaniTipZaVrijeme(vrijeme: LocalTime): String = when {
+    !vrijeme.isAfter(LocalTime.of(10, 30)) -> "DORUCAK"
+    !vrijeme.isAfter(LocalTime.of(15, 0)) -> "RUCAK"
+    !vrijeme.isAfter(LocalTime.of(18, 0)) -> "UZINA"
+    else -> "VECERA"
+}
+
+@Composable
+private fun DatumVrijemeGumb(
+    ikona: androidx.compose.ui.graphics.vector.ImageVector,
+    tekst: String,
+    opis: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        onClick = onClick,
+        modifier = modifier.height(56.dp),
+        shape = RoundedCornerShape(18.dp),
+        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 14.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = ikona,
+                contentDescription = opis,
+                tint = MacroGreen,
+                modifier = Modifier.size(20.dp)
+            )
+
+            Spacer(modifier = Modifier.width(10.dp))
+
+            Column {
+                Text(
+                    text = opis,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                Text(
+                    text = tekst,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 15.sp
+                )
+            }
+        }
+    }
 }
 
 private fun formatTipObroka(tip: String): String {

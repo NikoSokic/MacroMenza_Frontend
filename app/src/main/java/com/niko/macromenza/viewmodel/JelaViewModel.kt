@@ -7,7 +7,11 @@ import com.niko.macromenza.model.Jelo
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import com.niko.macromenza.model.KonzumacijaRequest
+import com.niko.macromenza.model.Obrok
+import com.niko.macromenza.model.ObrokRequest
+import com.niko.macromenza.model.StavkaObrokaRequest
+import org.json.JSONObject
+import retrofit2.HttpException
 
 
 class JelaViewModel : ViewModel() {
@@ -17,6 +21,15 @@ class JelaViewModel : ViewModel() {
 
     private val _greska = MutableStateFlow<String?>(null)
     val greska: StateFlow<String?> = _greska
+
+    private val _spremanjeUTijeku = MutableStateFlow(false)
+    val spremanjeUTijeku: StateFlow<Boolean> = _spremanjeUTijeku
+
+    private val _spremljeniObrok = MutableStateFlow<Obrok?>(null)
+    val spremljeniObrok: StateFlow<Obrok?> = _spremljeniObrok
+
+    private val _greskaSpremanja = MutableStateFlow<String?>(null)
+    val greskaSpremanja: StateFlow<String?> = _greskaSpremanja
 
     fun ucitajJela(
         search: String? = null,
@@ -36,25 +49,54 @@ class JelaViewModel : ViewModel() {
         }
     }
 
-    fun spremiKonzumaciju(
+    /** Sprema cijeli obrok jednim pozivom; backend sprema sve stavke ili nijednu. */
+    fun spremiObrok(
         idKorisnik: Long,
-        idJelo: Long,
-        kolicina: Double,
-        tipObroka: String
+        datum: String,
+        vrijeme: String,
+        tipObroka: String,
+        stavke: List<StavkaObrokaRequest>
     ) {
-        viewModelScope.launch {
-            try {
-                val request = KonzumacijaRequest(
-                    idKorisnik = idKorisnik,
-                    idJelo = idJelo,
-                    kolicina = kolicina.toInt(),
-                    tipObroka = tipObroka
-                )
+        if (_spremanjeUTijeku.value) return
 
-                RetrofitInstance.api.spremiKonzumaciju(request)
+        viewModelScope.launch {
+            _spremanjeUTijeku.value = true
+            try {
+                _spremljeniObrok.value = RetrofitInstance.api.spremiObrok(
+                    ObrokRequest(
+                        idKorisnik = idKorisnik,
+                        datum = datum,
+                        vrijeme = vrijeme,
+                        tipObroka = tipObroka,
+                        stavke = stavke
+                    )
+                )
+            } catch (e: HttpException) {
+                _greskaSpremanja.value = porukaGreske(e)
             } catch (e: Exception) {
-                _greska.value = e.message
+                _greskaSpremanja.value = "Spremanje nije uspjelo. Provjeri vezu s poslužiteljem."
+            } finally {
+                _spremanjeUTijeku.value = false
             }
+        }
+    }
+
+    fun ocistiRezultatSpremanja() {
+        _spremljeniObrok.value = null
+        _greskaSpremanja.value = null
+    }
+
+    private fun porukaGreske(e: HttpException): String {
+        val poruka = try {
+            e.response()?.errorBody()?.string()?.let { JSONObject(it).optString("poruka") }
+        } catch (ex: Exception) {
+            null
+        }
+
+        return if (poruka.isNullOrBlank()) {
+            "Spremanje nije uspjelo (greška ${e.code()})."
+        } else {
+            poruka
         }
     }
 

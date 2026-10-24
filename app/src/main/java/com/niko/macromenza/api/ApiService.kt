@@ -16,6 +16,8 @@ import com.niko.macromenza.model.Preporuka
 import com.niko.macromenza.model.RegistracijaProfilRequest
 import com.niko.macromenza.model.OnboardingStatusResponse
 import com.niko.macromenza.model.MeniDTO
+import com.niko.macromenza.model.Obrok
+import com.niko.macromenza.model.ObrokRequest
 
 import retrofit2.http.PUT
 import retrofit2.http.Path
@@ -32,6 +34,17 @@ interface ApiService {
     suspend fun spremiKonzumaciju(
         @Body request: KonzumacijaRequest
     )
+
+    @POST("api/obroci")
+    suspend fun spremiObrok(
+        @Body request: ObrokRequest
+    ): Obrok
+
+    @GET("api/obroci")
+    suspend fun getObroci(
+        @Query("idKorisnik") idKorisnik: Long,
+        @Query("datum") datum: String
+    ): List<Obrok>
 
     @GET("api/jela/filter")
     suspend fun filtrirajJela(
