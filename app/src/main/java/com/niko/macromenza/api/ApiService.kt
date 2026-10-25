@@ -1,6 +1,9 @@
 package com.niko.macromenza.api
 
+import com.niko.macromenza.model.CestoJedenoJelo
 import com.niko.macromenza.model.Jelo
+import com.niko.macromenza.model.JeloDetalj
+import com.niko.macromenza.model.KategorijaJela
 import com.niko.macromenza.model.PovijestDana
 import retrofit2.http.GET
 import com.niko.macromenza.model.KonzumacijaRequest
@@ -27,8 +30,31 @@ interface ApiService {
     @GET("api/jela")
     suspend fun getJela(
         @Query("search") search: String? = null,
-        @Query("tipObroka") tipObroka: String? = null
+        @Query("tipObroka") tipObroka: String? = null,
+        @Query("kategorija") kategorija: String? = null,
+        @Query("minKalorije") minKalorije: Double? = null,
+        @Query("maxKalorije") maxKalorije: Double? = null,
+        @Query("minProteini") minProteini: Double? = null,
+        @Query("maxProteini") maxProteini: Double? = null,
+        @Query("minUgljikohidrati") minUgljikohidrati: Double? = null,
+        @Query("maxUgljikohidrati") maxUgljikohidrati: Double? = null,
+        @Query("minMasti") minMasti: Double? = null,
+        @Query("maxMasti") maxMasti: Double? = null
     ): List<Jelo>
+
+    @GET("api/jela/kategorije")
+    suspend fun getKategorijeJela(): List<KategorijaJela>
+
+    @GET("api/jela/{id}/detalj")
+    suspend fun getJeloDetalj(
+        @Path("id") id: Long
+    ): JeloDetalj
+
+    @GET("api/jela/cesto")
+    suspend fun getCestoJedeno(
+        @Query("idKorisnik") idKorisnik: Long,
+        @Query("limit") limit: Int = 10
+    ): List<CestoJedenoJelo>
 
     @POST("api/konzumacije")
     suspend fun spremiKonzumaciju(

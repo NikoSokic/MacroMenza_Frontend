@@ -4,8 +4,10 @@ import com.niko.macromenza.util.formatKcal
 import com.niko.macromenza.util.formatKolicina
 import com.niko.macromenza.util.formatMakro
 import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -17,6 +19,7 @@ import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -30,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.niko.macromenza.model.CestoJedenoJelo
 import com.niko.macromenza.model.Jelo
 import com.niko.macromenza.model.StavkaObrokaRequest
 import com.niko.macromenza.session.UserSessionManager
@@ -37,7 +41,7 @@ import com.niko.macromenza.ui.components.screenBottomPadding
 import com.niko.macromenza.ui.components.screenTopPadding
 import com.niko.macromenza.ui.theme.MacroGreen
 import com.niko.macromenza.viewmodel.JelaViewModel
-import kotlinx.coroutines.delay
+import com.niko.macromenza.viewmodel.MakroFilter
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
@@ -63,6 +67,11 @@ fun UnosObrokaScreen(
     viewModel: JelaViewModel = viewModel()
 ) {
     val jela by viewModel.jela.collectAsState()
+    val search by viewModel.upit.collectAsState()
+    val odabranaKategorija by viewModel.kategorija.collectAsState()
+    val kategorije by viewModel.kategorije.collectAsState()
+    val cestoJedeno by viewModel.cestoJedeno.collectAsState()
+    val makroFilter by viewModel.makroFilter.collectAsState()
     val greska by viewModel.greska.collectAsState()
     val spremanjeUTijeku by viewModel.spremanjeUTijeku.collectAsState()
     val spremljeniObrok by viewModel.spremljeniObrok.collectAsState()
@@ -80,7 +89,6 @@ fun UnosObrokaScreen(
 
     val snackbarHostState = remember { SnackbarHostState() }
 
-    var search by remember { mutableStateOf("") }
     var showFilterSheet by remember { mutableStateOf(false) }
 
     var minKalorije by remember { mutableStateOf("") }
@@ -99,6 +107,39 @@ fun UnosObrokaScreen(
         mutableStateMapOf<Long, Double>()
     }
 
+    // Odabrana jela pamte se zasebno, da ostanu u obroku i kad ih pretraga ili kategorija makne s liste.
+    val odabrana = remember {
+        mutableStateMapOf<Long, Jelo>()
+    }
+
+    // Prvi + daje 1 porciju, dalje koraci po 0,5; − s 0,5 miče jelo iz obroka.
+    fun povecaj(jelo: Jelo) {
+        val trenutna = kolicine[jelo.id] ?: 0.0
+        kolicine[jelo.id] = if (trenutna == 0.0) 1.0 else trenutna + 0.5
+        odabrana[jelo.id] = jelo
+    }
+
+    // Iz detalja jela: odabrane porcije dodaju se na već odabranu količinu.
+    fun dodaj(jelo: Jelo, porcije: Double) {
+        val trenutna = kolicine[jelo.id] ?: 0.0
+        kolicine[jelo.id] = trenutna + porcije
+        odabrana[jelo.id] = jelo
+    }
+
+    var detaljJelo by remember { mutableStateOf<Jelo?>(null) }
+
+    fun smanji(jelo: Jelo) {
+        val trenutna = kolicine[jelo.id] ?: 0.0
+        if (trenutna <= 0.0) return
+
+        if (trenutna <= 0.5) {
+            kolicine[jelo.id] = 0.0
+            odabrana.remove(jelo.id)
+        } else {
+            kolicine[jelo.id] = trenutna - 0.5
+        }
+    }
+
     val context = LocalContext.current
 
     val sessionManager = remember {
@@ -108,11 +149,13 @@ fun UnosObrokaScreen(
     val prijavljeniKorisnikId by
     sessionManager.korisnikId.collectAsState(initial = null)
 
-    LaunchedEffect(search) {
-        delay(300)
-        viewModel.ucitajJela(
-            search = search.ifBlank { null }
-        )
+    LaunchedEffect(Unit) {
+        viewModel.ucitajKategorije()
+        viewModel.ucitajJela()
+    }
+
+    LaunchedEffect(prijavljeniKorisnikId) {
+        prijavljeniKorisnikId?.let { viewModel.ucitajCestoJedeno(it) }
     }
 
     LaunchedEffect(spremljeniObrok) {
@@ -127,8 +170,16 @@ fun UnosObrokaScreen(
         snackbarHostState.showSnackbar(poruka)
     }
 
-    val odabranaJela = jela.filter {
+    val odabranaJela = odabrana.values.filter {
         (kolicine[it.id] ?: 0.0) > 0.0
+    }
+
+    // "Često jedeš" vidljivo je samo bez upita i kategorije; makro filter vrijedi i za njega.
+    val prikaziCesto = search.isBlank() && odabranaKategorija == null
+    val cestoZaPrikaz = if (prikaziCesto) {
+        cestoJedeno.filter { makroFilter.propusta(it.jelo) }
+    } else {
+        emptyList()
     }
 
     val ukupnoKalorija = odabranaJela.sumOf {
@@ -257,7 +308,7 @@ fun UnosObrokaScreen(
 
                     OutlinedTextField(
                         value = search,
-                        onValueChange = { search = it },
+                        onValueChange = { viewModel.postaviUpit(it) },
                         placeholder = {
                             Text("Pretraži jelo")
                         },
@@ -295,6 +346,30 @@ fun UnosObrokaScreen(
                                 contentDescription = "Filter",
                                 tint = MacroGreen,
                                 modifier = Modifier.size(26.dp)
+                            )
+                        }
+                    }
+                }
+
+                if (kategorije.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        item {
+                            KategorijaChip(
+                                naziv = "Sve",
+                                selected = odabranaKategorija == null,
+                                onClick = { viewModel.postaviKategoriju(null) }
+                            )
+                        }
+
+                        items(kategorije, key = { it.naziv }) { kategorija ->
+                            KategorijaChip(
+                                naziv = kategorija.naziv,
+                                selected = odabranaKategorija == kategorija.naziv,
+                                onClick = { viewModel.postaviKategoriju(kategorija.naziv) }
                             )
                         }
                     }
@@ -351,6 +426,43 @@ fun UnosObrokaScreen(
                 }
             }
 
+            if (cestoZaPrikaz.isNotEmpty()) {
+                item {
+                    Text(
+                        text = "Često jedeš",
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+
+                    Spacer(modifier = Modifier.height(2.dp))
+
+                    Text(
+                        text = "Jela iz tvojih obroka u zadnjih 60 dana.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        items(cestoZaPrikaz, key = { it.jelo.id }) { cesto ->
+                            CestoJedenoKartica(
+                                cesto = cesto,
+                                kolicina = kolicine[cesto.jelo.id] ?: 0.0,
+                                onPlus = { povecaj(cesto.jelo) },
+                                onMinus = { smanji(cesto.jelo) },
+                                onDetalj = { detaljJelo = cesto.jelo }
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(22.dp))
+                }
+            }
+
             item {
                 Text(
                     text = "Jela",
@@ -377,20 +489,12 @@ fun UnosObrokaScreen(
             } else {
                 items(jela) { jelo ->
 
-                    val kolicina = kolicine[jelo.id] ?: 0.0
-
-                    // Prvi + daje 1 porciju, dalje koraci po 0,5; − s 0,5 miče jelo iz obroka.
                     JeloKolicinaItem(
                         jelo = jelo,
-                        kolicina = kolicina,
-                        onPlus = {
-                            kolicine[jelo.id] = if (kolicina == 0.0) 1.0 else kolicina + 0.5
-                        },
-                        onMinus = {
-                            if (kolicina > 0.0) {
-                                kolicine[jelo.id] = if (kolicina <= 0.5) 0.0 else kolicina - 0.5
-                            }
-                        }
+                        kolicina = kolicine[jelo.id] ?: 0.0,
+                        onPlus = { povecaj(jelo) },
+                        onMinus = { smanji(jelo) },
+                        onDetalj = { detaljJelo = jelo }
                     )
 
                     Spacer(modifier = Modifier.height(10.dp))
@@ -497,6 +601,17 @@ fun UnosObrokaScreen(
         )
     }
 
+    detaljJelo?.let { jelo ->
+        JeloDetaljSheet(
+            idJelo = jelo.id,
+            onDodaj = { porcije ->
+                dodaj(jelo, porcije)
+                detaljJelo = null
+            },
+            onDismiss = { detaljJelo = null }
+        )
+    }
+
     if (showFilterSheet) {
         FilterBottomSheet(
             minKalorije = minKalorije,
@@ -524,7 +639,7 @@ fun UnosObrokaScreen(
             },
 
             onApply = {
-                viewModel.filtrirajJela(
+                viewModel.primijeniMakroFilter(MakroFilter(
                     minKalorije = minKalorije.replace(',', '.').toDoubleOrNull(),
                     maxKalorije = maxKalorije.replace(',', '.').toDoubleOrNull(),
                     minProteini = minProteini.replace(',', '.').toDoubleOrNull(),
@@ -533,7 +648,7 @@ fun UnosObrokaScreen(
                     maxUgljikohidrati = maxUgljikohidrati.replace(',', '.').toDoubleOrNull(),
                     minMasti = minMasti.replace(',', '.').toDoubleOrNull(),
                     maxMasti = maxMasti.replace(',', '.').toDoubleOrNull()
-                )
+                ))
 
                 showFilterSheet = false
             },
@@ -550,9 +665,7 @@ fun UnosObrokaScreen(
 
                 prikaziOstalo = false
 
-                viewModel.ucitajJela(
-                    search = search.ifBlank { null }
-                )
+                viewModel.resetirajMakroFilter()
             },
 
             onDismiss = {
@@ -674,12 +787,17 @@ fun JeloKolicinaItem(
     jelo: Jelo,
     kolicina: Double,
     onPlus: () -> Unit,
-    onMinus: () -> Unit
+    onMinus: () -> Unit,
+    onDetalj: () -> Unit
 ) {
     val selected = kolicina > 0.0
 
+    // Tap dodaje porciju, dugi pritisak otvara detalj jela.
     Surface(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(22.dp))
+            .combinedClickable(onClick = onPlus, onLongClick = onDetalj),
         shape = RoundedCornerShape(22.dp),
         color =
             if (selected) {
@@ -711,12 +829,27 @@ fun JeloKolicinaItem(
                 Column(
                     modifier = Modifier.weight(1f)
                 ) {
-                    Text(
-                        text = jelo.naziv,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 17.sp
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = jelo.naziv,
+                            modifier = Modifier.weight(1f, fill = false),
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 17.sp
+                        )
+
+                        IconButton(
+                            onClick = onDetalj,
+                            modifier = Modifier.size(30.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.Info,
+                                contentDescription = "Detalj jela",
+                                tint = MacroGreen,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    }
 
                     Spacer(modifier = Modifier.height(4.dp))
 
@@ -869,6 +1002,137 @@ private fun FoodMacro(
 }
 
 @Composable
+private fun KategorijaChip(
+    naziv: String,
+    selected: Boolean,
+    onClick: () -> Unit
+) {
+    FilterChip(
+        selected = selected,
+        onClick = onClick,
+        label = {
+            Text(
+                text = naziv,
+                maxLines = 1
+            )
+        },
+        colors = FilterChipDefaults.filterChipColors(
+            selectedContainerColor = MacroGreen.copy(alpha = 0.22f),
+            selectedLabelColor = MacroGreen
+        )
+    )
+}
+
+@Composable
+private fun CestoJedenoKartica(
+    cesto: CestoJedenoJelo,
+    kolicina: Double,
+    onPlus: () -> Unit,
+    onMinus: () -> Unit,
+    onDetalj: () -> Unit
+) {
+    val selected = kolicina > 0.0
+
+    // Tap i dalje dodaje porciju, dugi pritisak otvara detalj jela.
+    Surface(
+        modifier = Modifier
+            .width(190.dp)
+            .clip(RoundedCornerShape(20.dp))
+            .combinedClickable(onClick = onPlus, onLongClick = onDetalj),
+        shape = RoundedCornerShape(20.dp),
+        color =
+            if (selected) {
+                MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)
+            } else {
+                MaterialTheme.colorScheme.surface
+            },
+        border =
+            if (selected) {
+                androidx.compose.foundation.BorderStroke(
+                    width = 1.5.dp,
+                    color = MacroGreen.copy(alpha = 0.65f)
+                )
+            } else {
+                null
+            },
+        tonalElevation = 1.dp
+    ) {
+        Column(
+            modifier = Modifier.padding(14.dp)
+        ) {
+            Text(
+                text = cesto.jelo.naziv,
+                color = MaterialTheme.colorScheme.onSurface,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 15.sp,
+                maxLines = 2,
+                minLines = 2,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+            )
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            Text(
+                text = "${formatKcal(cesto.jelo.kalorije)} kcal",
+                color = MacroGreen,
+                fontWeight = FontWeight.Bold,
+                fontSize = 14.sp
+            )
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(28.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "${cesto.brojPuta}× u 60 dana",
+                    modifier = Modifier.weight(1f),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodySmall,
+                    maxLines = 1
+                )
+
+                IconButton(
+                    onClick = onDetalj,
+                    modifier = Modifier.size(28.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Info,
+                        contentDescription = "Detalj jela",
+                        tint = MacroGreen,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+
+                if (selected) {
+                    IconButton(
+                        onClick = onMinus,
+                        modifier = Modifier.size(28.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Remove,
+                            contentDescription = "Smanji",
+                            tint = MacroGreen,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+
+                    Text(
+                        text = formatKolicina(kolicina),
+                        color = MacroGreen,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
 private fun EmptyFoodCard() {
     Surface(
         modifier = Modifier.fillMaxWidth(),
@@ -879,7 +1143,7 @@ private fun EmptyFoodCard() {
             modifier = Modifier.padding(22.dp)
         ) {
             Text(
-                text = "Nema pronađenih jela",
+                text = "Nema jela za odabrane filtere",
                 color = MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 17.sp
@@ -888,7 +1152,7 @@ private fun EmptyFoodCard() {
             Spacer(modifier = Modifier.height(4.dp))
 
             Text(
-                text = "Pokušaj promijeniti pretragu ili filter.",
+                text = "Pokušaj promijeniti pretragu, kategoriju ili filter.",
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 style = MaterialTheme.typography.bodySmall
             )
