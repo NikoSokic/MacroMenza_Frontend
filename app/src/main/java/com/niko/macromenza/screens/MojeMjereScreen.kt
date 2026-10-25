@@ -31,7 +31,10 @@ import com.niko.macromenza.ui.components.screenBottomPadding
 import com.niko.macromenza.ui.components.screenTopPadding
 import com.niko.macromenza.ui.theme.MacroGreen
 import com.niko.macromenza.ui.theme.MacroLightGreen
+import com.niko.macromenza.util.formatMasa
 import com.niko.macromenza.viewmodel.MjereViewModel
+import java.time.LocalDate
+import java.time.ZoneId
 
 @Composable
 fun MojeMjereScreen(
@@ -39,7 +42,11 @@ fun MojeMjereScreen(
     viewModel: MjereViewModel = viewModel()
 ) {
     val mjerenja by viewModel.mjerenja.collectAsState()
+    val mase by viewModel.mase.collectAsState()
+    val preporuke by viewModel.preporuke.collectAsState()
     val greska by viewModel.greska.collectAsState()
+    val sprema by viewModel.sprema.collectAsState()
+    val poruka by viewModel.poruka.collectAsState()
 
     val context = LocalContext.current
 
@@ -58,6 +65,9 @@ fun MojeMjereScreen(
 
     val zadnjeMjerenje =
         mjerenja.maxByOrNull { it.datum ?: "" }
+
+    val danas = LocalDate.now(ZoneId.of("Europe/Zagreb")).toString()
+    val danasnjaMasa = mase.lastOrNull { it.datum == danas }?.masa
 
     Box(
         modifier = Modifier
@@ -162,6 +172,33 @@ fun MojeMjereScreen(
                 LatestMeasurementCard(
                     measurement = zadnjeMjerenje
                 )
+            }
+
+            // BRZO MJERENJE (samo uz postojeće mjerenje: aktivnost i cilj preuzimaju se iz zadnjeg)
+            if (zadnjeMjerenje != null) {
+                item {
+                    BrzoMjerenjeKartica(
+                        zadnjaMasa = mase.lastOrNull()?.masa ?: zadnjeMjerenje.masa,
+                        danasnjaMasa = danasnjaMasa,
+                        sprema = sprema,
+                        poruka = poruka,
+                        onSpremi = { desetinke ->
+                            prijavljeniKorisnikId?.let { id ->
+                                viewModel.spremiBrzo(id, desetinke)
+                            }
+                        }
+                    )
+                }
+            }
+
+            // GRAF MASE
+            if (mase.isNotEmpty()) {
+                item {
+                    GrafMaseKartica(
+                        mase = mase,
+                        preporuke = preporuke
+                    )
+                }
             }
 
             // GREŠKA
@@ -311,9 +348,7 @@ private fun LatestMeasurementCard(
                 Text(
                     text =
                         if (measurement != null) {
-                            "%.1f kg".format(
-                                measurement.masa
-                            )
+                            formatMasa(measurement.masa)
                         } else {
                             "Nema mjerenja"
                         },
@@ -394,10 +429,7 @@ fun MjerenjeItem(
                     )
 
                     Text(
-                        text =
-                            "%.1f kg".format(
-                                mjerenje.masa
-                            ),
+                        text = formatMasa(mjerenje.masa),
                         fontSize = 25.sp,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface,

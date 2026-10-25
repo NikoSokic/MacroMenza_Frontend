@@ -30,6 +30,8 @@ import com.niko.macromenza.ui.components.screenBottomPadding
 import com.niko.macromenza.ui.components.screenTopPadding
 import com.niko.macromenza.ui.theme.MacroGreen
 import com.niko.macromenza.ui.theme.MacroLightGreen
+import com.niko.macromenza.util.filtrirajUnosMase
+import com.niko.macromenza.util.parsirajMasu
 import com.niko.macromenza.viewmodel.CiljeviViewModel
 
 @Composable
@@ -210,15 +212,7 @@ fun PostavkeCiljevaScreen(
                 OutlinedTextField(
                     value = masa,
                     onValueChange = { noviUnos ->
-                        if (
-                            noviUnos.all {
-                                it.isDigit() ||
-                                        it == '.' ||
-                                        it == ','
-                            }
-                        ) {
-                            masa = noviUnos.replace(",", ".")
-                        }
+                        filtrirajUnosMase(noviUnos)?.let { masa = it }
                     },
                     label = {
                         Text("Masa (kg)")
@@ -479,7 +473,7 @@ fun PostavkeCiljevaScreen(
                         dob.toIntOrNull()
 
                     val masaBroj =
-                        masa.toDoubleOrNull()
+                        parsirajMasu(masa)
 
                     if (
                         prijavljeniKorisnikId == null

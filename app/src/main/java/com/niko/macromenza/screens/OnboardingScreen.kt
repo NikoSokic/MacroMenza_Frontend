@@ -29,6 +29,8 @@ import com.niko.macromenza.model.RegistracijaProfilRequest
 import com.niko.macromenza.session.UserSessionManager
 import com.niko.macromenza.ui.theme.MacroGreen
 import com.niko.macromenza.ui.theme.MacroLightGreen
+import com.niko.macromenza.util.filtrirajUnosMase
+import com.niko.macromenza.util.parsirajMasu
 import kotlinx.coroutines.launch
 
 @Composable
@@ -256,9 +258,7 @@ fun OnboardingScreen(
                 OutlinedTextField(
                     value = masa,
                     onValueChange = { noviUnos ->
-                        if (noviUnos.all { it.isDigit() || it == '.' || it == ',' }) {
-                            masa = noviUnos.replace(",", ".")
-                        }
+                        filtrirajUnosMase(noviUnos)?.let { masa = it }
                     },
                     label = { Text("Masa (kg)") },
                     singleLine = true,
@@ -365,7 +365,7 @@ fun OnboardingScreen(
                 onClick = {
                     val visinaBroj = visina.toIntOrNull()
                     val dobBroj = dob.toIntOrNull()
-                    val masaBroj = masa.toDoubleOrNull()
+                    val masaBroj = parsirajMasu(masa)
 
                     if (visinaBroj == null || visinaBroj !in 100..250) {
                         poruka = "Provjeri visinu. Očekujemo vrijednost između 100 i 250 cm."
@@ -429,7 +429,7 @@ fun OnboardingScreen(
                             prezime.isNotBlank() &&
                             visina.toIntOrNull() != null &&
                             dob.toIntOrNull() != null &&
-                            masa.toDoubleOrNull() != null &&
+                            parsirajMasu(masa) != null &&
                             !ucitavanje,
                 shape = RoundedCornerShape(18.dp),
                 colors = ButtonDefaults.buttonColors(

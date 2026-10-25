@@ -16,6 +16,9 @@ import com.niko.macromenza.model.UkupniUnos
 import com.niko.macromenza.model.Korisnik
 import com.niko.macromenza.model.ProfilPodaci
 import com.niko.macromenza.model.Mjerenje
+import com.niko.macromenza.model.MjerenjeMase
+import com.niko.macromenza.model.BrzoMjerenjeRequest
+import com.niko.macromenza.model.BrzoMjerenjeOdgovor
 import com.niko.macromenza.model.Preporuka
 import com.niko.macromenza.model.RegistracijaProfilRequest
 import com.niko.macromenza.model.OnboardingStatusResponse
@@ -171,6 +174,18 @@ interface ApiService {
     suspend fun dohvatiMjerenjaZaKorisnika(
         @Path("idKorisnik") idKorisnik: Long
     ): List<Mjerenje>
+
+    @GET("api/mjerenja")
+    suspend fun getMase(
+        @Query("idKorisnik") idKorisnik: Long,
+        @Query("od") od: String? = null,
+        @Query("do") doDatuma: String? = null
+    ): List<MjerenjeMase>
+
+    @POST("api/mjerenja/brzo")
+    suspend fun brzoMjerenje(
+        @Body request: BrzoMjerenjeRequest
+    ): BrzoMjerenjeOdgovor
 
     @GET("preporuke/korisnik/{idKorisnik}")
     suspend fun dohvatiPreporukeZaKorisnika(
