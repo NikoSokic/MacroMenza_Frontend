@@ -35,13 +35,16 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.niko.macromenza.model.CestoJedenoJelo
 import com.niko.macromenza.model.Jelo
+import com.niko.macromenza.model.MeniDTO
 import com.niko.macromenza.model.StavkaObrokaRequest
 import com.niko.macromenza.session.UserSessionManager
 import com.niko.macromenza.ui.components.screenBottomPadding
 import com.niko.macromenza.ui.components.screenTopPadding
 import com.niko.macromenza.ui.theme.MacroGreen
 import com.niko.macromenza.viewmodel.JelaViewModel
+import com.niko.macromenza.viewmodel.KarticaUnosa
 import com.niko.macromenza.viewmodel.MakroFilter
+import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
@@ -76,6 +79,12 @@ fun UnosObrokaScreen(
     val spremanjeUTijeku by viewModel.spremanjeUTijeku.collectAsState()
     val spremljeniObrok by viewModel.spremljeniObrok.collectAsState()
     val greskaSpremanja by viewModel.greskaSpremanja.collectAsState()
+    val kartica by viewModel.kartica.collectAsState()
+    val meniji by viewModel.meniji.collectAsState()
+    val menijiUcitavanje by viewModel.menijiUcitavanje.collectAsState()
+    val greskaMenija by viewModel.greskaMenija.collectAsState()
+    val tipMenija by viewModel.tipMenija.collectAsState()
+    val samoVegetarijanski by viewModel.samoVegetarijanski.collectAsState()
 
     val danas = remember { LocalDate.now(ZAGREB) }
     var datum by remember { mutableStateOf(danas) }
@@ -112,6 +121,13 @@ fun UnosObrokaScreen(
         mutableStateMapOf<Long, Jelo>()
     }
 
+    // Jela koja su u odabir došla iz menija; dok ih ima, izvor obroka je MENI.
+    val jelaIzMenija = remember {
+        mutableStateListOf<Long>()
+    }
+
+    val scope = rememberCoroutineScope()
+
     // Prvi + daje 1 porciju, dalje koraci po 0,5; − s 0,5 miče jelo iz obroka.
     fun povecaj(jelo: Jelo) {
         val trenutna = kolicine[jelo.id] ?: 0.0
@@ -135,8 +151,55 @@ fun UnosObrokaScreen(
         if (trenutna <= 0.5) {
             kolicine[jelo.id] = 0.0
             odabrana.remove(jelo.id)
+            jelaIzMenija.remove(jelo.id)
         } else {
             kolicine[jelo.id] = trenutna - 0.5
+        }
+    }
+
+    // Svaka stavka ide u odabir s količinom iz menija (zbraja se s već odabranom);
+    // "Poništi" vraća odabir na stanje prije dodavanja.
+    fun dodajMeni(meni: MeniDTO) {
+        val staroKolicine = kolicine.toMap()
+        val staroOdabrana = odabrana.toMap()
+        val staroIzMenija = jelaIzMenija.toList()
+
+        meni.stavke.forEach { s ->
+            kolicine[s.idJelo] = (kolicine[s.idJelo] ?: 0.0) + s.kolicina
+            if (s.idJelo !in odabrana) {
+                // Vrijednosti stavke su za cijelu količinu, a odabir računa po porciji.
+                odabrana[s.idJelo] = Jelo(
+                    id = s.idJelo,
+                    naziv = s.nazivJela,
+                    opis = null,
+                    kalorije = s.kalorije / s.kolicina,
+                    proteini = s.proteini / s.kolicina,
+                    ugljikohidrati = s.ugljikohidrati / s.kolicina,
+                    masti = s.masti / s.kolicina,
+                    sifra = null,
+                    kategorija = null,
+                    cijenaEur = null,
+                    napomena = null
+                )
+            }
+            if (s.idJelo !in jelaIzMenija) jelaIzMenija.add(s.idJelo)
+        }
+
+        scope.launch {
+            snackbarHostState.currentSnackbarData?.dismiss()
+            val rezultat = snackbarHostState.showSnackbar(
+                message = "Dodan meni ${nazivMenija(meni)}",
+                actionLabel = "Poništi",
+                duration = SnackbarDuration.Short
+            )
+            if (rezultat == SnackbarResult.ActionPerformed) {
+                kolicine.clear()
+                kolicine.putAll(staroKolicine)
+                odabrana.clear()
+                odabrana.putAll(staroOdabrana)
+                jelaIzMenija.clear()
+                jelaIzMenija.addAll(staroIzMenija)
+            }
         }
     }
 
@@ -172,6 +235,15 @@ fun UnosObrokaScreen(
 
     val odabranaJela = odabrana.values.filter {
         (kolicine[it.id] ?: 0.0) > 0.0
+    }
+
+    // Tip obroka RUCAK/VECERA određuje tip menija; za doručak i užinu bira se chipom.
+    val tipFilterMenija = if (tip == "RUCAK" || tip == "VECERA") tip else tipMenija
+    val prikazaniMeniji = remember(meniji, tipFilterMenija, samoVegetarijanski) {
+        meniji.filter {
+            (tipFilterMenija == null || it.tip == tipFilterMenija) &&
+                (!samoVegetarijanski || it.vegetarijanski)
+        }
     }
 
     // "Često jedeš" vidljivo je samo bez upita i kategorije; makro filter vrijedi i za njega.
@@ -296,10 +368,29 @@ fun UnosObrokaScreen(
                     }
                 }
 
+                Spacer(modifier = Modifier.height(14.dp))
+
+                SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                    val kartice = listOf(KarticaUnosa.JELA to "Jela", KarticaUnosa.MENIJI to "Meniji")
+                    kartice.forEachIndexed { index, (k, naziv) ->
+                        SegmentedButton(
+                            selected = kartica == k,
+                            onClick = { viewModel.postaviKarticu(k) },
+                            shape = SegmentedButtonDefaults.itemShape(index, kartice.size),
+                            colors = SegmentedButtonDefaults.colors(
+                                activeContainerColor = MacroGreen.copy(alpha = 0.22f),
+                                activeContentColor = MacroGreen
+                            )
+                        ) {
+                            Text(naziv)
+                        }
+                    }
+                }
+
                 Spacer(modifier = Modifier.height(20.dp))
             }
 
-            item {
+            if (kartica == KarticaUnosa.JELA) item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(10.dp),
@@ -400,7 +491,8 @@ fun UnosObrokaScreen(
                                     idJelo = jelo.id,
                                     kolicina = kolicine[jelo.id] ?: 0.0
                                 )
-                            }
+                            },
+                            izvor = if (jelaIzMenija.isNotEmpty()) "MENI" else "RUCNO"
                         )
                     }
                 )
@@ -408,7 +500,7 @@ fun UnosObrokaScreen(
                 Spacer(modifier = Modifier.height(22.dp))
             }
 
-            if (greska != null) {
+            if (kartica == KarticaUnosa.JELA && greska != null) {
                 item {
                     Surface(
                         modifier = Modifier.fillMaxWidth(),
@@ -426,7 +518,7 @@ fun UnosObrokaScreen(
                 }
             }
 
-            if (cestoZaPrikaz.isNotEmpty()) {
+            if (kartica == KarticaUnosa.JELA && cestoZaPrikaz.isNotEmpty()) {
                 item {
                     Text(
                         text = "Često jedeš",
@@ -463,7 +555,7 @@ fun UnosObrokaScreen(
                 }
             }
 
-            item {
+            if (kartica == KarticaUnosa.JELA) item {
                 Text(
                     text = "Jela",
                     fontSize = 22.sp,
@@ -482,7 +574,55 @@ fun UnosObrokaScreen(
                 Spacer(modifier = Modifier.height(14.dp))
             }
 
-            if (jela.isEmpty()) {
+            if (kartica == KarticaUnosa.MENIJI) {
+                item {
+                    MeniFilteri(
+                        prikaziTipove = tip != "RUCAK" && tip != "VECERA",
+                        tipMenija = tipMenija,
+                        samoVegetarijanski = samoVegetarijanski,
+                        onTip = { viewModel.postaviTipMenija(it) },
+                        onVegetarijanski = { viewModel.postaviSamoVegetarijanski(it) }
+                    )
+
+                    Spacer(modifier = Modifier.height(14.dp))
+                }
+
+                when {
+                    menijiUcitavanje -> item {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 28.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(color = MacroGreen)
+                        }
+                    }
+
+                    greskaMenija != null -> item {
+                        MeniGreskaKartica(
+                            poruka = greskaMenija ?: "",
+                            onPonovno = { viewModel.ucitajMenije() }
+                        )
+                    }
+
+                    prikazaniMeniji.isEmpty() -> item {
+                        PraznaKartica(
+                            naslov = "Nema menija za odabrane filtere",
+                            opis = "Pokušaj promijeniti tip ili ukloniti filter."
+                        )
+                    }
+
+                    else -> items(prikazaniMeniji, key = { it.id }) { meni ->
+                        MeniKartica(
+                            meni = meni,
+                            onDodaj = { dodajMeni(meni) }
+                        )
+
+                        Spacer(modifier = Modifier.height(10.dp))
+                    }
+                }
+            } else if (jela.isEmpty()) {
                 item {
                     EmptyFoodCard()
                 }
@@ -1128,6 +1268,199 @@ private fun CestoJedenoKartica(
                     )
                 }
             }
+        }
+    }
+}
+
+private fun nazivMenija(meni: MeniDTO): String =
+    listOfNotNull(formatTipObroka(meni.tip), meni.redniBroj?.toString()).joinToString(" ")
+
+@Composable
+private fun MeniFilteri(
+    prikaziTipove: Boolean,
+    tipMenija: String?,
+    samoVegetarijanski: Boolean,
+    onTip: (String?) -> Unit,
+    onVegetarijanski: (Boolean) -> Unit
+) {
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        if (prikaziTipove) {
+            KategorijaChip(
+                naziv = "Ručak",
+                selected = tipMenija == "RUCAK",
+                onClick = { onTip(if (tipMenija == "RUCAK") null else "RUCAK") }
+            )
+
+            KategorijaChip(
+                naziv = "Večera",
+                selected = tipMenija == "VECERA",
+                onClick = { onTip(if (tipMenija == "VECERA") null else "VECERA") }
+            )
+        }
+
+        KategorijaChip(
+            naziv = "Vegetarijanski",
+            selected = samoVegetarijanski,
+            onClick = { onVegetarijanski(!samoVegetarijanski) }
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun MeniKartica(
+    meni: MeniDTO,
+    onDodaj: () -> Unit
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(22.dp),
+        color = MaterialTheme.colorScheme.surface,
+        tonalElevation = 1.dp
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = nazivMenija(meni),
+                    modifier = Modifier.weight(1f),
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 17.sp
+                )
+
+                if (meni.vegetarijanski) {
+                    Text(
+                        text = "Vegetarijanski",
+                        color = MacroGreen,
+                        style = MaterialTheme.typography.labelMedium
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            meni.stavke.forEach { stavka ->
+                val tekst = buildString {
+                    if (stavka.priblizno) append("≈ ")
+                    if (stavka.kolicina != 1.0) append("${formatKolicina(stavka.kolicina)}× ")
+                    append(stavka.oznaka)
+                }
+
+                if (stavka.priblizno) {
+                    // Dugi pritisak otvara objašnjenje.
+                    TooltipBox(
+                        positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
+                        tooltip = {
+                            PlainTooltip {
+                                Text("Približna vrijednost: jelo nema vlastitu recepturu, uzeto je slično jelo.")
+                            }
+                        },
+                        state = rememberTooltipState()
+                    ) {
+                        Text(
+                            text = tekst,
+                            modifier = Modifier.padding(vertical = 2.dp),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                } else {
+                    Text(
+                        text = tekst,
+                        modifier = Modifier.padding(vertical = 2.dp),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            HorizontalDivider(
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.09f)
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "${formatKcal(meni.kalorije)} kcal",
+                    color = MacroGreen,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 15.sp
+                )
+
+                FoodMacro(label = "Proteini", value = meni.proteini, color = ProteinBlue)
+                FoodMacro(label = "UH", value = meni.ugljikohidrati, color = CarbsOrange)
+                FoodMacro(label = "Masti", value = meni.masti, color = FatPurple)
+            }
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            Button(
+                onClick = onDodaj,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = MacroGreen)
+            ) {
+                Text(text = "Dodaj meni", fontWeight = FontWeight.SemiBold)
+            }
+        }
+    }
+}
+
+@Composable
+private fun MeniGreskaKartica(
+    poruka: String,
+    onPonovno: () -> Unit
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(14.dp),
+        color = MaterialTheme.colorScheme.error.copy(alpha = 0.08f)
+    ) {
+        Column(modifier = Modifier.padding(14.dp)) {
+            Text(text = poruka, color = MaterialTheme.colorScheme.error)
+
+            TextButton(onClick = onPonovno) {
+                Text("Pokušaj ponovno", color = MacroGreen)
+            }
+        }
+    }
+}
+
+@Composable
+private fun PraznaKartica(
+    naslov: String,
+    opis: String
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(22.dp),
+        color = MaterialTheme.colorScheme.surface
+    ) {
+        Column(modifier = Modifier.padding(22.dp)) {
+            Text(
+                text = naslov,
+                color = MaterialTheme.colorScheme.onSurface,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 17.sp
+            )
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            Text(
+                text = opis,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.bodySmall
+            )
         }
     }
 }

@@ -6,6 +6,7 @@ import com.niko.macromenza.api.RetrofitInstance
 import com.niko.macromenza.model.CestoJedenoJelo
 import com.niko.macromenza.model.Jelo
 import com.niko.macromenza.model.KategorijaJela
+import com.niko.macromenza.model.MeniDTO
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -49,7 +50,30 @@ data class MakroFilter(
 
 private const val ODGODA_PRETRAGE_MS = 300L
 
+enum class KarticaUnosa { JELA, MENIJI }
+
 class JelaViewModel : ViewModel() {
+
+    private val _kartica = MutableStateFlow(KarticaUnosa.JELA)
+    val kartica: StateFlow<KarticaUnosa> = _kartica
+
+    private val _meniji = MutableStateFlow<List<MeniDTO>>(emptyList())
+    val meniji: StateFlow<List<MeniDTO>> = _meniji
+
+    private val _menijiUcitavanje = MutableStateFlow(false)
+    val menijiUcitavanje: StateFlow<Boolean> = _menijiUcitavanje
+
+    private val _greskaMenija = MutableStateFlow<String?>(null)
+    val greskaMenija: StateFlow<String?> = _greskaMenija
+
+    /** Tip menija (RUCAK / VECERA) kad tip obroka ne određuje filter; null = svi. */
+    private val _tipMenija = MutableStateFlow<String?>(null)
+    val tipMenija: StateFlow<String?> = _tipMenija
+
+    private val _samoVegetarijanski = MutableStateFlow(false)
+    val samoVegetarijanski: StateFlow<Boolean> = _samoVegetarijanski
+
+    private var menijiUcitani = false
 
     private val _jela = MutableStateFlow<List<Jelo>>(emptyList())
     val jela: StateFlow<List<Jelo>> = _jela
@@ -137,6 +161,39 @@ class JelaViewModel : ViewModel() {
         ucitajJela()
     }
 
+    fun postaviKarticu(kartica: KarticaUnosa) {
+        _kartica.value = kartica
+        if (kartica == KarticaUnosa.MENIJI) ucitajMenije()
+    }
+
+    fun postaviTipMenija(tip: String?) {
+        _tipMenija.value = tip
+    }
+
+    fun postaviSamoVegetarijanski(samo: Boolean) {
+        _samoVegetarijanski.value = samo
+    }
+
+    /** Meniji se učitavaju jednom (svih 84), a filtriraju se lokalno. */
+    fun ucitajMenije() {
+        if (menijiUcitani || _menijiUcitavanje.value) return
+
+        viewModelScope.launch {
+            _menijiUcitavanje.value = true
+            _greskaMenija.value = null
+            try {
+                _meniji.value = RetrofitInstance.api.getMeniji()
+                menijiUcitani = true
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                _greskaMenija.value = "Meniji se nisu učitali. Provjeri vezu s poslužiteljem."
+            } finally {
+                _menijiUcitavanje.value = false
+            }
+        }
+    }
+
     fun ucitajKategorije() {
         viewModelScope.launch {
             try {
@@ -168,7 +225,8 @@ class JelaViewModel : ViewModel() {
         datum: String,
         vrijeme: String,
         tipObroka: String,
-        stavke: List<StavkaObrokaRequest>
+        stavke: List<StavkaObrokaRequest>,
+        izvor: String = "RUCNO"
     ) {
         if (_spremanjeUTijeku.value) return
 
@@ -181,6 +239,7 @@ class JelaViewModel : ViewModel() {
                         datum = datum,
                         vrijeme = vrijeme,
                         tipObroka = tipObroka,
+                        izvor = izvor,
                         stavke = stavke
                     )
                 )

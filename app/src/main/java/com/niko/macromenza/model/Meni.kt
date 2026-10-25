@@ -15,6 +15,9 @@ data class MeniDTO(
     @SerializedName("vegetarijanski")
     val vegetarijanski: Boolean,
 
+    @SerializedName("redniBroj")
+    val redniBroj: Int?,
+
     @SerializedName("kalorije")
     val kalorije: Double,
 
