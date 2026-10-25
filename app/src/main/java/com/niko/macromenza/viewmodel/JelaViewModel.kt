@@ -11,13 +11,20 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import com.niko.macromenza.model.Obrok
 import com.niko.macromenza.model.ObrokRequest
+import com.niko.macromenza.model.PovijestDana
+import com.niko.macromenza.model.Preporuka
 import com.niko.macromenza.model.StavkaObrokaRequest
 import org.json.JSONObject
 import retrofit2.HttpException
+import java.time.LocalDate
+import java.time.ZoneId
 
 
 /** Primijenjeni rasponi makronutrijenata (po porciji); null znači bez ograničenja. */
@@ -48,11 +55,68 @@ data class MakroFilter(
         (min == null || vrijednost >= min) && (max == null || vrijednost <= max)
 }
 
+/** Jelo u obroku koji se slaže; vrijednosti jela su po porciji. */
+data class OdabranaStavka(
+    val jelo: Jelo,
+    val kolicina: Double
+)
+
+/** Odabir ostaje i kad pretraga ili kategorija makne jelo s liste; redoslijed je redoslijed dodavanja. */
+data class OdabirObroka(
+    val stavke: Map<Long, OdabranaStavka> = emptyMap(),
+    // Jela koja su došla iz menija; dok ih ima, izvor obroka je MENI.
+    val jelaIzMenija: Set<Long> = emptySet()
+)
+
+data class SazetakObroka(
+    val brojStavki: Int = 0,
+    val kalorije: Double = 0.0,
+    val proteini: Double = 0.0,
+    val ugljikohidrati: Double = 0.0,
+    val masti: Double = 0.0,
+    /** Pojedeno za odabrani datum; null dok se ne učita ili ako učitavanje ne uspije. */
+    val pojedenoKalorije: Double? = null,
+    /** null ako korisnik nema preporuku. */
+    val ciljKalorije: Double? = null
+) {
+    val nakonObroka: Double?
+        get() = pojedenoKalorije?.plus(kalorije)
+}
+
 private const val ODGODA_PRETRAGE_MS = 300L
+
+private val ZAGREB = ZoneId.of("Europe/Zagreb")
 
 enum class KarticaUnosa { JELA, MENIJI }
 
 class JelaViewModel : ViewModel() {
+
+    private var idKorisnik: Long? = null
+
+    private val _odabir = MutableStateFlow(OdabirObroka())
+    val odabir: StateFlow<OdabirObroka> = _odabir
+
+    private val _datum = MutableStateFlow(LocalDate.now(ZAGREB))
+    val datum: StateFlow<LocalDate> = _datum
+
+    private val _pojedeno = MutableStateFlow<PovijestDana?>(null)
+
+    private val _cilj = MutableStateFlow<Preporuka?>(null)
+
+    private var ucitavanjePojedenog: Job? = null
+
+    val sazetak: StateFlow<SazetakObroka> = combine(_odabir, _pojedeno, _cilj) { odabir, pojedeno, cilj ->
+        val stavke = odabir.stavke.values
+        SazetakObroka(
+            brojStavki = stavke.size,
+            kalorije = stavke.sumOf { it.jelo.kalorije * it.kolicina },
+            proteini = stavke.sumOf { it.jelo.proteini * it.kolicina },
+            ugljikohidrati = stavke.sumOf { it.jelo.ugljikohidrati * it.kolicina },
+            masti = stavke.sumOf { it.jelo.masti * it.kolicina },
+            pojedenoKalorije = pojedeno?.ukupnoKalorije,
+            ciljKalorije = cilj?.kalorije
+        )
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, SazetakObroka())
 
     private val _kartica = MutableStateFlow(KarticaUnosa.JELA)
     val kartica: StateFlow<KarticaUnosa> = _kartica
@@ -219,31 +283,152 @@ class JelaViewModel : ViewModel() {
         }
     }
 
+    fun postaviKorisnika(id: Long) {
+        idKorisnik = id
+        ucitajCestoJedeno(id)
+        ucitajCilj(id)
+        ucitajPojedeno()
+    }
+
+    fun postaviDatum(noviDatum: LocalDate) {
+        if (_datum.value == noviDatum) return
+        _datum.value = noviDatum
+        ucitajPojedeno()
+    }
+
+    /** Pojedeno za odabrani datum; novi poziv otkazuje prethodni pa stariji datum ne može pregaziti noviji. */
+    private fun ucitajPojedeno() {
+        val id = idKorisnik ?: return
+        val trazeniDatum = _datum.value
+
+        ucitavanjePojedenog?.cancel()
+        _pojedeno.value = null
+        ucitavanjePojedenog = viewModelScope.launch {
+            try {
+                _pojedeno.value = RetrofitInstance.api.dohvatiPovijestZaDan(
+                    idKorisnik = id,
+                    datum = trazeniDatum.toString()
+                )
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                // Bez pojedenog se redak "Nakon ovog obroka" samo ne prikazuje.
+                _pojedeno.value = null
+            }
+        }
+    }
+
+    private fun ucitajCilj(id: Long) {
+        viewModelScope.launch {
+            try {
+                _cilj.value = RetrofitInstance.api.dohvatiPreporukeZaKorisnika(id)
+                    .maxByOrNull { it.id ?: 0 }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                _cilj.value = null
+            }
+        }
+    }
+
+    // Prvi + daje 1 porciju, dalje koraci po 0,5.
+    fun povecaj(jelo: Jelo) = dodaj(jelo, if (kolicina(jelo.id) == 0.0) 1.0 else 0.5)
+
+    // Iz detalja jela: odabrane porcije dodaju se na već odabranu količinu.
+    fun dodaj(jelo: Jelo, porcije: Double) {
+        val odabir = _odabir.value
+        _odabir.value = odabir.copy(
+            stavke = odabir.stavke + (jelo.id to OdabranaStavka(jelo, kolicina(jelo.id) + porcije))
+        )
+    }
+
+    // − s 0,5 miče jelo iz obroka.
+    fun smanji(idJelo: Long) {
+        val trenutna = kolicina(idJelo)
+        if (trenutna <= 0.0) return
+
+        if (trenutna <= 0.5) {
+            ukloni(idJelo)
+        } else {
+            val odabir = _odabir.value
+            val stavka = odabir.stavke.getValue(idJelo)
+            _odabir.value = odabir.copy(
+                stavke = odabir.stavke + (idJelo to stavka.copy(kolicina = trenutna - 0.5))
+            )
+        }
+    }
+
+    fun ukloni(idJelo: Long) {
+        val odabir = _odabir.value
+        _odabir.value = odabir.copy(
+            stavke = odabir.stavke - idJelo,
+            jelaIzMenija = odabir.jelaIzMenija - idJelo
+        )
+    }
+
+    /** Vraća odabir prije dodavanja, za "Poništi". */
+    fun dodajMeni(meni: MeniDTO): OdabirObroka {
+        val staro = _odabir.value
+        val stavke = LinkedHashMap(staro.stavke)
+
+        meni.stavke.forEach { s ->
+            val postojeca = stavke[s.idJelo]
+            // Vrijednosti stavke menija su za cijelu količinu, a odabir računa po porciji.
+            val jelo = postojeca?.jelo ?: Jelo(
+                id = s.idJelo,
+                naziv = s.nazivJela,
+                opis = null,
+                kalorije = s.kalorije / s.kolicina,
+                proteini = s.proteini / s.kolicina,
+                ugljikohidrati = s.ugljikohidrati / s.kolicina,
+                masti = s.masti / s.kolicina,
+                sifra = null,
+                kategorija = null,
+                cijenaEur = null,
+                napomena = null
+            )
+            stavke[s.idJelo] = OdabranaStavka(jelo, (postojeca?.kolicina ?: 0.0) + s.kolicina)
+        }
+
+        _odabir.value = OdabirObroka(
+            stavke = stavke,
+            jelaIzMenija = staro.jelaIzMenija + meni.stavke.map { it.idJelo }
+        )
+
+        return staro
+    }
+
+    fun vratiOdabir(staro: OdabirObroka) {
+        _odabir.value = staro
+    }
+
+    private fun kolicina(idJelo: Long): Double = _odabir.value.stavke[idJelo]?.kolicina ?: 0.0
+
     /** Sprema cijeli obrok jednim pozivom; backend sprema sve stavke ili nijednu. */
-    fun spremiObrok(
-        idKorisnik: Long,
-        datum: String,
-        vrijeme: String,
-        tipObroka: String,
-        stavke: List<StavkaObrokaRequest>,
-        izvor: String = "RUCNO"
-    ) {
-        if (_spremanjeUTijeku.value) return
+    fun spremiObrok(vrijeme: String, tipObroka: String) {
+        val id = idKorisnik ?: return
+        val odabir = _odabir.value
+        if (odabir.stavke.isEmpty() || _spremanjeUTijeku.value) return
 
         viewModelScope.launch {
             _spremanjeUTijeku.value = true
             try {
                 _spremljeniObrok.value = RetrofitInstance.api.spremiObrok(
                     ObrokRequest(
-                        idKorisnik = idKorisnik,
-                        datum = datum,
+                        idKorisnik = id,
+                        datum = _datum.value.toString(),
                         vrijeme = vrijeme,
                         tipObroka = tipObroka,
-                        izvor = izvor,
-                        stavke = stavke
+                        izvor = if (odabir.jelaIzMenija.isNotEmpty()) "MENI" else "RUCNO",
+                        stavke = odabir.stavke.values.map {
+                            StavkaObrokaRequest(idJelo = it.jelo.id, kolicina = it.kolicina)
+                        }
                     )
                 )
-                ucitajCestoJedeno(idKorisnik)
+                // Obrok je spremljen: prazan odabir sprječava dvostruko spremanje nakon povratka na ekran.
+                _odabir.value = OdabirObroka()
+                ucitajPojedeno()
+                ucitajCestoJedeno(id)
             } catch (e: HttpException) {
                 _greskaSpremanja.value = porukaGreske(e)
             } catch (e: Exception) {

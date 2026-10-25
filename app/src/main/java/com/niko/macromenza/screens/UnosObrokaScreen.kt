@@ -85,9 +85,12 @@ fun UnosObrokaScreen(
     val greskaMenija by viewModel.greskaMenija.collectAsState()
     val tipMenija by viewModel.tipMenija.collectAsState()
     val samoVegetarijanski by viewModel.samoVegetarijanski.collectAsState()
+    val odabir by viewModel.odabir.collectAsState()
+    val sazetak by viewModel.sazetak.collectAsState()
+    val datum by viewModel.datum.collectAsState()
 
     val danas = remember { LocalDate.now(ZAGREB) }
-    var datum by remember { mutableStateOf(danas) }
+    var visinaBara by remember { mutableStateOf(0.dp) }
     var vrijeme by remember {
         mutableStateOf(LocalTime.now(ZAGREB).truncatedTo(ChronoUnit.MINUTES))
     }
@@ -112,78 +115,17 @@ fun UnosObrokaScreen(
 
     var prikaziOstalo by remember { mutableStateOf(false) }
 
-    val kolicine = remember {
-        mutableStateMapOf<Long, Double>()
-    }
-
-    // Odabrana jela pamte se zasebno, da ostanu u obroku i kad ih pretraga ili kategorija makne s liste.
-    val odabrana = remember {
-        mutableStateMapOf<Long, Jelo>()
-    }
-
-    // Jela koja su u odabir došla iz menija; dok ih ima, izvor obroka je MENI.
-    val jelaIzMenija = remember {
-        mutableStateListOf<Long>()
-    }
-
     val scope = rememberCoroutineScope()
 
-    // Prvi + daje 1 porciju, dalje koraci po 0,5; − s 0,5 miče jelo iz obroka.
-    fun povecaj(jelo: Jelo) {
-        val trenutna = kolicine[jelo.id] ?: 0.0
-        kolicine[jelo.id] = if (trenutna == 0.0) 1.0 else trenutna + 0.5
-        odabrana[jelo.id] = jelo
-    }
-
-    // Iz detalja jela: odabrane porcije dodaju se na već odabranu količinu.
-    fun dodaj(jelo: Jelo, porcije: Double) {
-        val trenutna = kolicine[jelo.id] ?: 0.0
-        kolicine[jelo.id] = trenutna + porcije
-        odabrana[jelo.id] = jelo
-    }
+    // Količina odabrana za jelo; odabir živi u ViewModelu pa ostaje i kad pretraga makne jelo s liste.
+    fun kolicinaJela(idJelo: Long): Double = odabir.stavke[idJelo]?.kolicina ?: 0.0
 
     var detaljJelo by remember { mutableStateOf<Jelo?>(null) }
-
-    fun smanji(jelo: Jelo) {
-        val trenutna = kolicine[jelo.id] ?: 0.0
-        if (trenutna <= 0.0) return
-
-        if (trenutna <= 0.5) {
-            kolicine[jelo.id] = 0.0
-            odabrana.remove(jelo.id)
-            jelaIzMenija.remove(jelo.id)
-        } else {
-            kolicine[jelo.id] = trenutna - 0.5
-        }
-    }
 
     // Svaka stavka ide u odabir s količinom iz menija (zbraja se s već odabranom);
     // "Poništi" vraća odabir na stanje prije dodavanja.
     fun dodajMeni(meni: MeniDTO) {
-        val staroKolicine = kolicine.toMap()
-        val staroOdabrana = odabrana.toMap()
-        val staroIzMenija = jelaIzMenija.toList()
-
-        meni.stavke.forEach { s ->
-            kolicine[s.idJelo] = (kolicine[s.idJelo] ?: 0.0) + s.kolicina
-            if (s.idJelo !in odabrana) {
-                // Vrijednosti stavke su za cijelu količinu, a odabir računa po porciji.
-                odabrana[s.idJelo] = Jelo(
-                    id = s.idJelo,
-                    naziv = s.nazivJela,
-                    opis = null,
-                    kalorije = s.kalorije / s.kolicina,
-                    proteini = s.proteini / s.kolicina,
-                    ugljikohidrati = s.ugljikohidrati / s.kolicina,
-                    masti = s.masti / s.kolicina,
-                    sifra = null,
-                    kategorija = null,
-                    cijenaEur = null,
-                    napomena = null
-                )
-            }
-            if (s.idJelo !in jelaIzMenija) jelaIzMenija.add(s.idJelo)
-        }
+        val staro = viewModel.dodajMeni(meni)
 
         scope.launch {
             snackbarHostState.currentSnackbarData?.dismiss()
@@ -193,12 +135,7 @@ fun UnosObrokaScreen(
                 duration = SnackbarDuration.Short
             )
             if (rezultat == SnackbarResult.ActionPerformed) {
-                kolicine.clear()
-                kolicine.putAll(staroKolicine)
-                odabrana.clear()
-                odabrana.putAll(staroOdabrana)
-                jelaIzMenija.clear()
-                jelaIzMenija.addAll(staroIzMenija)
+                viewModel.vratiOdabir(staro)
             }
         }
     }
@@ -218,7 +155,7 @@ fun UnosObrokaScreen(
     }
 
     LaunchedEffect(prijavljeniKorisnikId) {
-        prijavljeniKorisnikId?.let { viewModel.ucitajCestoJedeno(it) }
+        prijavljeniKorisnikId?.let { viewModel.postaviKorisnika(it) }
     }
 
     LaunchedEffect(spremljeniObrok) {
@@ -231,10 +168,6 @@ fun UnosObrokaScreen(
         val poruka = greskaSpremanja ?: return@LaunchedEffect
         viewModel.ocistiRezultatSpremanja()
         snackbarHostState.showSnackbar(poruka)
-    }
-
-    val odabranaJela = odabrana.values.filter {
-        (kolicine[it.id] ?: 0.0) > 0.0
     }
 
     // Tip obroka RUCAK/VECERA određuje tip menija; za doručak i užinu bira se chipom.
@@ -252,22 +185,6 @@ fun UnosObrokaScreen(
         cestoJedeno.filter { makroFilter.propusta(it.jelo) }
     } else {
         emptyList()
-    }
-
-    val ukupnoKalorija = odabranaJela.sumOf {
-        it.kalorije * (kolicine[it.id] ?: 0.0)
-    }
-
-    val ukupnoProteina = odabranaJela.sumOf {
-        it.proteini * (kolicine[it.id] ?: 0.0)
-    }
-
-    val ukupnoUh = odabranaJela.sumOf {
-        it.ugljikohidrati * (kolicine[it.id] ?: 0.0)
-    }
-
-    val ukupnoMasti = odabranaJela.sumOf {
-        it.masti * (kolicine[it.id] ?: 0.0)
     }
 
     Box(
@@ -292,7 +209,8 @@ fun UnosObrokaScreen(
                 start = 20.dp,
                 top = screenTopPadding(),
                 end = 20.dp,
-                bottom = screenBottomPadding()
+                // Prostor za plutajuću navigaciju i sažetak obroka da zadnje jelo ostane vidljivo.
+                bottom = screenBottomPadding() + visinaBara + 12.dp
             ),
             verticalArrangement = Arrangement.spacedBy(0.dp)
         ) {
@@ -469,37 +387,6 @@ fun UnosObrokaScreen(
                 Spacer(modifier = Modifier.height(18.dp))
             }
 
-            item {
-                MealSummaryCard(
-                    ukupnoKalorija = ukupnoKalorija,
-                    ukupnoProteina = ukupnoProteina,
-                    ukupnoUh = ukupnoUh,
-                    ukupnoMasti = ukupnoMasti,
-                    enabled = odabranaJela.isNotEmpty() && !spremanjeUTijeku,
-                    spremanjeUTijeku = spremanjeUTijeku,
-                    onSave = {
-                        val idKorisnik =
-                            prijavljeniKorisnikId ?: return@MealSummaryCard
-
-                        viewModel.spremiObrok(
-                            idKorisnik = idKorisnik,
-                            datum = datum.toString(),
-                            vrijeme = vrijeme.format(FORMAT_VREMENA),
-                            tipObroka = tip,
-                            stavke = odabranaJela.map { jelo ->
-                                StavkaObrokaRequest(
-                                    idJelo = jelo.id,
-                                    kolicina = kolicine[jelo.id] ?: 0.0
-                                )
-                            },
-                            izvor = if (jelaIzMenija.isNotEmpty()) "MENI" else "RUCNO"
-                        )
-                    }
-                )
-
-                Spacer(modifier = Modifier.height(22.dp))
-            }
-
             if (kartica == KarticaUnosa.JELA && greska != null) {
                 item {
                     Surface(
@@ -543,9 +430,9 @@ fun UnosObrokaScreen(
                         items(cestoZaPrikaz, key = { it.jelo.id }) { cesto ->
                             CestoJedenoKartica(
                                 cesto = cesto,
-                                kolicina = kolicine[cesto.jelo.id] ?: 0.0,
-                                onPlus = { povecaj(cesto.jelo) },
-                                onMinus = { smanji(cesto.jelo) },
+                                kolicina = kolicinaJela(cesto.jelo.id),
+                                onPlus = { viewModel.povecaj(cesto.jelo) },
+                                onMinus = { viewModel.smanji(cesto.jelo.id) },
                                 onDetalj = { detaljJelo = cesto.jelo }
                             )
                         }
@@ -631,9 +518,9 @@ fun UnosObrokaScreen(
 
                     JeloKolicinaItem(
                         jelo = jelo,
-                        kolicina = kolicine[jelo.id] ?: 0.0,
-                        onPlus = { povecaj(jelo) },
-                        onMinus = { smanji(jelo) },
+                        kolicina = kolicinaJela(jelo.id),
+                        onPlus = { viewModel.povecaj(jelo) },
+                        onMinus = { viewModel.smanji(jelo.id) },
                         onDetalj = { detaljJelo = jelo }
                     )
 
@@ -642,6 +529,25 @@ fun UnosObrokaScreen(
             }
         }
 
+        SazetakObrokaBar(
+            sazetak = sazetak,
+            stavke = odabir.stavke.values.toList(),
+            spremanjeUTijeku = spremanjeUTijeku,
+            onPlus = { viewModel.povecaj(it) },
+            onMinus = { viewModel.smanji(it) },
+            onUkloni = { viewModel.ukloni(it) },
+            onSpremi = {
+                viewModel.spremiObrok(
+                    vrijeme = vrijeme.format(FORMAT_VREMENA),
+                    tipObroka = tip
+                )
+            },
+            onVisina = { visinaBara = it },
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = screenBottomPadding() - 12.dp)
+        )
+
         SnackbarHost(
             hostState = snackbarHostState,
             modifier = Modifier
@@ -649,7 +555,7 @@ fun UnosObrokaScreen(
                 .padding(
                     start = 16.dp,
                     end = 16.dp,
-                    bottom = screenBottomPadding()
+                    bottom = screenBottomPadding() + visinaBara + 4.dp
                 )
         )
     }
@@ -675,9 +581,11 @@ fun UnosObrokaScreen(
                 TextButton(
                     onClick = {
                         datePickerState.selectedDateMillis?.let { millis ->
-                            datum = Instant.ofEpochMilli(millis)
-                                .atZone(ZoneOffset.UTC)
-                                .toLocalDate()
+                            viewModel.postaviDatum(
+                                Instant.ofEpochMilli(millis)
+                                    .atZone(ZoneOffset.UTC)
+                                    .toLocalDate()
+                            )
                         }
                         showDatePicker = false
                     }
@@ -745,7 +653,7 @@ fun UnosObrokaScreen(
         JeloDetaljSheet(
             idJelo = jelo.id,
             onDodaj = { porcije ->
-                dodaj(jelo, porcije)
+                viewModel.dodaj(jelo, porcije)
                 detaljJelo = null
             },
             onDismiss = { detaljJelo = null }
@@ -813,114 +721,6 @@ fun UnosObrokaScreen(
             }
         )
     }}
-
-@Composable
-private fun MealSummaryCard(
-    ukupnoKalorija: Double,
-    ukupnoProteina: Double,
-    ukupnoUh: Double,
-    ukupnoMasti: Double,
-    enabled: Boolean,
-    spremanjeUTijeku: Boolean,
-    onSave: () -> Unit
-) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
-        color = MacroGreen
-    ) {
-        Column(
-            modifier = Modifier.padding(18.dp)
-        ) {
-            Text(
-                text = "Tvoj obrok",
-                color = Color.White.copy(alpha = 0.75f),
-                style = MaterialTheme.typography.bodySmall
-            )
-
-            Spacer(modifier = Modifier.height(5.dp))
-
-            Text(
-                text = "${formatKcal(ukupnoKalorija)} kcal",
-                color = Color.White,
-                fontSize = 30.sp,
-                fontWeight = FontWeight.Bold
-            )
-
-            Spacer(modifier = Modifier.height(14.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement =
-                    Arrangement.SpaceBetween
-            ) {
-                SummaryMacro(
-                    label = "Proteini",
-                    value = ukupnoProteina,
-                    color = Color.White
-                )
-
-                SummaryMacro(
-                    label = "UH",
-                    value = ukupnoUh,
-                    color = Color.White
-                )
-
-                SummaryMacro(
-                    label = "Masti",
-                    value = ukupnoMasti,
-                    color = Color.White
-                )
-            }
-
-            Spacer(modifier = Modifier.height(18.dp))
-
-            Button(
-                onClick = onSave,
-                enabled = enabled,
-                shape = RoundedCornerShape(16.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.White,
-                    contentColor = MacroGreen,
-                    disabledContainerColor =
-                        Color.White.copy(alpha = 0.25f),
-                    disabledContentColor =
-                        Color.White.copy(alpha = 0.65f)
-                )
-            ) {
-                Text(
-                    text = if (spremanjeUTijeku) "Spremam..." else "Spremi obrok",
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun SummaryMacro(
-    label: String,
-    value: Double,
-    color: Color
-) {
-    Column {
-        Text(
-            text = "${formatMakro(value)} g",
-            color = color,
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 16.sp
-        )
-
-        Text(
-            text = label,
-            color = color.copy(alpha = 0.70f),
-            fontSize = 11.sp
-        )
-    }
-}
 
 @Composable
 fun JeloKolicinaItem(
