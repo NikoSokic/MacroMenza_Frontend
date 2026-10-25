@@ -1,5 +1,6 @@
 package com.niko.macromenza.screens
 
+import com.niko.macromenza.util.PrijedlogObrokaStore
 import com.niko.macromenza.util.formatKcal
 import com.niko.macromenza.util.formatKolicina
 import com.niko.macromenza.util.formatMakro
@@ -19,6 +20,7 @@ import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Search
@@ -34,6 +36,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.google.gson.Gson
@@ -181,6 +185,17 @@ fun UnosObrokaScreen(
         tipRucno = true
     }
 
+    // Prijedlog iz ekrana "Slika ili opis" stiže pri otvaranju i pri povratku na ovaj ekran.
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        if (uredivanje) return@LifecycleEventEffect
+        val cekajuci = PrijedlogObrokaStore.preuzmi() ?: return@LifecycleEventEffect
+        viewModel.primijeniPrijedlog(cekajuci.prijedlog, cekajuci.izvor)
+        scope.launch {
+            snackbarHostState.currentSnackbarData?.dismiss()
+            snackbarHostState.showSnackbar("Prijedlog je dodan u obrok. Provjeri jela i količine.")
+        }
+    }
+
     LaunchedEffect(spremljeniObrok) {
         val obrok = spremljeniObrok ?: return@LaunchedEffect
         viewModel.ocistiRezultatSpremanja()
@@ -281,6 +296,19 @@ fun UnosObrokaScreen(
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
+
+                    if (!uredivanje) {
+                        IconButton(
+                            onClick = { navController.navigate(RUTA_SLIKA_ILI_OPIS) },
+                            enabled = !spremanjeUTijeku
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.PhotoCamera,
+                                contentDescription = "Slika ili opis",
+                                tint = MacroGreen
+                            )
+                        }
+                    }
 
                     if (uredivanje && uredivaniObrok != null) {
                         Box {
@@ -1648,7 +1676,7 @@ private fun FilterNumberField(
 }
 
 /** Zadani tip prema vremenu: do 10:30 doručak, do 15:00 ručak, do 18:00 užina, inače večera. */
-private fun zadaniTipZaVrijeme(vrijeme: LocalTime): String = when {
+internal fun zadaniTipZaVrijeme(vrijeme: LocalTime): String = when {
     !vrijeme.isAfter(LocalTime.of(10, 30)) -> "DORUCAK"
     !vrijeme.isAfter(LocalTime.of(15, 0)) -> "RUCAK"
     !vrijeme.isAfter(LocalTime.of(18, 0)) -> "UZINA"

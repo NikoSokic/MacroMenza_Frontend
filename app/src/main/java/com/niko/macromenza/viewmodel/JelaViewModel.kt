@@ -20,6 +20,7 @@ import com.niko.macromenza.model.Obrok
 import com.niko.macromenza.model.ObrokRequest
 import com.niko.macromenza.model.PovijestDana
 import com.niko.macromenza.model.Preporuka
+import com.niko.macromenza.model.PrijedlogObroka
 import com.niko.macromenza.model.StavkaObrokaRequest
 import org.json.JSONObject
 import retrofit2.HttpException
@@ -65,7 +66,9 @@ data class OdabranaStavka(
 data class OdabirObroka(
     val stavke: Map<Long, OdabranaStavka> = emptyMap(),
     // Jela koja su došla iz menija; dok ih ima, izvor obroka je MENI.
-    val jelaIzMenija: Set<Long> = emptySet()
+    val jelaIzMenija: Set<Long> = emptySet(),
+    // SLIKA ili OPIS kad je odabir popunjen prijedlogom iz prepoznavanja.
+    val izvorPrijedloga: String? = null
 )
 
 data class SazetakObroka(
@@ -412,12 +415,40 @@ class JelaViewModel : ViewModel() {
             stavke[s.idJelo] = OdabranaStavka(jelo, (postojeca?.kolicina ?: 0.0) + s.kolicina)
         }
 
-        _odabir.value = OdabirObroka(
+        _odabir.value = staro.copy(
             stavke = stavke,
             jelaIzMenija = staro.jelaIzMenija + meni.stavke.map { it.idJelo }
         )
 
         return staro
+    }
+
+    /** Dodaje prijedlog iz prepoznavanja (SLIKA ili OPIS) u odabir; postojeće stavke ostaju. */
+    fun primijeniPrijedlog(prijedlog: PrijedlogObroka, izvor: String) {
+        val staro = _odabir.value
+        val stavke = LinkedHashMap(staro.stavke)
+
+        prijedlog.stavke.forEach { s ->
+            if (s.kolicina <= 0.0) return@forEach
+            val postojeca = stavke[s.idJelo]
+            // Vrijednosti stavke prijedloga su za cijelu količinu, a odabir računa po porciji.
+            val jelo = postojeca?.jelo ?: Jelo(
+                id = s.idJelo,
+                naziv = s.naziv,
+                opis = null,
+                kalorije = s.kalorije / s.kolicina,
+                proteini = s.proteini / s.kolicina,
+                ugljikohidrati = s.ugljikohidrati / s.kolicina,
+                masti = s.masti / s.kolicina,
+                sifra = null,
+                kategorija = null,
+                cijenaEur = null,
+                napomena = null
+            )
+            stavke[s.idJelo] = OdabranaStavka(jelo, (postojeca?.kolicina ?: 0.0) + s.kolicina)
+        }
+
+        _odabir.value = staro.copy(stavke = stavke, izvorPrijedloga = izvor)
     }
 
     fun vratiOdabir(staro: OdabirObroka) {
@@ -441,7 +472,7 @@ class JelaViewModel : ViewModel() {
                         datum = _datum.value.toString(),
                         vrijeme = vrijeme,
                         tipObroka = tipObroka,
-                        izvor = if (odabir.jelaIzMenija.isNotEmpty()) "MENI" else "RUCNO",
+                        izvor = if (odabir.jelaIzMenija.isNotEmpty()) "MENI" else odabir.izvorPrijedloga ?: "RUCNO",
                         stavke = odabir.stavke.values.map {
                             StavkaObrokaRequest(idJelo = it.jelo.id, kolicina = it.kolicina)
                         }

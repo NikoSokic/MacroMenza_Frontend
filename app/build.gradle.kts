@@ -80,4 +80,8 @@ dependencies {
 
     implementation("androidx.datastore:datastore-preferences:1.1.7")
 
+    implementation("androidx.exifinterface:exifinterface:1.3.7")
+    // Retrofit 2.11 vuče OkHttp 3.x, a za multipart i timeout koristi se Kotlin API iz 4.x.
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+
 }

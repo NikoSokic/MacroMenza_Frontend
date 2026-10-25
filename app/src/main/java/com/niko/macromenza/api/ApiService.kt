@@ -28,10 +28,15 @@ import com.niko.macromenza.model.IzvoriPodataka
 import com.niko.macromenza.model.MeniDTO
 import com.niko.macromenza.model.Obrok
 import com.niko.macromenza.model.ObrokRequest
+import com.niko.macromenza.model.PrijedlogObroka
 
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
 import retrofit2.Response
 import retrofit2.http.DELETE
+import retrofit2.http.Multipart
 import retrofit2.http.PUT
+import retrofit2.http.Part
 import retrofit2.http.Path
 
 interface ApiService {
@@ -243,5 +248,14 @@ interface ApiService {
     suspend fun dohvatiOnboardingStatus(
         @Path("id") id: Long
     ): OnboardingStatusResponse
+
+    // Poziva se preko RetrofitInstance.prepoznavanjeApi (duži timeout).
+    @Multipart
+    @POST("api/prepoznavanje")
+    suspend fun prepoznaj(
+        @Part slika: MultipartBody.Part?,
+        @Part("opis") opis: RequestBody?,
+        @Part("idKorisnik") idKorisnik: RequestBody
+    ): PrijedlogObroka
 
 }

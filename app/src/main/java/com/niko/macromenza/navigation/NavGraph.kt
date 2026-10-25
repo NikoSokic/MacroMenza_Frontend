@@ -1,5 +1,6 @@
 package com.niko.macromenza.navigation
 
+import android.net.Uri
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -18,8 +19,14 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Alignment
 
+private const val KLJUC_DIJELJENA_SLIKA = "dijeljena_slika"
+
 @Composable
-fun AppNavigation() {
+fun AppNavigation(
+    // Slika podijeljena iz druge aplikacije; obrađuje se čim je korisnik prijavljen.
+    dijeljenaSlika: Uri? = null,
+    onDijeljenaObradena: () -> Unit = {}
+) {
     val navController = rememberNavController()
 
 
@@ -61,6 +68,20 @@ fun AppNavigation() {
                 currentRoute != "register" &&
                 currentRoute?.startsWith("onboarding") != true &&
                 !uredivanjeObroka
+
+    // Neprijavljeni korisnik prvo prolazi prijavu (i onboarding), a slika čeka u MainActivityju.
+    LaunchedEffect(isLoggedIn, dijeljenaSlika, currentRoute) {
+        val uri = dijeljenaSlika ?: return@LaunchedEffect
+        val ruta = currentRoute ?: return@LaunchedEffect
+        if (isLoggedIn != true ||
+            ruta == "welcome" || ruta == "login" || ruta == "register" ||
+            ruta.startsWith("onboarding")
+        ) return@LaunchedEffect
+
+        navController.navigate(RUTA_SLIKA_ILI_OPIS) { launchSingleTop = true }
+        navController.getBackStackEntry(RUTA_SLIKA_ILI_OPIS).savedStateHandle[KLJUC_DIJELJENA_SLIKA] = uri
+        onDijeljenaObradena()
+    }
 
     if (isLoggedIn == null) {
         SplashScreen()
@@ -174,6 +195,20 @@ fun AppNavigation() {
                     tipObroka = tipObroka,
                     navController = navController,
                     idObrok = idObrok
+                )
+            }
+
+            composable(RUTA_SLIKA_ILI_OPIS) { backStackEntry ->
+                val slika by backStackEntry.savedStateHandle
+                    .getStateFlow<Uri?>(KLJUC_DIJELJENA_SLIKA, null)
+                    .collectAsState()
+
+                SlikaIliOpisScreen(
+                    navController = navController,
+                    dijeljenaSlika = slika,
+                    onDijeljenaPrimljena = {
+                        backStackEntry.savedStateHandle[KLJUC_DIJELJENA_SLIKA] = null
+                    }
                 )
             }
 
