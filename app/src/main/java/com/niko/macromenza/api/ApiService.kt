@@ -72,6 +72,19 @@ interface ApiService {
         @Query("datum") datum: String
     ): List<Obrok>
 
+    @GET("api/obroci/{id}")
+    suspend fun getObrok(
+        @Path("id") id: Long,
+        @Query("idKorisnik") idKorisnik: Long
+    ): Obrok
+
+    @PUT("api/obroci/{id}")
+    suspend fun azurirajObrok(
+        @Path("id") id: Long,
+        @Query("idKorisnik") idKorisnik: Long,
+        @Body request: ObrokRequest
+    ): Obrok
+
     @GET("api/jela/filter")
     suspend fun filtrirajJela(
         @Query("minKalorije") minKalorije: Double? = null,

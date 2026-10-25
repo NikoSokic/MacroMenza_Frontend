@@ -59,7 +59,8 @@ fun SazetakObrokaBar(
     onUkloni: (Long) -> Unit,
     onSpremi: () -> Unit,
     onVisina: (Dp) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    tekstSpremi: String = "Spremi"
 ) {
     val prazno = stavke.isEmpty()
     var otvoren by remember { mutableStateOf(false) }
@@ -138,11 +139,12 @@ fun SazetakObrokaBar(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 if (prazno) {
-                    PrazanSazetak()
+                    PrazanSazetak(tekstSpremi)
                 } else {
                     PuniSazetak(
                         sazetak = sazetak,
                         spremanjeUTijeku = spremanjeUTijeku,
+                        tekstSpremi = tekstSpremi,
                         onSpremi = onSpremi
                     )
                 }
@@ -152,7 +154,7 @@ fun SazetakObrokaBar(
 }
 
 @Composable
-private fun PrazanSazetak() {
+private fun PrazanSazetak(tekstSpremi: String) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -172,7 +174,7 @@ private fun PrazanSazetak() {
             shape = RoundedCornerShape(16.dp),
             modifier = Modifier.height(46.dp)
         ) {
-            Text(text = "Spremi", fontWeight = FontWeight.SemiBold)
+            Text(text = tekstSpremi, fontWeight = FontWeight.SemiBold)
         }
     }
 }
@@ -181,6 +183,7 @@ private fun PrazanSazetak() {
 private fun PuniSazetak(
     sazetak: SazetakObroka,
     spremanjeUTijeku: Boolean,
+    tekstSpremi: String,
     onSpremi: () -> Unit
 ) {
     Row(
@@ -226,7 +229,7 @@ private fun PuniSazetak(
             )
         ) {
             Text(
-                text = if (spremanjeUTijeku) "Spremam..." else "Spremi",
+                text = if (spremanjeUTijeku) "Spremam..." else tekstSpremi,
                 fontWeight = FontWeight.SemiBold,
                 maxLines = 1
             )

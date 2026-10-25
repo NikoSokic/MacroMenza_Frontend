@@ -14,6 +14,7 @@ import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -24,7 +25,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.niko.macromenza.model.StavkaObroka
+import androidx.navigation.NavController
 import com.niko.macromenza.session.UserSessionManager
 import com.niko.macromenza.ui.components.screenBottomPadding
 import com.niko.macromenza.ui.components.screenTopPadding
@@ -39,16 +40,19 @@ enum class PovijestTab {
 
 @Composable
 fun PovijestScreen(
+    navController: NavController,
     viewModel: PovijestViewModel = viewModel()
 ) {
     val tjedniPregled by viewModel.tjedniPregled.collectAsState()
     val povijestDana by viewModel.povijestDana.collectAsState()
+    val obrociDana by viewModel.obrociDana.collectAsState()
 
-    var odabraniTab by remember {
+    // Saveable: nakon povratka iz uređivanja obroka otvara se isti dan.
+    var odabraniTab by rememberSaveable {
         mutableStateOf(PovijestTab.TJEDNI)
     }
 
-    var odabraniDatum by remember {
+    var odabraniDatum by rememberSaveable {
         mutableStateOf<String?>(null)
     }
 
@@ -376,17 +380,11 @@ fun PovijestScreen(
                             )
                         }
 
-                        dan.obroci.forEach { (tip, stavke) ->
-
-                            if (stavke.isNotEmpty()) {
-
-                                item {
-                                    SekcijaObroka(
-                                        naslov = tip,
-                                        stavke = stavke
-                                    )
-                                }
-                            }
+                        item {
+                            ObrociDana(
+                                obroci = obrociDana,
+                                onUredi = { navController.navigate(rutaUredivanjaObroka(it)) }
+                            )
                         }
                     }
                 }
@@ -1148,17 +1146,4 @@ private fun EmptyDayCard() {
             )
         }
     }
-}
-
-@Composable
-fun SekcijaObroka(
-    naslov: String,
-    stavke: List<StavkaObroka>
-) {
-    if (stavke.isEmpty()) return
-
-    SekcijaObrokaDetalj(
-        naslov = naslov,
-        stavke = stavke
-    )
 }

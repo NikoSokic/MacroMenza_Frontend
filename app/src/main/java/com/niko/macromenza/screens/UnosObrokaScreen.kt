@@ -3,6 +3,7 @@ package com.niko.macromenza.screens
 import com.niko.macromenza.util.formatKcal
 import com.niko.macromenza.util.formatKolicina
 import com.niko.macromenza.util.formatMakro
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
@@ -67,8 +68,11 @@ private val FatPurple = Color(0xFF9B6DE3)
 fun UnosObrokaScreen(
     tipObroka: String,
     navController: NavController,
+    // Zadan kod uređivanja spremljenog obroka; null je novi unos.
+    idObrok: Long? = null,
     viewModel: JelaViewModel = viewModel()
 ) {
+    val uredivanje = idObrok != null
     val jela by viewModel.jela.collectAsState()
     val search by viewModel.upit.collectAsState()
     val odabranaKategorija by viewModel.kategorija.collectAsState()
@@ -88,6 +92,10 @@ fun UnosObrokaScreen(
     val odabir by viewModel.odabir.collectAsState()
     val sazetak by viewModel.sazetak.collectAsState()
     val datum by viewModel.datum.collectAsState()
+    val uredivaniObrok by viewModel.uredivaniObrok.collectAsState()
+    val ucitavanjeObroka by viewModel.ucitavanjeObroka.collectAsState()
+    val greskaUcitavanja by viewModel.greskaUcitavanja.collectAsState()
+    val azuriraniObrok by viewModel.azuriraniObrok.collectAsState()
 
     val danas = remember { LocalDate.now(ZAGREB) }
     var visinaBara by remember { mutableStateOf(0.dp) }
@@ -155,7 +163,18 @@ fun UnosObrokaScreen(
     }
 
     LaunchedEffect(prijavljeniKorisnikId) {
-        prijavljeniKorisnikId?.let { viewModel.postaviKorisnika(it) }
+        prijavljeniKorisnikId?.let {
+            viewModel.postaviKorisnika(it)
+            idObrok?.let { id -> viewModel.ucitajObrok(id) }
+        }
+    }
+
+    // Vrijeme i tip žive u ekranu, pa ih postavlja ekran kad obrok stigne; tip se više ne mijenja s vremenom.
+    LaunchedEffect(uredivaniObrok) {
+        val obrok = uredivaniObrok ?: return@LaunchedEffect
+        vrijeme = LocalTime.parse(obrok.vrijeme, FORMAT_VREMENA)
+        tip = obrok.tipObroka
+        tipRucno = true
     }
 
     LaunchedEffect(spremljeniObrok) {
@@ -163,6 +182,26 @@ fun UnosObrokaScreen(
         viewModel.ocistiRezultatSpremanja()
         navController.navigate("obrok_spremljen/${obrok.tipObroka}")
     }
+
+    // Promjene spremljene: natrag na prikaz dana, koji se pri povratku sam ponovno učita.
+    LaunchedEffect(azuriraniObrok) {
+        azuriraniObrok ?: return@LaunchedEffect
+        viewModel.ocistiRezultatSpremanja()
+        navController.popBackStack()
+    }
+
+    LaunchedEffect(greskaUcitavanja) {
+        val poruka = greskaUcitavanja ?: return@LaunchedEffect
+        viewModel.ocistiGreskuUcitavanja()
+        snackbarHostState.showSnackbar(poruka)
+    }
+
+    val imaPromjena = uredivanje && uredivaniObrok != null &&
+        viewModel.imaPromjena(vrijeme.format(FORMAT_VREMENA), tip)
+    var showOdbaciDialog by remember { mutableStateOf(false) }
+
+    // Prije BackHandlera sažetka, pa otvorena lista sažetka i dalje prva hvata "natrag".
+    BackHandler(enabled = imaPromjena) { showOdbaciDialog = true }
 
     LaunchedEffect(greskaSpremanja) {
         val poruka = greskaSpremanja ?: return@LaunchedEffect
@@ -217,7 +256,7 @@ fun UnosObrokaScreen(
 
             item {
                 Text(
-                    text = formatTipObroka(tip),
+                    text = if (uredivanje) "Uredi obrok" else formatTipObroka(tip),
                     fontSize = 34.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
@@ -226,10 +265,23 @@ fun UnosObrokaScreen(
                 Spacer(modifier = Modifier.height(4.dp))
 
                 Text(
-                    text = "Odaberi jela i količinu za svoj obrok.",
+                    text = if (uredivanje) {
+                        "Promijeni datum, vrijeme, tip ili jela."
+                    } else {
+                        "Odaberi jela i količinu za svoj obrok."
+                    },
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+
+                if (ucitavanjeObroka) {
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    LinearProgressIndicator(
+                        modifier = Modifier.fillMaxWidth(),
+                        color = MacroGreen
+                    )
+                }
 
                 Spacer(modifier = Modifier.height(18.dp))
             }
@@ -537,15 +589,23 @@ fun UnosObrokaScreen(
             onMinus = { viewModel.smanji(it) },
             onUkloni = { viewModel.ukloni(it) },
             onSpremi = {
-                viewModel.spremiObrok(
-                    vrijeme = vrijeme.format(FORMAT_VREMENA),
-                    tipObroka = tip
-                )
+                if (uredivanje) {
+                    viewModel.azurirajObrok(
+                        vrijeme = vrijeme.format(FORMAT_VREMENA),
+                        tipObroka = tip
+                    )
+                } else {
+                    viewModel.spremiObrok(
+                        vrijeme = vrijeme.format(FORMAT_VREMENA),
+                        tipObroka = tip
+                    )
+                }
             },
             onVisina = { visinaBara = it },
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(bottom = screenBottomPadding() - 12.dp)
+                .padding(bottom = screenBottomPadding() - 12.dp),
+            tekstSpremi = if (uredivanje) "Spremi promjene" else "Spremi"
         )
 
         SnackbarHost(
@@ -557,6 +617,29 @@ fun UnosObrokaScreen(
                     end = 16.dp,
                     bottom = screenBottomPadding() + visinaBara + 4.dp
                 )
+        )
+    }
+
+    if (showOdbaciDialog) {
+        AlertDialog(
+            onDismissRequest = { showOdbaciDialog = false },
+            title = { Text("Odbaciti promjene?") },
+            text = { Text("Promjene ovog obroka neće biti spremljene.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showOdbaciDialog = false
+                        navController.popBackStack()
+                    }
+                ) {
+                    Text("Odbaci", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showOdbaciDialog = false }) {
+                    Text("Nastavi uređivati", color = MacroGreen)
+                }
+            }
         )
     }
 

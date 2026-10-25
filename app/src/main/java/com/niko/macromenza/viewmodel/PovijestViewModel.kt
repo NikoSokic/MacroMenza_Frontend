@@ -3,6 +3,7 @@ package com.niko.macromenza.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.niko.macromenza.api.RetrofitInstance
+import com.niko.macromenza.model.Obrok
 import com.niko.macromenza.model.PovijestDana
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -13,6 +14,9 @@ class PovijestViewModel : ViewModel() {
 
     private val _povijestDana = MutableStateFlow<PovijestDana?>(null)
     val povijestDana = _povijestDana.asStateFlow()
+
+    private val _obrociDana = MutableStateFlow<List<Obrok>>(emptyList())
+    val obrociDana = _obrociDana.asStateFlow()
 
     private val _tjedniPregled = MutableStateFlow<TjedniPregled?>(null)
     val tjedniPregled = _tjedniPregled.asStateFlow()
@@ -31,6 +35,14 @@ class PovijestViewModel : ViewModel() {
                     )
             } catch (_: Exception) {
 
+            }
+        }
+        viewModelScope.launch {
+            try {
+                _obrociDana.value =
+                    RetrofitInstance.api.getObroci(idKorisnik, datum).sortedBy { it.vrijeme }
+            } catch (_: Exception) {
+                _obrociDana.value = emptyList()
             }
         }
     }

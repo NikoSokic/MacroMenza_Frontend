@@ -4,7 +4,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.navigation.NavType
 import androidx.navigation.compose.*
+import androidx.navigation.navArgument
 import com.niko.macromenza.screens.*
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -48,11 +50,17 @@ fun AppNavigation() {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
+    // Kod uređivanja obroka izlaz ide samo preko "natrag", da dijalog za odbacivanje promjena ne bi bio zaobiđen.
+    val uredivanjeObroka =
+        currentRoute?.startsWith("unos_obroka") == true &&
+                (navBackStackEntry?.arguments?.getLong("idObrok", -1L) ?: -1L) > 0
+
     val showBottomBar =
         currentRoute != "welcome" &&
                 currentRoute != "login" &&
                 currentRoute != "register" &&
-                currentRoute?.startsWith("onboarding") != true
+                currentRoute?.startsWith("onboarding") != true &&
+                !uredivanjeObroka
 
     if (isLoggedIn == null) {
         SplashScreen()
@@ -114,7 +122,7 @@ fun AppNavigation() {
             }
 
             composable(BottomNavItem.Povijest.route) {
-                PovijestScreen()
+                PovijestScreen(navController)
             }
 
             composable(BottomNavItem.Profil.route) {
@@ -140,14 +148,28 @@ fun AppNavigation() {
                 PostavkeAplikacijeScreen(navController)
             }
 
-            composable("unos_obroka/{tipObroka}") { backStackEntry ->
+            // Bez idObrok je novi unos; s njim se uređuje spremljeni obrok.
+            composable(
+                route = "unos_obroka/{tipObroka}?idObrok={idObrok}",
+                arguments = listOf(
+                    navArgument("idObrok") {
+                        type = NavType.LongType
+                        defaultValue = -1L
+                    }
+                )
+            ) { backStackEntry ->
                 val tipObroka =
                     backStackEntry.arguments?.getString("tipObroka")
                         ?: "RUCAK"
 
+                val idObrok = backStackEntry.arguments
+                    ?.getLong("idObrok", -1L)
+                    ?.takeIf { it > 0 }
+
                 UnosObrokaScreen(
                     tipObroka = tipObroka,
-                    navController = navController
+                    navController = navController,
+                    idObrok = idObrok
                 )
             }
 
@@ -167,7 +189,8 @@ fun AppNavigation() {
                     backStackEntry.arguments?.getString("datum") ?: ""
 
                 DetaljDanaScreen(
-                    datum = datum
+                    datum = datum,
+                    navController = navController
                 )
             }
         }

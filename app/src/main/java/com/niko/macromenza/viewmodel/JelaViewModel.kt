@@ -105,15 +105,34 @@ class JelaViewModel : ViewModel() {
 
     private var ucitavanjePojedenog: Job? = null
 
-    val sazetak: StateFlow<SazetakObroka> = combine(_odabir, _pojedeno, _cilj) { odabir, pojedeno, cilj ->
+    /** Spremljeni obrok kakav je bio prije uređivanja; null kod novog unosa. */
+    private val _uredivaniObrok = MutableStateFlow<Obrok?>(null)
+    val uredivaniObrok: StateFlow<Obrok?> = _uredivaniObrok
+
+    private val _ucitavanjeObroka = MutableStateFlow(false)
+    val ucitavanjeObroka: StateFlow<Boolean> = _ucitavanjeObroka
+
+    private val _greskaUcitavanja = MutableStateFlow<String?>(null)
+    val greskaUcitavanja: StateFlow<String?> = _greskaUcitavanja
+
+    private val _azuriraniObrok = MutableStateFlow<Obrok?>(null)
+    val azuriraniObrok: StateFlow<Obrok?> = _azuriraniObrok
+
+    val sazetak: StateFlow<SazetakObroka> = combine(
+        _odabir, _pojedeno, _cilj, _uredivaniObrok, _datum
+    ) { odabir, pojedeno, cilj, uredivani, datum ->
         val stavke = odabir.stavke.values
+        // Obrok koji se uređuje već je u pojedenom za svoj datum; oduzima se da se ne broji dvaput.
+        val vecUbrojeno = uredivani
+            ?.takeIf { it.datum == datum.toString() }
+            ?.ukupnoKalorije ?: 0.0
         SazetakObroka(
             brojStavki = stavke.size,
             kalorije = stavke.sumOf { it.jelo.kalorije * it.kolicina },
             proteini = stavke.sumOf { it.jelo.proteini * it.kolicina },
             ugljikohidrati = stavke.sumOf { it.jelo.ugljikohidrati * it.kolicina },
             masti = stavke.sumOf { it.jelo.masti * it.kolicina },
-            pojedenoKalorije = pojedeno?.ukupnoKalorije,
+            pojedenoKalorije = pojedeno?.ukupnoKalorije?.minus(vecUbrojeno),
             ciljKalorije = cilj?.kalorije
         )
     }.stateIn(viewModelScope, SharingStarted.Eagerly, SazetakObroka())
@@ -439,8 +458,105 @@ class JelaViewModel : ViewModel() {
         }
     }
 
+    /** Učitava spremljeni obrok za uređivanje i puni datum i odabir; vrijeme i tip postavlja ekran. */
+    fun ucitajObrok(idObrok: Long) {
+        val id = idKorisnik ?: return
+        if (_uredivaniObrok.value?.id == idObrok || _ucitavanjeObroka.value) return
+
+        viewModelScope.launch {
+            _ucitavanjeObroka.value = true
+            try {
+                val obrok = RetrofitInstance.api.getObrok(idObrok, id)
+                val stavke = LinkedHashMap<Long, OdabranaStavka>()
+
+                obrok.stavke.forEach { s ->
+                    // Vrijednosti stavke obroka su za cijelu količinu, a odabir računa po porciji.
+                    stavke[s.idJelo] = OdabranaStavka(
+                        jelo = Jelo(
+                            id = s.idJelo,
+                            naziv = s.naziv,
+                            opis = null,
+                            kalorije = s.kalorije / s.kolicina,
+                            proteini = s.proteini / s.kolicina,
+                            ugljikohidrati = s.ugljikohidrati / s.kolicina,
+                            masti = s.masti / s.kolicina,
+                            sifra = null,
+                            kategorija = null,
+                            cijenaEur = null,
+                            napomena = null
+                        ),
+                        kolicina = s.kolicina
+                    )
+                }
+
+                _odabir.value = OdabirObroka(stavke = stavke)
+                _uredivaniObrok.value = obrok
+                postaviDatum(LocalDate.parse(obrok.datum))
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: HttpException) {
+                _greskaUcitavanja.value =
+                    if (e.code() == 404) "Obrok ne postoji." else "Obrok se nije učitao (greška ${e.code()})."
+            } catch (e: Exception) {
+                _greskaUcitavanja.value = "Obrok se nije učitao. Provjeri vezu s poslužiteljem."
+            } finally {
+                _ucitavanjeObroka.value = false
+            }
+        }
+    }
+
+    /** Je li se nešto promijenilo u odnosu na spremljeni obrok (datum, vrijeme, tip ili stavke). */
+    fun imaPromjena(vrijeme: String, tipObroka: String): Boolean {
+        val izvorni = _uredivaniObrok.value ?: return false
+        val stavke = _odabir.value.stavke.mapValues { it.value.kolicina }
+
+        return izvorni.datum != _datum.value.toString() ||
+            izvorni.vrijeme != vrijeme ||
+            izvorni.tipObroka != tipObroka ||
+            izvorni.stavke.associate { it.idJelo to it.kolicina } != stavke
+    }
+
+    /** Sprema promjene obroka jednim pozivom; backend mijenja obrok i sve stavke ili ništa. */
+    fun azurirajObrok(vrijeme: String, tipObroka: String) {
+        val id = idKorisnik ?: return
+        val izvorni = _uredivaniObrok.value ?: return
+        val odabir = _odabir.value
+        if (odabir.stavke.isEmpty() || _spremanjeUTijeku.value) return
+
+        viewModelScope.launch {
+            _spremanjeUTijeku.value = true
+            try {
+                _azuriraniObrok.value = RetrofitInstance.api.azurirajObrok(
+                    id = izvorni.id,
+                    idKorisnik = id,
+                    request = ObrokRequest(
+                        idKorisnik = id,
+                        datum = _datum.value.toString(),
+                        vrijeme = vrijeme,
+                        tipObroka = tipObroka,
+                        izvor = if (odabir.jelaIzMenija.isNotEmpty()) "MENI" else izvorni.izvor,
+                        stavke = odabir.stavke.values.map {
+                            StavkaObrokaRequest(idJelo = it.jelo.id, kolicina = it.kolicina)
+                        }
+                    )
+                )
+            } catch (e: HttpException) {
+                _greskaSpremanja.value = porukaGreske(e)
+            } catch (e: Exception) {
+                _greskaSpremanja.value = "Spremanje nije uspjelo. Provjeri vezu s poslužiteljem."
+            } finally {
+                _spremanjeUTijeku.value = false
+            }
+        }
+    }
+
+    fun ocistiGreskuUcitavanja() {
+        _greskaUcitavanja.value = null
+    }
+
     fun ocistiRezultatSpremanja() {
         _spremljeniObrok.value = null
+        _azuriraniObrok.value = null
         _greskaSpremanja.value = null
     }
 

@@ -1,6 +1,7 @@
 package com.niko.macromenza.screens
 
 import com.niko.macromenza.util.formatKcal
+import com.niko.macromenza.util.formatKolicina
 import com.niko.macromenza.util.formatMakro
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -8,6 +9,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -20,7 +22,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.niko.macromenza.model.StavkaObroka
+import androidx.navigation.NavController
+import com.niko.macromenza.model.Obrok
 import com.niko.macromenza.session.UserSessionManager
 import com.niko.macromenza.ui.theme.MacroGreen
 import com.niko.macromenza.ui.theme.MacroLightGreen
@@ -33,9 +36,11 @@ private val DetailFatPurple = Color(0xFF9B6DE3)
 @Composable
 fun DetaljDanaScreen(
     datum: String,
+    navController: NavController,
     viewModel: PovijestViewModel = viewModel()
 ) {
     val povijestDana by viewModel.povijestDana.collectAsState()
+    val obroci by viewModel.obrociDana.collectAsState()
 
     val context = LocalContext.current
     val sessionManager = remember {
@@ -128,16 +133,11 @@ fun DetaljDanaScreen(
                         )
                     }
 
-                    dan.obroci.forEach { (tip, stavke) ->
-
-                        if (stavke.isNotEmpty()) {
-                            item {
-                                SekcijaObrokaDetalj(
-                                    naslov = tip,
-                                    stavke = stavke
-                                )
-                            }
-                        }
+                    item {
+                        ObrociDana(
+                            obroci = obroci,
+                            onUredi = { navController.navigate(rutaUredivanjaObroka(it)) }
+                        )
                     }
                 }
             }
@@ -229,31 +229,32 @@ private fun DetailSummaryMacro(
     }
 }
 
+/** Ruta za uređivanje spremljenog obroka (isti ekran kao za unos). */
+fun rutaUredivanjaObroka(obrok: Obrok): String =
+    "unos_obroka/${obrok.tipObroka}?idObrok=${obrok.id}"
+
+/** Obroci dana sortirani po vremenu; zajedničko za Detalj dana i karticu "Dan" na Povijesti. */
 @Composable
-fun SekcijaObrokaDetalj(
-    naslov: String,
-    stavke: List<StavkaObroka>
+fun ObrociDana(
+    obroci: List<Obrok>,
+    onUredi: (Obrok) -> Unit
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-
-        Text(
-            text = formatDetaljTipObroka(naslov),
-            fontSize = 18.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-
-        stavke.forEach { stavka ->
-            DetaljObrokItem(stavka)
+        obroci.forEach { obrok ->
+            ObrokDanaKartica(
+                obrok = obrok,
+                onUredi = { onUredi(obrok) }
+            )
         }
     }
 }
 
 @Composable
-private fun DetaljObrokItem(
-    stavka: StavkaObroka
+private fun ObrokDanaKartica(
+    obrok: Obrok,
+    onUredi: () -> Unit
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
@@ -293,7 +294,7 @@ private fun DetaljObrokItem(
                     modifier = Modifier.weight(1f)
                 ) {
                     Text(
-                        text = stavka.nazivJela,
+                        text = formatDetaljTipObroka(obrok.tipObroka),
                         color = MaterialTheme.colorScheme.onSurface,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 17.sp
@@ -302,7 +303,7 @@ private fun DetaljObrokItem(
                     Spacer(modifier = Modifier.height(3.dp))
 
                     Text(
-                        text = "Evidentirano jelo",
+                        text = "${obrok.vrijeme} · ${formatIzvor(obrok.izvor)}",
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         style = MaterialTheme.typography.bodySmall
                     )
@@ -312,7 +313,7 @@ private fun DetaljObrokItem(
                     horizontalAlignment = Alignment.End
                 ) {
                     Text(
-                        text = formatKcal(stavka.kalorije),
+                        text = formatKcal(obrok.ukupnoKalorije),
                         color = MacroGreen,
                         fontWeight = FontWeight.Bold,
                         fontSize = 19.sp
@@ -326,7 +327,33 @@ private fun DetaljObrokItem(
                 }
             }
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(12.dp))
+
+            obrok.stavke.forEach { stavka ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 3.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "${formatKolicina(stavka.kolicina)}× ${stavka.naziv}",
+                        modifier = Modifier.weight(1f),
+                        color = MaterialTheme.colorScheme.onSurface,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    Text(
+                        text = "${formatKcal(stavka.kalorije)} kcal",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
 
             HorizontalDivider(
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.10f)
@@ -336,26 +363,44 @@ private fun DetaljObrokItem(
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
 
                 DetaljMacroValue(
                     label = "Proteini",
-                    value = stavka.proteini,
+                    value = obrok.ukupnoProteini,
                     color = DetailProteinBlue
                 )
 
                 DetaljMacroValue(
                     label = "UH",
-                    value = stavka.ugljikohidrati,
+                    value = obrok.ukupnoUgljikohidrati,
                     color = DetailCarbsOrange
                 )
 
                 DetaljMacroValue(
                     label = "Masti",
-                    value = stavka.masti,
+                    value = obrok.ukupnoMasti,
                     color = DetailFatPurple
                 )
+
+                TextButton(onClick = onUredi) {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = null,
+                        tint = MacroGreen,
+                        modifier = Modifier.size(18.dp)
+                    )
+
+                    Spacer(modifier = Modifier.width(6.dp))
+
+                    Text(
+                        text = "Uredi",
+                        color = MacroGreen,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
             }
         }
     }
@@ -424,5 +469,17 @@ private fun formatDetaljTipObroka(
         "VECERA" -> "Večera"
         "UZINA" -> "Užina"
         else -> tip
+    }
+}
+
+private fun formatIzvor(
+    izvor: String
+): String {
+    return when (izvor.uppercase()) {
+        "RUCNO" -> "Ručno"
+        "MENI" -> "Meni"
+        "SLIKA" -> "Slika"
+        "OPIS" -> "Opis"
+        else -> izvor
     }
 }
