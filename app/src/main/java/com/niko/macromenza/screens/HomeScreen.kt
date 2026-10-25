@@ -5,6 +5,7 @@ import com.niko.macromenza.util.formatMakro
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -284,6 +285,19 @@ fun HomeScreen(
                     }
                 }
             }
+
+            item {
+                Text(
+                    text = "Vrijednosti su okvirne · Odakle su kalorije?",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { navController.navigate("odakle_su_kalorije") }
+                        .padding(vertical = 8.dp),
+                    textAlign = TextAlign.Center,
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
     }
 
@@ -291,6 +305,10 @@ fun HomeScreen(
     detaljJeloId?.let { id ->
         JeloDetaljSheet(
             idJelo = id,
+            onOdakleSuKalorije = {
+                detaljJeloId = null
+                navController.navigate("odakle_su_kalorije")
+            },
             onDismiss = { detaljJeloId = null }
         )
     }

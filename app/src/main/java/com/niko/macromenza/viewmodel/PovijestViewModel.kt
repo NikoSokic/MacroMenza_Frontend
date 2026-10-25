@@ -52,6 +52,9 @@ class PovijestViewModel(
 
     private var brisanjeUTijeku = false
 
+    private val _primjerUTijeku = MutableStateFlow(false)
+    val primjerUTijeku = _primjerUTijeku.asStateFlow()
+
 
     fun ucitajDan(
         idKorisnik: Long,
@@ -163,6 +166,50 @@ class PovijestViewModel(
                 _greskaBrisanja.value = "Vraćanje nije uspjelo: " + (poruka(e) ?: "greška ${e.code()}.")
             } catch (e: Exception) {
                 _greskaBrisanja.value = "Vraćanje nije uspjelo. Provjeri vezu s poslužiteljem."
+            }
+        }
+    }
+
+    /** Stvara primjer tjedna (obroci s izvorom PRIMJER) za dane bez unosa; greška ide u snackbar. */
+    fun ucitajPrimjerTjedna(idKorisnik: Long) = primjerTjedna(
+        idKorisnik,
+        greska = "Primjer tjedna nije učitan."
+    ) { RetrofitInstance.api.ucitajPrimjerTjedna(idKorisnik) }
+
+    /** Briše samo obroke s izvorom PRIMJER. */
+    fun ukloniPrimjerTjedna(idKorisnik: Long) = primjerTjedna(
+        idKorisnik,
+        greska = "Primjer tjedna nije uklonjen."
+    ) { RetrofitInstance.api.ukloniPrimjerTjedna(idKorisnik) }
+
+    private fun primjerTjedna(
+        idKorisnik: Long,
+        greska: String,
+        poziv: suspend () -> retrofit2.Response<Unit>
+    ) {
+        if (_primjerUTijeku.value) return
+
+        viewModelScope.launch {
+            _primjerUTijeku.value = true
+            try {
+                val odgovor = poziv()
+                if (!odgovor.isSuccessful) {
+                    val poruka = try {
+                        odgovor.errorBody()?.string()
+                            ?.let { JSONObject(it).optString("poruka") }
+                            ?.takeIf { it.isNotBlank() }
+                    } catch (_: Exception) {
+                        null
+                    }
+                    _greskaBrisanja.value = "$greska ${poruka ?: "(greška ${odgovor.code()})"}"
+                }
+                ucitajTjedan(idKorisnik)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                _greskaBrisanja.value = "$greska Provjeri vezu s poslužiteljem."
+            } finally {
+                _primjerUTijeku.value = false
             }
         }
     }

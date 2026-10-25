@@ -661,6 +661,7 @@ private fun formatIzvor(
         "MENI" -> "Meni"
         "SLIKA" -> "Slika"
         "OPIS" -> "Opis"
+        "PRIMJER" -> "Primjer"
         else -> izvor
     }
 }

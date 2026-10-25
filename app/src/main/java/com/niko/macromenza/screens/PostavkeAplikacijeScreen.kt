@@ -10,6 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CloudDone
 import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Palette
@@ -27,7 +28,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.niko.macromenza.api.RetrofitInstance
+import com.niko.macromenza.navigation.BottomNavItem
 import com.niko.macromenza.session.ThemeManager
+import com.niko.macromenza.session.UserSessionManager
 import com.niko.macromenza.ui.components.screenBottomPadding
 import com.niko.macromenza.ui.components.screenTopPadding
 import com.niko.macromenza.ui.theme.AppTheme
@@ -47,6 +51,17 @@ fun PostavkeAplikacijeScreen(
     }
 
     val scope = rememberCoroutineScope()
+
+    val sessionManager = remember {
+        UserSessionManager(context)
+    }
+
+    val korisnikId by sessionManager.korisnikId.collectAsState(initial = null)
+
+    var prikaziBrisanje by remember { mutableStateOf(false) }
+    var potvrdaTekst by remember { mutableStateOf("") }
+    var brisanjeUTijeku by remember { mutableStateOf(false) }
+    var greskaBrisanja by remember { mutableStateOf<String?>(null) }
 
     val spremljenaTema by
     themeManager.theme.collectAsState(
@@ -272,6 +287,48 @@ fun PostavkeAplikacijeScreen(
                 modifier = Modifier.height(16.dp)
             )
 
+            // MOJI PODACI
+            AppSettingsCard(
+                title = "Moji podaci",
+                subtitle = "Brisanje unesenih podataka",
+                icon = Icons.Default.DeleteForever
+            ) {
+
+                Text(
+                    text = "Briše sve tvoje obroke, mjerenja mase i izračunate ciljeve. " +
+                        "Račun i osnovni profil ostaju.",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+
+                Spacer(
+                    modifier = Modifier.height(14.dp)
+                )
+
+                OutlinedButton(
+                    onClick = {
+                        potvrdaTekst = ""
+                        greskaBrisanja = null
+                        prikaziBrisanje = true
+                    },
+                    enabled = korisnikId != null,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    Text(
+                        text = "Obriši sve moje podatke",
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
+
+            Spacer(
+                modifier = Modifier.height(16.dp)
+            )
+
             // O APLIKACIJI
             AppSettingsCard(
                 title = "O aplikaciji",
@@ -365,6 +422,153 @@ fun PostavkeAplikacijeScreen(
             }
         }
     }
+
+    if (prikaziBrisanje) {
+        BrisanjePodatakaDialog(
+            potvrdaTekst = potvrdaTekst,
+            onPotvrdaTekst = { potvrdaTekst = it },
+            brisanjeUTijeku = brisanjeUTijeku,
+            greska = greskaBrisanja,
+            onOdustani = { prikaziBrisanje = false },
+            onObrisi = {
+                val id = korisnikId ?: return@BrisanjePodatakaDialog
+
+                scope.launch {
+                    brisanjeUTijeku = true
+                    greskaBrisanja = null
+
+                    try {
+                        val odgovor = RetrofitInstance.api.obrisiSvePodatke(id, "OBRISI")
+
+                        if (!odgovor.isSuccessful) {
+                            greskaBrisanja = "Brisanje nije uspjelo (greška ${odgovor.code()})."
+                            return@launch
+                        }
+
+                        val onboardingZavrsen = try {
+                            RetrofitInstance.api.dohvatiOnboardingStatus(id).onboardingZavrsen
+                        } catch (_: Exception) {
+                            false
+                        }
+
+                        prikaziBrisanje = false
+
+                        if (onboardingZavrsen) {
+                            navController.navigate(BottomNavItem.Home.route) {
+                                popUpTo(0)
+                            }
+                        } else {
+                            navController.navigate("onboarding/$id") {
+                                popUpTo(0)
+                            }
+                        }
+                    } catch (e: Exception) {
+                        greskaBrisanja = "Brisanje nije uspjelo. Provjeri vezu s poslužiteljem."
+                    } finally {
+                        brisanjeUTijeku = false
+                    }
+                }
+            }
+        )
+    }
+}
+
+@Composable
+private fun BrisanjePodatakaDialog(
+    potvrdaTekst: String,
+    onPotvrdaTekst: (String) -> Unit,
+    brisanjeUTijeku: Boolean,
+    greska: String?,
+    onObrisi: () -> Unit,
+    onOdustani: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = { if (!brisanjeUTijeku) onOdustani() },
+        shape = RoundedCornerShape(26.dp),
+        title = {
+            Text(
+                text = "Obrisati sve podatke?",
+                fontWeight = FontWeight.Bold
+            )
+        },
+        text = {
+            Column {
+                Text(
+                    text = "Briše se:",
+                    fontWeight = FontWeight.SemiBold
+                )
+                Text("• svi tvoji obroci (i primjer tjedna)\n• sva mjerenja mase\n• izračunati dnevni ciljevi")
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                Text(
+                    text = "Ostaje:",
+                    fontWeight = FontWeight.SemiBold
+                )
+                Text("• tvoj račun i prijava\n• profil (spol, visina, dob)")
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                Text(
+                    text = "Ovo se ne može poništiti. Nakon brisanja ponovno postavljaš masu i cilj.",
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
+                )
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                OutlinedTextField(
+                    value = potvrdaTekst,
+                    onValueChange = onPotvrdaTekst,
+                    label = { Text("Upiši OBRIŠI za potvrdu") },
+                    singleLine = true,
+                    enabled = !brisanjeUTijeku,
+                    shape = RoundedCornerShape(14.dp),
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                greska?.let {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = it,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = onObrisi,
+                enabled = potvrdaTekst.trim() == "OBRIŠI" && !brisanjeUTijeku
+            ) {
+                if (brisanjeUTijeku) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(18.dp),
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Text(
+                        text = "Obriši",
+                        color = if (potvrdaTekst.trim() == "OBRIŠI") {
+                            MaterialTheme.colorScheme.error
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
+                        },
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = onOdustani,
+                enabled = !brisanjeUTijeku
+            ) {
+                Text("Odustani", color = MacroGreen)
+            }
+        }
+    )
 }
 
 @Composable

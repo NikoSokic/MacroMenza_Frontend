@@ -25,6 +25,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.niko.macromenza.api.RetrofitInstance
+import com.niko.macromenza.model.IzracunPreporuke
+import com.niko.macromenza.model.IzracunPreporukeRequest
 import com.niko.macromenza.model.RegistracijaProfilRequest
 import com.niko.macromenza.session.UserSessionManager
 import com.niko.macromenza.ui.theme.MacroGreen
@@ -56,6 +58,26 @@ fun OnboardingScreen(
 
     var ucitavanje by remember { mutableStateOf(false) }
     var poruka by remember { mutableStateOf<String?>(null) }
+
+    // Pregled izračuna vrijedi samo za unose s kojima je dobiven; promjena bilo kojeg polja ga skriva.
+    var izracun by remember { mutableStateOf<IzracunPreporuke?>(null) }
+    var izracunUnosi by remember { mutableStateOf<String?>(null) }
+    var racunanje by remember { mutableStateOf(false) }
+    val trenutniUnosi = "$spol|$visina|$dob|${masa.trim()}|$aktivnost|$cilj"
+
+    // Nakon brisanja podataka račun postoji pa se ime i prezime ne moraju ponovno upisivati.
+    LaunchedEffect(korisnikId) {
+        try {
+            val korisnik = RetrofitInstance.api.dohvatiKorisnika(korisnikId)
+            if (ime.isBlank() && korisnik.ime.isNotBlank() && !korisnik.ime.equals("EMPTY", true)) {
+                ime = korisnik.ime
+            }
+            if (prezime.isBlank() && korisnik.prezime.isNotBlank() && !korisnik.prezime.equals("EMPTY", true)) {
+                prezime = korisnik.prezime
+            }
+        } catch (_: Exception) {
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -360,6 +382,80 @@ fun OnboardingScreen(
             }
 
             Spacer(modifier = Modifier.height(26.dp))
+
+            val prikazaniIzracun = izracun?.takeIf { izracunUnosi == trenutniUnosi }
+            val masaZaPrikaz = parsirajMasu(masa)
+
+            if (prikazaniIzracun != null && masaZaPrikaz != null) {
+                KakoSmoIzracunaliKartica(
+                    izracun = prikazaniIzracun,
+                    masa = masaZaPrikaz
+                )
+
+                Spacer(modifier = Modifier.height(18.dp))
+            } else {
+                OutlinedButton(
+                    onClick = {
+                        val visinaBroj = visina.toIntOrNull()
+                        val dobBroj = dob.toIntOrNull()
+                        val masaBroj = parsirajMasu(masa)
+
+                        if (visinaBroj == null || visinaBroj !in 100..250 ||
+                            dobBroj == null || dobBroj !in 15..100 ||
+                            masaBroj == null || masaBroj !in 30.0..300.0
+                        ) {
+                            poruka = "Provjeri visinu (100–250 cm), dob (15–100) i masu (30–300 kg)."
+                            return@OutlinedButton
+                        }
+
+                        scope.launch {
+                            racunanje = true
+                            poruka = null
+                            try {
+                                izracun = RetrofitInstance.api.pregledPreporuke(
+                                    IzracunPreporukeRequest(
+                                        spol = spol,
+                                        dob = dobBroj,
+                                        visina = visinaBroj,
+                                        masa = masaBroj,
+                                        razinaAktivnosti = aktivnost,
+                                        tipCilja = cilj
+                                    )
+                                )
+                                izracunUnosi = trenutniUnosi
+                            } catch (e: Exception) {
+                                poruka = "Nismo uspjeli izračunati preporuku. Pokušaj ponovno."
+                            } finally {
+                                racunanje = false
+                            }
+                        }
+                    },
+                    enabled = visina.toIntOrNull() != null &&
+                        dob.toIntOrNull() != null &&
+                        parsirajMasu(masa) != null &&
+                        !racunanje && !ucitavanje,
+                    shape = RoundedCornerShape(18.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp)
+                ) {
+                    if (racunanje) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(22.dp),
+                            strokeWidth = 2.dp,
+                            color = MacroGreen
+                        )
+                    } else {
+                        Text(
+                            text = "Pokaži kako se računa moj cilj",
+                            color = MacroGreen,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(18.dp))
+            }
 
             Button(
                 onClick = {

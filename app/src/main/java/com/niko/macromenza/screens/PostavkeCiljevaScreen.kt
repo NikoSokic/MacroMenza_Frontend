@@ -50,6 +50,12 @@ fun PostavkeCiljevaScreen(
     val prijavljeniKorisnikId by
     sessionManager.korisnikId.collectAsState(initial = null)
 
+    val objasnjenje by viewModel.objasnjenje.collectAsState()
+
+    LaunchedEffect(prijavljeniKorisnikId) {
+        prijavljeniKorisnikId?.let { viewModel.ucitajObjasnjenje(it) }
+    }
+
     var visina by remember { mutableStateOf("") }
     var dob by remember { mutableStateOf("") }
     var masa by remember { mutableStateOf("") }
@@ -546,6 +552,19 @@ fun PostavkeCiljevaScreen(
                     fontWeight = FontWeight.SemiBold,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
+                )
+            }
+
+            objasnjenje?.let {
+
+                Spacer(
+                    modifier = Modifier.height(24.dp)
+                )
+
+                KakoSmoIzracunaliKartica(
+                    izracun = it.izracun,
+                    masa = it.masa,
+                    naslov = "Kako je izračunato"
                 )
             }
         }

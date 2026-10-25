@@ -15,7 +15,8 @@ data class Tjedan(
     val prosjek: NutritivneVrijednosti?,
     val prosjekCilj: NutritivneVrijednosti?,
     val imaPrethodni: Boolean,
-    val imaSljedeci: Boolean
+    val imaSljedeci: Boolean,
+    val imaPrimjer: Boolean = false
 )
 
 /** Dan tjedna; [ciljKalorije] je null kad za taj dan nema preporuke. */

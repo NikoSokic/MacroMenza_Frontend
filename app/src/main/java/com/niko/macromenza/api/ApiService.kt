@@ -22,6 +22,9 @@ import com.niko.macromenza.model.BrzoMjerenjeOdgovor
 import com.niko.macromenza.model.Preporuka
 import com.niko.macromenza.model.RegistracijaProfilRequest
 import com.niko.macromenza.model.OnboardingStatusResponse
+import com.niko.macromenza.model.IzracunPreporuke
+import com.niko.macromenza.model.IzracunPreporukeRequest
+import com.niko.macromenza.model.IzvoriPodataka
 import com.niko.macromenza.model.MeniDTO
 import com.niko.macromenza.model.Obrok
 import com.niko.macromenza.model.ObrokRequest
@@ -211,6 +214,30 @@ interface ApiService {
     suspend fun registracijaProfil(
         @Body request: RegistracijaProfilRequest
     ): Korisnik
+
+    @POST("api/preporuke/pregled")
+    suspend fun pregledPreporuke(
+        @Body request: IzracunPreporukeRequest
+    ): IzracunPreporuke
+
+    @GET("api/izvori-podataka")
+    suspend fun getIzvoriPodataka(): IzvoriPodataka
+
+    @DELETE("api/korisnici/{id}/podaci")
+    suspend fun obrisiSvePodatke(
+        @Path("id") id: Long,
+        @Query("potvrda") potvrda: String
+    ): Response<Unit>
+
+    @POST("api/obroci/primjer-tjedna")
+    suspend fun ucitajPrimjerTjedna(
+        @Query("idKorisnik") idKorisnik: Long
+    ): Response<Unit>
+
+    @DELETE("api/obroci/primjer-tjedna")
+    suspend fun ukloniPrimjerTjedna(
+        @Query("idKorisnik") idKorisnik: Long
+    ): Response<Unit>
 
     @GET("korisnici/{id}/onboarding-status")
     suspend fun dohvatiOnboardingStatus(

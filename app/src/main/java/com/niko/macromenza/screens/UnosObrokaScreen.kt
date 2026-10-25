@@ -812,6 +812,10 @@ fun UnosObrokaScreen(
                 viewModel.dodaj(jelo, porcije)
                 detaljJelo = null
             },
+            onOdakleSuKalorije = {
+                detaljJelo = null
+                navController.navigate("odakle_su_kalorije")
+            },
             onDismiss = { detaljJelo = null }
         )
     }

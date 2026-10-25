@@ -283,6 +283,21 @@ fun ProfilScreen(
             )
 
             ProfileMenuItem(
+                title = "Odakle su kalorije",
+                subtitle = "Kako računamo vrijednosti jela",
+                iconType = ProfileIconType.Settings,
+                onClick = {
+                    navController.navigate(
+                        "odakle_su_kalorije"
+                    )
+                }
+            )
+
+            Spacer(
+                modifier = Modifier.height(10.dp)
+            )
+
+            ProfileMenuItem(
                 title = "Postavke aplikacije",
                 subtitle = "Prilagodi MacroMenzu",
                 iconType = ProfileIconType.Settings,

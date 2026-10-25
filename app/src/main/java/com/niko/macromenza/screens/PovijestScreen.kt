@@ -69,6 +69,7 @@ fun PovijestScreen(
     val greskaTjedna by viewModel.greskaTjedna.collectAsState()
     val povijestDana by viewModel.povijestDana.collectAsState()
     val obrociDana by viewModel.obrociDana.collectAsState()
+    val primjerUTijeku by viewModel.primjerUTijeku.collectAsState()
 
     // Saveable: nakon povratka iz uređivanja obroka otvara se isti dan.
     var odabraniTab by rememberSaveable {
@@ -95,7 +96,8 @@ fun PovijestScreen(
         }
     }
 
-    LaunchedEffect(odabraniDatum, prijavljeniKorisnikId) {
+    // Učitavanje ili uklanjanje primjera mijenja i odabrani dan.
+    LaunchedEffect(odabraniDatum, prijavljeniKorisnikId, tjedan?.imaPrimjer) {
         odabraniDatum?.let { datum ->
             prijavljeniKorisnikId?.let { id ->
                 viewModel.ucitajDan(id, datum)
@@ -241,6 +243,16 @@ fun PovijestScreen(
                         )
                     }
 
+                    if (trenutni.imaPrimjer) {
+
+                        item {
+                            PrimjerTraka(
+                                uTijeku = primjerUTijeku,
+                                onUkloni = { prijavljeniKorisnikId?.let { viewModel.ukloniPrimjerTjedna(it) } }
+                            )
+                        }
+                    }
+
                     if (trenutni.daniSUnosom == 0) {
 
                         item {
@@ -248,6 +260,32 @@ fun PovijestScreen(
                                 naslov = "Nema unosa u ovom tjednu",
                                 tekst = "Dodaj obroke ili prelistaj na drugi tjedan."
                             )
+                        }
+
+                        // Primjer se stvara za zadnjih 7 dana (bez danas), pa tjedan mora imati barem jedan takav dan.
+                        val danas = LocalDate.now(ZAGREB)
+                        val pocetakTjedna = LocalDate.parse(trenutni.pocetak)
+                        val krajTjedna = LocalDate.parse(trenutni.kraj)
+                        val mozePrimjer = !pocetakTjedna.isAfter(danas.minusDays(1)) &&
+                            !krajTjedna.isBefore(danas.minusDays(7))
+
+                        if (mozePrimjer) {
+                            item {
+                                OutlinedButton(
+                                    onClick = { prijavljeniKorisnikId?.let { viewModel.ucitajPrimjerTjedna(it) } },
+                                    enabled = !primjerUTijeku,
+                                    shape = RoundedCornerShape(18.dp),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(52.dp)
+                                ) {
+                                    Text(
+                                        text = "Učitaj primjer tjedna",
+                                        color = MacroGreen,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                }
+                            }
                         }
 
                     } else {
@@ -1184,6 +1222,37 @@ private fun MakroTraka(
                         .clip(RoundedCornerShape(4.dp))
                         .background(boja)
                 )
+            }
+        }
+    }
+}
+
+@Composable
+private fun PrimjerTraka(
+    uTijeku: Boolean,
+    onUkloni: () -> Unit
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(18.dp),
+        color = MacroGreen.copy(alpha = 0.16f)
+    ) {
+        Row(
+            modifier = Modifier.padding(start = 16.dp, end = 6.dp, top = 4.dp, bottom = 4.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Prikazan je primjer tjedna",
+                modifier = Modifier.weight(1f),
+                color = MaterialTheme.colorScheme.onSurface,
+                fontWeight = FontWeight.Medium
+            )
+
+            TextButton(
+                onClick = onUkloni,
+                enabled = !uTijeku
+            ) {
+                Text("Ukloni primjer", color = MacroGreen, fontWeight = FontWeight.SemiBold)
             }
         }
     }

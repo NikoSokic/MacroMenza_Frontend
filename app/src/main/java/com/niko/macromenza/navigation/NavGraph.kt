@@ -140,6 +140,10 @@ fun AppNavigation() {
                 PostavkeCiljevaScreen(navController)
             }
 
+            composable("odakle_su_kalorije") {
+                OdakleSuKalorijeScreen(navController)
+            }
+
             composable("moje_mjere") {
                 MojeMjereScreen(navController)
             }

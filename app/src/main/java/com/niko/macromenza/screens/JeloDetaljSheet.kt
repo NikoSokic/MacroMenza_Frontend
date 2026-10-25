@@ -1,6 +1,7 @@
 package com.niko.macromenza.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -47,6 +48,7 @@ fun JeloDetaljSheet(
     idJelo: Long,
     onDismiss: () -> Unit,
     onDodaj: ((Double) -> Unit)? = null,
+    onOdakleSuKalorije: (() -> Unit)? = null,
     viewModel: JeloDetaljViewModel = viewModel()
 ) {
     val stanje by viewModel.stanje.collectAsState()
@@ -155,6 +157,19 @@ fun JeloDetaljSheet(
                 fontSize = 11.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+
+            if (onOdakleSuKalorije != null) {
+                Text(
+                    text = "Odakle su kalorije?",
+                    modifier = Modifier
+                        .clickable(onClick = onOdakleSuKalorije)
+                        .padding(vertical = 6.dp),
+                    style = MaterialTheme.typography.bodySmall,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MacroGreen
+                )
+            }
         }
     }
 }
