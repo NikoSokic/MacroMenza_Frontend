@@ -38,14 +38,15 @@ private val FatPurple = Color(0xFF9B6DE3)
 
 /**
  * Detalj jela u donjem listu: vrijednosti po porciji, masa, cijena, napomena i sastojci iz recepture.
- * [onDodaj] dobiva odabrani broj porcija (koraci po 0,5).
+ * [onDodaj] dobiva odabrani broj porcija (koraci po 0,5); kad je null, sheet je samo pregled
+ * (bez odabira porcija i gumba "Dodaj u obrok").
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun JeloDetaljSheet(
     idJelo: Long,
-    onDodaj: (Double) -> Unit,
     onDismiss: () -> Unit,
+    onDodaj: ((Double) -> Unit)? = null,
     viewModel: JeloDetaljViewModel = viewModel()
 ) {
     val stanje by viewModel.stanje.collectAsState()
@@ -115,36 +116,38 @@ fun JeloDetaljSheet(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                PorcijeStepper(
-                    porcije = porcije,
-                    onMinus = { if (porcije > 0.5) porcije -= 0.5 },
-                    onPlus = { porcije += 0.5 }
-                )
-
-                Button(
-                    onClick = { onDodaj(porcije) },
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(52.dp),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MacroGreen
-                    )
+            if (onDodaj != null) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Text(
-                        text = "Dodaj u obrok",
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 16.sp
+                    PorcijeStepper(
+                        porcije = porcije,
+                        onMinus = { if (porcije > 0.5) porcije -= 0.5 },
+                        onPlus = { porcije += 0.5 }
                     )
-                }
-            }
 
-            Spacer(modifier = Modifier.height(12.dp))
+                    Button(
+                        onClick = { onDodaj(porcije) },
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(52.dp),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MacroGreen
+                        )
+                    ) {
+                        Text(
+                            text = "Dodaj u obrok",
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 16.sp
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+            }
 
             Text(
                 text = "Vrijednosti su okvirne (USDA/EU tablice), izračunate iz normativa NN 120/2013.",

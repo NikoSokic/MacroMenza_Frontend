@@ -1,6 +1,7 @@
 package com.niko.macromenza.api
 
 import com.niko.macromenza.model.CestoJedenoJelo
+import com.niko.macromenza.model.DanPregled
 import com.niko.macromenza.model.Jelo
 import com.niko.macromenza.model.JeloDetalj
 import com.niko.macromenza.model.KategorijaJela
@@ -73,6 +74,12 @@ interface ApiService {
         @Query("idKorisnik") idKorisnik: Long,
         @Query("datum") datum: String
     ): List<Obrok>
+
+    @GET("api/obroci/dan-pregled")
+    suspend fun getDanPregled(
+        @Query("idKorisnik") idKorisnik: Long,
+        @Query("datum") datum: String? = null
+    ): DanPregled
 
     @GET("api/obroci/{id}")
     suspend fun getObrok(

@@ -11,6 +11,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material3.*
@@ -25,8 +26,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.niko.macromenza.model.Savjet
 import com.niko.macromenza.model.StavkaObroka
 import com.niko.macromenza.session.UserSessionManager
 import com.niko.macromenza.ui.components.screenBottomPadding
@@ -46,15 +49,9 @@ fun HomeScreen(
     refreshKey: Int = 0,
     viewModel: HomeViewModel = viewModel()
 ) {
-    val ukupniUnos by viewModel.ukupniUnos.collectAsState()
+    val danPregled by viewModel.danPregled.collectAsState()
     val danasnjiObroci by viewModel.danasnjiObroci.collectAsState()
-    val preporuka by viewModel.preporuka.collectAsState()
     val ucitava by viewModel.ucitava.collectAsState()
-
-    val ciljKalorije = preporuka?.kalorije ?: 2400.0
-    val ciljProteini = preporuka?.proteini ?: 160.0
-    val ciljUh = preporuka?.ugljikohidrati ?: 300.0
-    val ciljMasti = preporuka?.masti ?: 80.0
 
     val context = LocalContext.current
 
@@ -65,16 +62,19 @@ fun HomeScreen(
     val prijavljeniKorisnikId by
     sessionManager.korisnikId.collectAsState(initial = null)
 
-    LaunchedEffect(refreshKey, prijavljeniKorisnikId) {
+    // Osvježava se pri svakom povratku na Home (nakon spremanja, uređivanja ili brisanja obroka).
+    LifecycleResumeEffect(refreshKey, prijavljeniKorisnikId) {
         prijavljeniKorisnikId?.let { id ->
             viewModel.ucitajHome(id)
         }
+        onPauseOrDispose { }
     }
 
-    val kalorije = ukupniUnos?.kalorije ?: 0.0
-    val proteini = ukupniUnos?.proteini ?: 0.0
-    val uh = ukupniUnos?.ugljikohidrati ?: 0.0
-    val masti = ukupniUnos?.masti ?: 0.0
+    var detaljJeloId by remember { mutableStateOf<Long?>(null) }
+
+    val pregled = danPregled
+    val cilj = pregled?.cilj
+    val pojedeno = pregled?.pojedeno
 
     if (ucitava) {
         SplashScreen()
@@ -128,94 +128,75 @@ fun HomeScreen(
                 }
             }
 
-            // Ako nema preporuke
-            if (preporuka == null) {
+            if (pregled == null || pojedeno == null) {
+                // Prvo učitavanje nije uspjelo (backend nedostupan)
                 item {
-                    Surface(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(20.dp),
-                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(18.dp)
-                        ) {
-                            Text(
-                                text = "Postavi svoje ciljeve",
-                                fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-
-                            Spacer(modifier = Modifier.height(5.dp))
-
-                            Text(
-                                text = "Otvori Profil → Postavke ciljeva kako bismo izračunali tvoju dnevnu preporuku.",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                    PregledNedostupanCard(
+                        onPonovi = {
+                            prijavljeniKorisnikId?.let { viewModel.ucitajHome(it) }
                         }
+                    )
+                }
+            } else {
+                // PRSTEN KALORIJA PO OBROCIMA
+                item {
+                    PrstenKalorija(
+                        danPregled = pregled,
+                        onPostaviCilj = { navController.navigate("postavke_ciljeva") }
+                    )
+                }
+
+                // MAKRO HEADER
+                item {
+                    SectionTitle(
+                        title = "Makronutrijenti",
+                        subtitle = "Današnji napredak"
+                    )
+                }
+
+                // 3 MACRO KARTICE
+                item {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+
+                        MacroMiniCard(
+                            modifier = Modifier.weight(1f),
+                            naziv = "Proteini",
+                            kratko = "P",
+                            vrijednost = pojedeno.proteini,
+                            cilj = cilj?.proteini,
+                            color = ProteinBlue
+                        )
+
+                        MacroMiniCard(
+                            modifier = Modifier.weight(1f),
+                            naziv = "Ugljikoh.",
+                            kratko = "UH",
+                            vrijednost = pojedeno.ugljikohidrati,
+                            cilj = cilj?.ugljikohidrati,
+                            color = CarbsOrange
+                        )
+
+                        MacroMiniCard(
+                            modifier = Modifier.weight(1f),
+                            naziv = "Masti",
+                            kratko = "M",
+                            vrijednost = pojedeno.masti,
+                            cilj = cilj?.masti,
+                            color = FatPurple
+                        )
                     }
                 }
-            }
 
-            // GLAVNA KALORIJSKA KARTICA
-            item {
-                CaloriesHeroCard(
-                    kalorije = kalorije,
-                    cilj = ciljKalorije
-                )
-            }
-
-            // MAKRO HEADER
-            item {
-                SectionTitle(
-                    title = "Makronutrijenti",
-                    subtitle = "Današnji napredak"
-                )
-            }
-
-            // 3 MACRO KARTICE
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-
-                    MacroMiniCard(
-                        modifier = Modifier.weight(1f),
-                        naziv = "Proteini",
-                        kratko = "P",
-                        vrijednost = proteini,
-                        cilj = ciljProteini,
-                        color = ProteinBlue
-                    )
-
-                    MacroMiniCard(
-                        modifier = Modifier.weight(1f),
-                        naziv = "Ugljikoh.",
-                        kratko = "UH",
-                        vrijednost = uh,
-                        cilj = ciljUh,
-                        color = CarbsOrange
-                    )
-
-                    MacroMiniCard(
-                        modifier = Modifier.weight(1f),
-                        naziv = "Masti",
-                        kratko = "M",
-                        vrijednost = masti,
-                        cilj = ciljMasti,
-                        color = FatPurple
+                // SAVJET DANA
+                item {
+                    SavjetDanaCard(
+                        savjet = pregled.savjet,
+                        onJeloClick = { detaljJeloId = it }
                     )
                 }
-            }
-
-            item {
-                InsightCard(
-                    proteini = proteini,
-                    ciljProteini = ciljProteini,
-                    kalorije = kalorije,
-                    ciljKalorije = ciljKalorije
-                )
             }
 
             // QUICK ADD
@@ -305,129 +286,15 @@ fun HomeScreen(
             }
         }
     }
-}
 
-@Composable
-private fun CaloriesHeroCard(
-    kalorije: Double,
-    cilj: Double
-) {
-    val progress =
-        if (cilj > 0) {
-            (kalorije / cilj)
-                .toFloat()
-                .coerceIn(0f, 1f)
-        } else {
-            0f
-        }
-
-    val animatedProgress by animateFloatAsState(
-        targetValue = progress,
-        animationSpec = tween(durationMillis = 900),
-        label = "calorieProgress"
-    )
-
-    val preostalo = (cilj - kalorije).coerceAtLeast(0.0)
-    val postotak = (progress * 100).toInt()
-
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(30.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MacroGreen
+    // Detalj jela iz savjeta dana: samo pregled, bez dodavanja u obrok
+    detaljJeloId?.let { id ->
+        JeloDetaljSheet(
+            idJelo = id,
+            onDismiss = { detaljJeloId = null }
         )
-    ) {
-        Column(
-            modifier = Modifier.padding(22.dp)
-        ) {
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column(
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text(
-                        text = "Dnevne kalorije",
-                        color = Color.White.copy(alpha = 0.78f),
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-
-                    Spacer(modifier = Modifier.height(6.dp))
-
-                    Row(
-                        verticalAlignment = Alignment.Bottom
-                    ) {
-                        Text(
-                            text = formatKcal(kalorije),
-                            fontSize = 42.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
-
-                        Spacer(modifier = Modifier.width(6.dp))
-
-                        Text(
-                            text = "/ ${formatKcal(cilj)} kcal",
-                            color = Color.White.copy(alpha = 0.70f),
-                            fontSize = 15.sp,
-                            modifier = Modifier.padding(bottom = 7.dp)
-                        )
-                    }
-                }
-
-                Text(
-                    text = "$postotak%",
-                    fontSize = 26.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
-                )
-            }
-
-            Spacer(modifier = Modifier.height(18.dp))
-
-            LinearProgressIndicator(
-                progress = { animatedProgress },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(9.dp)
-                    .clip(CircleShape),
-                color = Color.White,
-                trackColor = Color.White.copy(alpha = 0.20f)
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text =
-                        if (kalorije <= cilj)
-                            "Preostalo"
-                        else
-                            "Premašeno",
-                    color = Color.White.copy(alpha = 0.70f),
-                    fontSize = 13.sp
-                )
-
-                Text(
-                    text =
-                        if (kalorije <= cilj)
-                            "${formatKcal(preostalo)} kcal"
-                        else
-                            "${formatKcal(kalorije - cilj)} kcal",
-                    color = Color.White,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 14.sp
-                )
-            }
-        }
     }
 }
-
 
 @Composable
 private fun MacroMiniCard(
@@ -435,11 +302,11 @@ private fun MacroMiniCard(
     naziv: String,
     kratko: String,
     vrijednost: Double,
-    cilj: Double,
+    cilj: Double?,
     color: Color
 ) {
     val progress =
-        if (cilj > 0) {
+        if (cilj != null && cilj > 0) {
             (vrijednost / cilj)
                 .toFloat()
                 .coerceIn(0f, 1f)
@@ -498,110 +365,155 @@ private fun MacroMiniCard(
                 fontSize = 20.sp
             )
 
-            Text(
-                text = "/ %.0fg".format(cilj),
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontSize = 11.sp
-            )
+            // Bez cilja nema ni "/ Xg" ni trake napretka
+            if (cilj != null) {
+                Text(
+                    text = "/ %.0fg".format(cilj),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontSize = 11.sp
+                )
 
-            Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(10.dp))
 
-            LinearProgressIndicator(
-                progress = { animatedProgress },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(5.dp)
-                    .clip(CircleShape),
-                color = color,
-                trackColor = color.copy(alpha = 0.12f)
-            )
+                LinearProgressIndicator(
+                    progress = { animatedProgress },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(5.dp)
+                        .clip(CircleShape),
+                    color = color,
+                    trackColor = color.copy(alpha = 0.12f)
+                )
+            } else {
+                Text(
+                    text = "bez cilja",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontSize = 11.sp
+                )
+            }
         }
     }
 }
 
 @Composable
-private fun InsightCard(
-    proteini: Double,
-    ciljProteini: Double,
-    kalorije: Double,
-    ciljKalorije: Double
+private fun SavjetDanaCard(
+    savjet: Savjet,
+    onJeloClick: (Long) -> Unit
 ) {
-    val preostaliProteini =
-        (ciljProteini - proteini).coerceAtLeast(0.0)
-
-    val kalorijskiProgress =
-        if (ciljKalorije > 0)
-            kalorije / ciljKalorije
-        else
-            0.0
-
-    val naslov: String
-    val poruka: String
-
-    when {
-        proteini >= ciljProteini -> {
-            naslov = "Proteinski cilj ostvaren"
-            poruka = "Odlično, danas si već dosegnuo cilj proteina."
-        }
-
-        kalorijskiProgress < 0.35 -> {
-            naslov = "Dobar početak"
-            poruka =
-                "Do cilja ti nedostaje još %.0f g proteina. Imaš dovoljno prostora za kvalitetan obrok.".format(
-                    preostaliProteini
-                )
-        }
-
-        else -> {
-            naslov = "Na dobrom si putu"
-            poruka =
-                "Do cilja ti nedostaje još %.0f g proteina.".format(
-                    preostaliProteini
-                )
-        }
-    }
-
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(22.dp),
         color = MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)
     ) {
-        Row(
-            modifier = Modifier.padding(18.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(46.dp)
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(MacroGreen.copy(alpha = 0.14f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "i",
-                    color = MacroGreen,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 20.sp
-                )
+        Column(modifier = Modifier.padding(18.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier
+                        .size(46.dp)
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(MacroGreen.copy(alpha = 0.14f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "i",
+                        color = MacroGreen,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 20.sp
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(14.dp))
+
+                Column {
+                    Text(
+                        text = "Savjet dana",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontSize = 12.sp
+                    )
+
+                    Text(
+                        text = savjet.naslov,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 16.sp
+                    )
+                }
             }
 
-            Spacer(modifier = Modifier.width(14.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
-            Column {
-                Text(
-                    text = naslov,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 16.sp
-                )
+            Text(
+                text = savjet.tekst,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.bodySmall
+            )
 
-                Spacer(modifier = Modifier.height(4.dp))
+            savjet.jela.take(3).forEach { jelo ->
+                Spacer(modifier = Modifier.height(8.dp))
 
-                Text(
-                    text = poruka,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.bodySmall
-                )
+                Surface(
+                    onClick = { onJeloClick(jelo.idJelo) },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(14.dp),
+                    color = MaterialTheme.colorScheme.surface
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = jelo.naziv,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 14.sp,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis
+                            )
+
+                            Text(
+                                text = "${formatKcal(jelo.kalorije)} kcal · ${formatMakro(jelo.proteini)} g proteina",
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontSize = 12.sp
+                            )
+                        }
+
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun PregledNedostupanCard(onPonovi: () -> Unit) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(22.dp),
+        color = MaterialTheme.colorScheme.surface
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(22.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = "Pregled dana trenutno nije dostupan",
+                color = MaterialTheme.colorScheme.onSurface,
+                fontWeight = FontWeight.SemiBold,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            TextButton(onClick = onPonovi) {
+                Text("Pokušaj ponovno", color = MacroGreen)
             }
         }
     }
