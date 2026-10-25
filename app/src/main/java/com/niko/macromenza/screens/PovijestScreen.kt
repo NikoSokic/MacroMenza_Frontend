@@ -79,6 +79,15 @@ fun PovijestScreen(
         }
     }
 
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    BrisanjeObrokaEfekti(
+        viewModel = viewModel,
+        navController = navController,
+        snackbarHostState = snackbarHostState,
+        idKorisnik = prijavljeniKorisnikId
+    )
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -383,13 +392,23 @@ fun PovijestScreen(
                         item {
                             ObrociDana(
                                 obroci = obrociDana,
-                                onUredi = { navController.navigate(rutaUredivanjaObroka(it)) }
+                                onUredi = { navController.navigate(rutaUredivanjaObroka(it)) },
+                                onObrisi = { obrok ->
+                                    prijavljeniKorisnikId?.let { viewModel.obrisiObrok(it, obrok) }
+                                }
                             )
                         }
                     }
                 }
             }
         }
+
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(start = 16.dp, end = 16.dp, bottom = screenBottomPadding())
+        )
     }
 }
 

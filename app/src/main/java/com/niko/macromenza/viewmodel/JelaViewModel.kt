@@ -118,6 +118,9 @@ class JelaViewModel : ViewModel() {
     private val _azuriraniObrok = MutableStateFlow<Obrok?>(null)
     val azuriraniObrok: StateFlow<Obrok?> = _azuriraniObrok
 
+    private val _obrisaniObrok = MutableStateFlow<Obrok?>(null)
+    val obrisaniObrok: StateFlow<Obrok?> = _obrisaniObrok
+
     val sazetak: StateFlow<SazetakObroka> = combine(
         _odabir, _pojedeno, _cilj, _uredivaniObrok, _datum
     ) { odabir, pojedeno, cilj, uredivani, datum ->
@@ -550,6 +553,31 @@ class JelaViewModel : ViewModel() {
         }
     }
 
+    /** Briše obrok koji se uređuje (onakav kakav je spremljen, ne uređeno stanje). */
+    fun obrisiObrok() {
+        val id = idKorisnik ?: return
+        val izvorni = _uredivaniObrok.value ?: return
+        if (_spremanjeUTijeku.value) return
+
+        viewModelScope.launch {
+            _spremanjeUTijeku.value = true
+            try {
+                val odgovor = RetrofitInstance.api.obrisiObrok(izvorni.id, id)
+                if (!odgovor.isSuccessful) throw HttpException(odgovor)
+
+                _obrisaniObrok.value = izvorni
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: HttpException) {
+                _greskaSpremanja.value = porukaGreske(e, "Brisanje")
+            } catch (e: Exception) {
+                _greskaSpremanja.value = "Brisanje nije uspjelo. Provjeri vezu s poslužiteljem."
+            } finally {
+                _spremanjeUTijeku.value = false
+            }
+        }
+    }
+
     fun ocistiGreskuUcitavanja() {
         _greskaUcitavanja.value = null
     }
@@ -557,10 +585,11 @@ class JelaViewModel : ViewModel() {
     fun ocistiRezultatSpremanja() {
         _spremljeniObrok.value = null
         _azuriraniObrok.value = null
+        _obrisaniObrok.value = null
         _greskaSpremanja.value = null
     }
 
-    private fun porukaGreske(e: HttpException): String {
+    private fun porukaGreske(e: HttpException, radnja: String = "Spremanje"): String {
         val poruka = try {
             e.response()?.errorBody()?.string()?.let { JSONObject(it).optString("poruka") }
         } catch (ex: Exception) {
@@ -568,7 +597,7 @@ class JelaViewModel : ViewModel() {
         }
 
         return if (poruka.isNullOrBlank()) {
-            "Spremanje nije uspjelo (greška ${e.code()})."
+            "$radnja nije uspjelo (greška ${e.code()})."
         } else {
             poruka
         }

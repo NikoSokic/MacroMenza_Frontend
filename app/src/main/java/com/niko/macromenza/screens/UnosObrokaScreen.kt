@@ -16,7 +16,9 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Search
@@ -34,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.google.gson.Gson
 import com.niko.macromenza.model.CestoJedenoJelo
 import com.niko.macromenza.model.Jelo
 import com.niko.macromenza.model.MeniDTO
@@ -96,6 +99,7 @@ fun UnosObrokaScreen(
     val ucitavanjeObroka by viewModel.ucitavanjeObroka.collectAsState()
     val greskaUcitavanja by viewModel.greskaUcitavanja.collectAsState()
     val azuriraniObrok by viewModel.azuriraniObrok.collectAsState()
+    val obrisaniObrok by viewModel.obrisaniObrok.collectAsState()
 
     val danas = remember { LocalDate.now(ZAGREB) }
     var visinaBara by remember { mutableStateOf(0.dp) }
@@ -199,6 +203,17 @@ fun UnosObrokaScreen(
     val imaPromjena = uredivanje && uredivaniObrok != null &&
         viewModel.imaPromjena(vrijeme.format(FORMAT_VREMENA), tip)
     var showOdbaciDialog by remember { mutableStateOf(false) }
+    var izbornikOtvoren by remember { mutableStateOf(false) }
+    var showBrisanjeDialog by remember { mutableStateOf(false) }
+
+    // Obrok obrisan: povratak na prikaz dana, koji nudi "Poništi" (obrok se predaje preko savedStateHandle).
+    LaunchedEffect(obrisaniObrok) {
+        val obrok = obrisaniObrok ?: return@LaunchedEffect
+        navController.previousBackStackEntry?.savedStateHandle
+            ?.set(KLJUC_OBRISANI_OBROK, Gson().toJson(obrok))
+        viewModel.ocistiRezultatSpremanja()
+        navController.popBackStack()
+    }
 
     // Prije BackHandlera sažetka, pa otvorena lista sažetka i dalje prva hvata "natrag".
     BackHandler(enabled = imaPromjena) { showOdbaciDialog = true }
@@ -255,12 +270,57 @@ fun UnosObrokaScreen(
         ) {
 
             item {
-                Text(
-                    text = if (uredivanje) "Uredi obrok" else formatTipObroka(tip),
-                    fontSize = 34.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = if (uredivanje) "Uredi obrok" else formatTipObroka(tip),
+                        modifier = Modifier.weight(1f),
+                        fontSize = 34.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+
+                    if (uredivanje && uredivaniObrok != null) {
+                        Box {
+                            IconButton(
+                                onClick = { izbornikOtvoren = true },
+                                enabled = !spremanjeUTijeku
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.MoreVert,
+                                    contentDescription = "Više opcija"
+                                )
+                            }
+
+                            DropdownMenu(
+                                expanded = izbornikOtvoren,
+                                onDismissRequest = { izbornikOtvoren = false }
+                            ) {
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(
+                                            text = "Obriši obrok",
+                                            color = MaterialTheme.colorScheme.error
+                                        )
+                                    },
+                                    leadingIcon = {
+                                        Icon(
+                                            imageVector = Icons.Default.Delete,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.error
+                                        )
+                                    },
+                                    onClick = {
+                                        izbornikOtvoren = false
+                                        showBrisanjeDialog = true
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
 
                 Spacer(modifier = Modifier.height(4.dp))
 
@@ -618,6 +678,19 @@ fun UnosObrokaScreen(
                     bottom = screenBottomPadding() + visinaBara + 4.dp
                 )
         )
+    }
+
+    if (showBrisanjeDialog) {
+        uredivaniObrok?.let { obrok ->
+            PotvrdaBrisanjaObrokaDialog(
+                obrok = obrok,
+                onPotvrdi = {
+                    showBrisanjeDialog = false
+                    viewModel.obrisiObrok()
+                },
+                onOdustani = { showBrisanjeDialog = false }
+            )
+        }
     }
 
     if (showOdbaciDialog) {

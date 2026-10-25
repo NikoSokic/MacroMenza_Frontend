@@ -9,10 +9,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -25,9 +27,13 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.niko.macromenza.model.Obrok
 import com.niko.macromenza.session.UserSessionManager
+import com.niko.macromenza.ui.components.screenBottomPadding
 import com.niko.macromenza.ui.theme.MacroGreen
 import com.niko.macromenza.ui.theme.MacroLightGreen
 import com.niko.macromenza.viewmodel.PovijestViewModel
+import com.google.gson.Gson
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 
 private val DetailProteinBlue = Color(0xFF4F8EF7)
 private val DetailCarbsOrange = Color(0xFFF4A340)
@@ -55,6 +61,15 @@ fun DetaljDanaScreen(
             viewModel.ucitajDan(id, datum)
         }
     }
+
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    BrisanjeObrokaEfekti(
+        viewModel = viewModel,
+        navController = navController,
+        snackbarHostState = snackbarHostState,
+        idKorisnik = prijavljeniKorisnikId
+    )
 
     Box(
         modifier = Modifier
@@ -136,12 +151,22 @@ fun DetaljDanaScreen(
                     item {
                         ObrociDana(
                             obroci = obroci,
-                            onUredi = { navController.navigate(rutaUredivanjaObroka(it)) }
+                            onUredi = { navController.navigate(rutaUredivanjaObroka(it)) },
+                            onObrisi = { obrok ->
+                                prijavljeniKorisnikId?.let { viewModel.obrisiObrok(it, obrok) }
+                            }
                         )
                     }
                 }
             }
         }
+
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(start = 16.dp, end = 16.dp, bottom = screenBottomPadding())
+        )
     }
 }
 
@@ -237,24 +262,42 @@ fun rutaUredivanjaObroka(obrok: Obrok): String =
 @Composable
 fun ObrociDana(
     obroci: List<Obrok>,
-    onUredi: (Obrok) -> Unit
+    onUredi: (Obrok) -> Unit,
+    onObrisi: (Obrok) -> Unit
 ) {
+    // Čuva se id: nakon brisanja obrok nestaje iz liste pa dijalog nestaje s njim.
+    var zaBrisanjeId by rememberSaveable { mutableStateOf<Long?>(null) }
+    val zaBrisanje = obroci.firstOrNull { it.id == zaBrisanjeId }
+
     Column(
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         obroci.forEach { obrok ->
             ObrokDanaKartica(
                 obrok = obrok,
-                onUredi = { onUredi(obrok) }
+                onUredi = { onUredi(obrok) },
+                onObrisi = { zaBrisanjeId = obrok.id }
             )
         }
+    }
+
+    zaBrisanje?.let { obrok ->
+        PotvrdaBrisanjaObrokaDialog(
+            obrok = obrok,
+            onPotvrdi = {
+                zaBrisanjeId = null
+                onObrisi(obrok)
+            },
+            onOdustani = { zaBrisanjeId = null }
+        )
     }
 }
 
 @Composable
 private fun ObrokDanaKartica(
     obrok: Obrok,
-    onUredi: () -> Unit
+    onUredi: () -> Unit,
+    onObrisi: () -> Unit
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
@@ -384,6 +427,32 @@ private fun ObrokDanaKartica(
                     value = obrok.ukupnoMasti,
                     color = DetailFatPurple
                 )
+            }
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+
+                TextButton(onClick = onObrisi) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.size(18.dp)
+                    )
+
+                    Spacer(modifier = Modifier.width(6.dp))
+
+                    Text(
+                        text = "Obriši",
+                        color = MaterialTheme.colorScheme.error,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
 
                 TextButton(onClick = onUredi) {
                     Icon(
@@ -404,6 +473,118 @@ private fun ObrokDanaKartica(
             }
         }
     }
+}
+
+/** Ključ u savedStateHandle ekrana na koji se vraća uređivanje: JSON obroka obrisanog iz uređivanja. */
+const val KLJUC_OBRISANI_OBROK = "obrisaniObrok"
+
+/** "1 stavka", "3 stavke", "5 stavki", "12 stavki". */
+private fun formatBrojStavki(broj: Int): String {
+    val oblik = when {
+        broj % 100 in 11..14 -> "stavki"
+        broj % 10 == 1 -> "stavka"
+        broj % 10 in 2..4 -> "stavke"
+        else -> "stavki"
+    }
+    return "$broj $oblik"
+}
+
+/** Potvrda brisanja cijelog obroka; zajednička za karticu obroka i uređivanje. */
+@Composable
+fun PotvrdaBrisanjaObrokaDialog(
+    obrok: Obrok,
+    onPotvrdi: () -> Unit,
+    onOdustani: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onOdustani,
+        title = {
+            Text("Obrisati ${formatDetaljTipObroka(obrok.tipObroka)} u ${obrok.vrijeme}?")
+        },
+        text = {
+            Text(
+                "${formatBrojStavki(obrok.stavke.size)}, ${formatKcal(obrok.ukupnoKalorije)} kcal. " +
+                    "Ovo briše cijeli obrok."
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = onPotvrdi) {
+                Text("Obriši", color = MaterialTheme.colorScheme.error)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onOdustani) {
+                Text("Odustani", color = MacroGreen)
+            }
+        }
+    )
+}
+
+/**
+ * Ponašanje nakon brisanja za ekrane s obrocima dana: Snackbar "Obrok obrisan / Poništi" (i kad je obrok
+ * obrisan u uređivanju, pa stigao preko savedStateHandle) te poruke grešaka.
+ */
+@Composable
+fun BrisanjeObrokaEfekti(
+    viewModel: PovijestViewModel,
+    navController: NavController,
+    snackbarHostState: SnackbarHostState,
+    idKorisnik: Long?
+) {
+    val obrisaniObrok by viewModel.obrisaniObrok.collectAsState()
+    val greskaBrisanja by viewModel.greskaBrisanja.collectAsState()
+    val scope = rememberCoroutineScope()
+
+    fun ponudiPonistavanje(obrok: Obrok) {
+        scope.launch {
+            if (snackbarHostState.ponudiPonistavanjeBrisanja()) {
+                idKorisnik?.let { viewModel.vratiObrok(it, obrok) }
+            }
+        }
+    }
+
+    LaunchedEffect(obrisaniObrok) {
+        val obrok = obrisaniObrok ?: return@LaunchedEffect
+        viewModel.ocistiRezultatBrisanja()
+        ponudiPonistavanje(obrok)
+    }
+
+    LaunchedEffect(greskaBrisanja) {
+        val poruka = greskaBrisanja ?: return@LaunchedEffect
+        viewModel.ocistiRezultatBrisanja()
+        scope.launch {
+            snackbarHostState.currentSnackbarData?.dismiss()
+            snackbarHostState.showSnackbar(poruka)
+        }
+    }
+
+    // Obrok obrisan iz uređivanja: ekran uređivanja je ostavio JSON obroka prije povratka.
+    LaunchedEffect(idKorisnik) {
+        if (idKorisnik == null) return@LaunchedEffect
+        val json = navController.currentBackStackEntry?.savedStateHandle
+            ?.remove<String>(KLJUC_OBRISANI_OBROK) ?: return@LaunchedEffect
+        val obrok = try {
+            Gson().fromJson(json, Obrok::class.java)
+        } catch (e: Exception) {
+            null
+        } ?: return@LaunchedEffect
+        ponudiPonistavanje(obrok)
+    }
+}
+
+/** Snackbar "Obrok obrisan" s akcijom "Poništi" (oko 5 s). Vraća true ako je korisnik kliknuo "Poništi". */
+suspend fun SnackbarHostState.ponudiPonistavanjeBrisanja(): Boolean {
+    currentSnackbarData?.dismiss()
+
+    val rezultat = withTimeoutOrNull(5_000L) {
+        showSnackbar(
+            message = "Obrok obrisan",
+            actionLabel = "Poništi",
+            duration = SnackbarDuration.Indefinite
+        )
+    }
+
+    return rezultat == SnackbarResult.ActionPerformed
 }
 
 @Composable

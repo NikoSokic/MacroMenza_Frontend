@@ -22,6 +22,8 @@ import com.niko.macromenza.model.MeniDTO
 import com.niko.macromenza.model.Obrok
 import com.niko.macromenza.model.ObrokRequest
 
+import retrofit2.Response
+import retrofit2.http.DELETE
 import retrofit2.http.PUT
 import retrofit2.http.Path
 
@@ -84,6 +86,12 @@ interface ApiService {
         @Query("idKorisnik") idKorisnik: Long,
         @Body request: ObrokRequest
     ): Obrok
+
+    @DELETE("api/obroci/{id}")
+    suspend fun obrisiObrok(
+        @Path("id") id: Long,
+        @Query("idKorisnik") idKorisnik: Long
+    ): Response<Unit>
 
     @GET("api/jela/filter")
     suspend fun filtrirajJela(
