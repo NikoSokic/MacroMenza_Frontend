@@ -8,7 +8,7 @@ import com.niko.macromenza.model.KategorijaJela
 import com.niko.macromenza.model.PovijestDana
 import retrofit2.http.GET
 import com.niko.macromenza.model.KonzumacijaRequest
-import com.niko.macromenza.model.TjedniPregled
+import com.niko.macromenza.model.Tjedan
 import retrofit2.http.Body
 import retrofit2.http.POST
 import retrofit2.http.Query
@@ -81,6 +81,12 @@ interface ApiService {
         @Query("datum") datum: String? = null
     ): DanPregled
 
+    @GET("api/obroci/tjedan")
+    suspend fun getTjedan(
+        @Query("idKorisnik") idKorisnik: Long,
+        @Query("pocetak") pocetak: String? = null
+    ): Tjedan
+
     @GET("api/obroci/{id}")
     suspend fun getObrok(
         @Path("id") id: Long,
@@ -128,11 +134,6 @@ interface ApiService {
         @Path("idKorisnik") idKorisnik: Long,
         @Query("datum") datum: String
     ): PovijestDana
-
-    @GET("api/konzumacije/tjedni-pregled/{idKorisnik}")
-    suspend fun dohvatiTjedniPregled(
-        @Path("idKorisnik") idKorisnik: Long
-    ): TjedniPregled
 
     @GET("api/konzumacije/ukupno/{idKorisnik}")
     suspend fun dohvatiUkupniUnos(

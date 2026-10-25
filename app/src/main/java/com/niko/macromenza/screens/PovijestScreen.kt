@@ -1,37 +1,59 @@
 package com.niko.macromenza.screens
 
+import com.niko.macromenza.util.formatGrami
 import com.niko.macromenza.util.formatKcal
+import com.niko.macromenza.util.formatKcalTisuce
 import com.niko.macromenza.util.formatMakro
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material.icons.filled.LocalFireDepartment
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.niko.macromenza.model.Tjedan
+import com.niko.macromenza.model.TjedanDan
 import com.niko.macromenza.session.UserSessionManager
 import com.niko.macromenza.ui.components.screenBottomPadding
 import com.niko.macromenza.ui.components.screenTopPadding
 import com.niko.macromenza.ui.theme.MacroGreen
 import com.niko.macromenza.viewmodel.PovijestViewModel
 import java.time.LocalDate
+import java.time.ZoneId
+
+private val ZAGREB = ZoneId.of("Europe/Zagreb")
+private val OZNAKE_DANA = listOf("P", "U", "S", "Č", "P", "S", "N")
+private val NAZIVI_DANA = listOf("Pon", "Uto", "Sri", "Čet", "Pet", "Sub", "Ned")
+
+private val TjedanProteinBlue = Color(0xFF4F8EF7)
+private val TjedanCarbsOrange = Color(0xFFF4A340)
+private val TjedanFatPurple = Color(0xFF9B6DE3)
 
 enum class PovijestTab {
     TJEDNI,
@@ -43,7 +65,8 @@ fun PovijestScreen(
     navController: NavController,
     viewModel: PovijestViewModel = viewModel()
 ) {
-    val tjedniPregled by viewModel.tjedniPregled.collectAsState()
+    val tjedan by viewModel.tjedan.collectAsState()
+    val greskaTjedna by viewModel.greskaTjedna.collectAsState()
     val povijestDana by viewModel.povijestDana.collectAsState()
     val obrociDana by viewModel.obrociDana.collectAsState()
 
@@ -65,13 +88,14 @@ fun PovijestScreen(
     val prijavljeniKorisnikId by
     sessionManager.korisnikId.collectAsState(initial = null)
 
+    // Pokreće se i pri povratku s uređivanja, pa graf i dan pokazuju svježe podatke.
     LaunchedEffect(prijavljeniKorisnikId) {
         prijavljeniKorisnikId?.let { id ->
-            viewModel.ucitajTjedniPregled(id)
+            viewModel.ucitajTjedan(id)
         }
     }
 
-    LaunchedEffect(odabraniDatum) {
+    LaunchedEffect(odabraniDatum, prijavljeniKorisnikId) {
         odabraniDatum?.let { datum ->
             prijavljeniKorisnikId?.let { id ->
                 viewModel.ucitajDan(id, datum)
@@ -87,6 +111,8 @@ fun PovijestScreen(
         snackbarHostState = snackbarHostState,
         idKorisnik = prijavljeniKorisnikId
     )
+
+    val pragPovlacenja = with(LocalDensity.current) { 80.dp.toPx() }
 
     Box(
         modifier = Modifier
@@ -111,7 +137,26 @@ fun PovijestScreen(
         )
 
         androidx.compose.foundation.lazy.LazyColumn(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                // Povlačenje lijevo/desno na tabu "Tjedan" mijenja tjedan (desno = prethodni).
+                .pointerInput(odabraniTab, prijavljeniKorisnikId) {
+                    val id = prijavljeniKorisnikId
+                    if (odabraniTab != PovijestTab.TJEDNI || id == null) return@pointerInput
+
+                    var pomak = 0f
+                    detectHorizontalDragGestures(
+                        onDragStart = { pomak = 0f },
+                        onDragEnd = {
+                            when {
+                                pomak > pragPovlacenja -> viewModel.prethodniTjedan(id)
+                                pomak < -pragPovlacenja -> viewModel.sljedeciTjedan(id)
+                            }
+                        }
+                    ) { _, dragAmount ->
+                        pomak += dragAmount
+                    }
+                },
             contentPadding = PaddingValues(
                 start = 22.dp,
                 end = 22.dp,
@@ -146,11 +191,14 @@ fun PovijestScreen(
                     onSelected = { tab ->
 
                         if (tab == PovijestTab.DNEVNI) {
+                            // Zadnji dan odabranog tjedna koji nije u budućnosti.
+                            val danas = LocalDate.now(ZAGREB)
                             odabraniDatum =
-                                tjedniPregled
+                                tjedan
                                     ?.dani
-                                    ?.lastOrNull()
+                                    ?.lastOrNull { !LocalDate.parse(it.datum).isAfter(danas) }
                                     ?.datum
+                                    ?: danas.toString()
                         }
 
                         odabraniTab = tab
@@ -160,175 +208,62 @@ fun PovijestScreen(
 
             if (odabraniTab == PovijestTab.TJEDNI) {
 
-                tjedniPregled?.let { pregled ->
+                val trenutni = tjedan
 
-                    val imaUnosa =
-                        pregled.dani.any {
-                            it.kalorije > 0
-                        }
+                if (trenutni == null) {
 
                     item {
-                        WeekSelector(
-                            datumOd = pregled.datumOd,
-                            datumDo = pregled.datumDo
+                        if (greskaTjedna) {
+                            PorukaTjednaCard(
+                                naslov = "Povijest nije dostupna",
+                                tekst = "Provjeri vezu s poslužiteljem."
+                            )
+                        } else {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 40.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator(color = MacroGreen)
+                            }
+                        }
+                    }
+
+                } else {
+
+                    item {
+                        TjedanZaglavlje(
+                            tjedan = trenutni,
+                            onPrethodni = { prijavljeniKorisnikId?.let { viewModel.prethodniTjedan(it) } },
+                            onSljedeci = { prijavljeniKorisnikId?.let { viewModel.sljedeciTjedan(it) } },
+                            onOvajTjedan = { prijavljeniKorisnikId?.let { viewModel.ovajTjedan(it) } }
                         )
                     }
 
-                    if (!imaUnosa) {
+                    if (trenutni.daniSUnosom == 0) {
 
                         item {
-                            EmptyHistoryCard()
+                            PorukaTjednaCard(
+                                naslov = "Nema unosa u ovom tjednu",
+                                tekst = "Dodaj obroke ili prelistaj na drugi tjedan."
+                            )
                         }
 
                     } else {
 
-                        val ukupnoKalorija =
-                            pregled.dani.sumOf {
-                                it.kalorije
-                            }
-
-                        val ukupnoProteina =
-                            pregled.dani.sumOf {
-                                it.proteini
-                            }
-
-                        val aktivniDani =
-                            pregled.dani.count {
-                                it.kalorije > 0
-                            }
-
                         item {
-                            WeeklyOverviewCard(
-                                prosjekKalorija =
-                                    pregled.prosjekKalorija,
-                                ukupnoKalorija =
-                                    ukupnoKalorija,
-                                aktivniDani =
-                                    aktivniDani
-                            )
-                        }
-
-                        item {
-                            Text(
-                                text = "Tjedni pregled",
-                                style =
-                                    MaterialTheme.typography.titleLarge,
-                                color =
-                                    MaterialTheme.colorScheme.onSurface,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-
-                        item {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement =
-                                    Arrangement.spacedBy(10.dp)
-                            ) {
-
-                                HistoryStatCard(
-                                    title = "Kalorije",
-                                    value = formatKcal(pregled.prosjekKalorija),
-                                    unit = "prosjek",
-                                    modifier = Modifier.weight(1f)
-                                )
-
-                                HistoryStatCard(
-                                    title = "Proteini",
-                                    value = formatMakro(ukupnoProteina / 7.0),
-                                    unit = "g / dan",
-                                    modifier = Modifier.weight(1f)
-                                )
-
-                                HistoryStatCard(
-                                    title = "Aktivnost",
-                                    value = "$aktivniDani",
-                                    unit = "/ 7 dana",
-                                    modifier = Modifier.weight(1f)
-                                )
-                            }
-                        }
-
-                        item {
-                            WeeklyChart(
-                                pregled = pregled,
-                                onDayClick = { datum ->
+                            TjedniGrafCard(
+                                tjedan = trenutni,
+                                onOtvoriDan = { datum ->
                                     odabraniDatum = datum
-                                    odabraniTab =
-                                        PovijestTab.DNEVNI
+                                    odabraniTab = PovijestTab.DNEVNI
                                 }
                             )
                         }
 
                         item {
-
-                            val najboljiDan =
-                                pregled.dani.maxByOrNull {
-                                    it.kalorije
-                                }
-
-                            val najviseProteina =
-                                pregled.dani.maxByOrNull {
-                                    it.proteini
-                                }
-
-                            Column {
-
-                                Text(
-                                    text = "Istaknuto",
-                                    style =
-                                        MaterialTheme.typography.titleLarge,
-                                    color =
-                                        MaterialTheme.colorScheme.onSurface,
-                                    fontWeight = FontWeight.Bold
-                                )
-
-                                Spacer(
-                                    modifier = Modifier.height(12.dp)
-                                )
-
-                                HighlightCard(
-                                    icon = {
-                                        Icon(
-                                            imageVector =
-                                                Icons.Default.LocalFireDepartment,
-                                            contentDescription = null,
-                                            tint =
-                                                MaterialTheme.colorScheme.primary
-                                        )
-                                    },
-                                    title = "Najveći unos",
-                                    value =
-                                        najboljiDan?.let {
-                                            "${formatKcal(it.kalorije)} kcal"
-                                        } ?: "—",
-                                    subtitle =
-                                        najboljiDan?.datum ?: ""
-                                )
-
-                                Spacer(
-                                    modifier = Modifier.height(10.dp)
-                                )
-
-                                HighlightCard(
-                                    icon = {
-                                        Icon(
-                                            imageVector =
-                                                Icons.Default.Star,
-                                            contentDescription = null,
-                                            tint =
-                                                MaterialTheme.colorScheme.primary
-                                        )
-                                    },
-                                    title = "Najviše proteina",
-                                    value =
-                                        najviseProteina?.let {
-                                            "${formatMakro(it.proteini)} g"
-                                        } ?: "—",
-                                    subtitle =
-                                        najviseProteina?.datum ?: ""
-                                )
-                            }
+                            TjednaStatistikaCard(tjedan = trenutni)
                         }
                     }
                 }
@@ -495,465 +430,6 @@ private fun HistoryTab(
 }
 
 @Composable
-private fun WeekSelector(
-    datumOd: String,
-    datumDo: String
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-
-        Surface(
-            shape = CircleShape,
-            color =
-                MaterialTheme.colorScheme.primary.copy(
-                    alpha = 0.18f
-                )
-        ) {
-            IconButton(
-                onClick = {}
-            ) {
-                Icon(
-                    imageVector = Icons.Default.ChevronLeft,
-                    contentDescription = "Prethodni tjedan",
-                    tint = MaterialTheme.colorScheme.primary
-                )
-            }
-        }
-
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .padding(horizontal = 8.dp),
-            horizontalAlignment =
-                Alignment.CenterHorizontally
-        ) {
-
-            Text(
-                text = "$datumOd  –  $datumDo",
-                style =
-                    MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color =
-                    MaterialTheme.colorScheme.onSurface,
-                textAlign = TextAlign.Center,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-
-            Text(
-                text = "Ovaj tjedan",
-                style =
-                    MaterialTheme.typography.bodySmall,
-                color =
-                    MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-
-        Surface(
-            shape = CircleShape,
-            color =
-                MaterialTheme.colorScheme.primary.copy(
-                    alpha = 0.18f
-                )
-        ) {
-            IconButton(
-                onClick = {}
-            ) {
-                Icon(
-                    imageVector = Icons.Default.ChevronRight,
-                    contentDescription = "Sljedeći tjedan",
-                    tint = MaterialTheme.colorScheme.primary
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun WeeklyOverviewCard(
-    prosjekKalorija: Double,
-    ukupnoKalorija: Double,
-    aktivniDani: Int
-) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(28.dp),
-        color = MacroGreen
-    ) {
-
-        Column(
-            modifier = Modifier.padding(24.dp)
-        ) {
-
-            Text(
-                text = "Prosječni dnevni unos",
-                color =
-                    Color.White.copy(alpha = 0.80f),
-                style =
-                    MaterialTheme.typography.bodyMedium
-            )
-
-            Spacer(
-                modifier = Modifier.height(4.dp)
-            )
-
-            Row(
-                verticalAlignment = Alignment.Bottom
-            ) {
-
-                Text(
-                    text =
-                        formatKcal(prosjekKalorija),
-                    color = Color.White,
-                    style =
-                        MaterialTheme.typography.headlineLarge,
-                    fontWeight = FontWeight.Bold
-                )
-
-                Spacer(
-                    modifier = Modifier.width(6.dp)
-                )
-
-                Text(
-                    text = "kcal",
-                    color =
-                        Color.White.copy(alpha = 0.8f),
-                    modifier =
-                        Modifier.padding(bottom = 5.dp)
-                )
-            }
-
-            Spacer(
-                modifier = Modifier.height(20.dp)
-            )
-
-            HorizontalDivider(
-                color =
-                    Color.White.copy(alpha = 0.20f)
-            )
-
-            Spacer(
-                modifier = Modifier.height(16.dp)
-            )
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement =
-                    Arrangement.SpaceBetween
-            ) {
-
-                Column {
-
-                    Text(
-                        text = "Ukupno",
-                        color =
-                            Color.White.copy(alpha = 0.7f),
-                        style =
-                            MaterialTheme.typography.bodySmall
-                    )
-
-                    Text(
-                        text =
-                            "${formatKcal(ukupnoKalorija)} kcal",
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-
-                Column(
-                    horizontalAlignment = Alignment.End
-                ) {
-
-                    Text(
-                        text = "Evidentirano",
-                        color =
-                            Color.White.copy(alpha = 0.7f),
-                        style =
-                            MaterialTheme.typography.bodySmall
-                    )
-
-                    Text(
-                        text = "$aktivniDani / 7 dana",
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun HistoryStatCard(
-    title: String,
-    value: String,
-    unit: String,
-    modifier: Modifier
-) {
-    Surface(
-        modifier = modifier.height(118.dp),
-        shape = RoundedCornerShape(22.dp),
-        color = MaterialTheme.colorScheme.surface
-    ) {
-
-        Column(
-            modifier = Modifier.padding(14.dp),
-            verticalArrangement = Arrangement.Center
-        ) {
-
-            Text(
-                text = title,
-                style =
-                    MaterialTheme.typography.bodySmall,
-                color =
-                    MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-            Spacer(
-                modifier = Modifier.height(6.dp)
-            )
-
-            Text(
-                text = value,
-                style =
-                    MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold,
-                color =
-                    MaterialTheme.colorScheme.onSurface
-            )
-
-            Text(
-                text = unit,
-                style =
-                    MaterialTheme.typography.bodySmall,
-                color =
-                    MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-    }
-}
-
-@Composable
-private fun WeeklyChart(
-    pregled: com.niko.macromenza.model.TjedniPregled,
-    onDayClick: (String) -> Unit
-) {
-    val dani =
-        listOf(
-            "Pon",
-            "Uto",
-            "Sri",
-            "Čet",
-            "Pet",
-            "Sub",
-            "Ned"
-        )
-
-    val maxKalorije =
-        pregled.dani.maxOfOrNull {
-            it.kalorije
-        }?.coerceAtLeast(1.0) ?: 1.0
-
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(26.dp),
-        color = MaterialTheme.colorScheme.surface
-    ) {
-
-        Column(
-            modifier = Modifier.padding(20.dp)
-        ) {
-
-            Text(
-                text = "Kalorije po danima",
-                style =
-                    MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color =
-                    MaterialTheme.colorScheme.onSurface
-            )
-
-            Text(
-                text = "Dnevni unos tijekom tjedna",
-                style =
-                    MaterialTheme.typography.bodySmall,
-                color =
-                    MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-            Spacer(
-                modifier = Modifier.height(22.dp)
-            )
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(180.dp),
-                horizontalArrangement =
-                    Arrangement.spacedBy(9.dp),
-                verticalAlignment = Alignment.Bottom
-            ) {
-
-                pregled.dani.forEachIndexed { index, dan ->
-
-                    val progress =
-                        (dan.kalorije / maxKalorije)
-                            .toFloat()
-                            .coerceIn(0f, 1f)
-
-                    Column(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxHeight()
-                            .clickable {
-                                onDayClick(dan.datum)
-                            },
-                        horizontalAlignment =
-                            Alignment.CenterHorizontally,
-                        verticalArrangement =
-                            Arrangement.Bottom
-                    ) {
-
-                        if (dan.kalorije > 0) {
-
-                            Text(
-                                text =
-                                    formatKcal(dan.kalorije),
-                                style =
-                                    MaterialTheme.typography.labelSmall,
-                                color =
-                                    MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-
-                            Spacer(
-                                modifier =
-                                    Modifier.height(6.dp)
-                            )
-                        }
-
-                        Box(
-                            modifier = Modifier
-                                .width(30.dp)
-                                .height(
-                                    if (dan.kalorije == 0.0) {
-                                        6.dp
-                                    } else {
-                                        (120 * progress)
-                                            .coerceAtLeast(18f)
-                                            .dp
-                                    }
-                                )
-                                .clip(
-                                    RoundedCornerShape(12.dp)
-                                )
-                                .background(
-                                    if (dan.kalorije > 0) {
-                                        MacroGreen
-                                    } else {
-                                        MaterialTheme
-                                            .colorScheme
-                                            .primary
-                                            .copy(alpha = 0.25f)
-                                    }
-                                )
-                        )
-
-                        Spacer(
-                            modifier = Modifier.height(8.dp)
-                        )
-
-                        Text(
-                            text =
-                                dani.getOrElse(index) {
-                                    ""
-                                },
-                            style =
-                                MaterialTheme.typography.bodySmall,
-                            color =
-                                MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun HighlightCard(
-    icon: @Composable () -> Unit,
-    title: String,
-    value: String,
-    subtitle: String
-) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(22.dp),
-        color =
-            MaterialTheme.colorScheme.primary.copy(
-                alpha = 0.12f
-            )
-    ) {
-
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-
-            Surface(
-                modifier = Modifier.size(52.dp),
-                shape = RoundedCornerShape(16.dp),
-                color =
-                    MaterialTheme.colorScheme.primary.copy(
-                        alpha = 0.25f
-                    )
-            ) {
-                Box(
-                    contentAlignment = Alignment.Center
-                ) {
-                    icon()
-                }
-            }
-
-            Spacer(
-                modifier = Modifier.width(14.dp)
-            )
-
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
-
-                Text(
-                    text = title,
-                    fontWeight = FontWeight.SemiBold,
-                    color =
-                        MaterialTheme.colorScheme.onSurface
-                )
-
-                Text(
-                    text = subtitle,
-                    style =
-                        MaterialTheme.typography.bodySmall,
-                    color =
-                        MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-
-            Text(
-                text = value,
-                color =
-                    MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.Bold,
-                style =
-                    MaterialTheme.typography.titleMedium
-            )
-        }
-    }
-}
-
-@Composable
 private fun DaySelector(
     datum: String?,
     onPrevious: () -> Unit,
@@ -1094,44 +570,6 @@ private fun DailyMacro(
 }
 
 @Composable
-private fun EmptyHistoryCard() {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
-        color =
-            MaterialTheme.colorScheme.primary.copy(
-                alpha = 0.12f
-            )
-    ) {
-
-        Column(
-            modifier = Modifier.padding(20.dp)
-        ) {
-
-            Text(
-                text = "Još nema aktivnosti",
-                fontWeight = FontWeight.Bold,
-                style =
-                    MaterialTheme.typography.titleMedium,
-                color =
-                    MaterialTheme.colorScheme.onSurface
-            )
-
-            Spacer(
-                modifier = Modifier.height(4.dp)
-            )
-
-            Text(
-                text =
-                    "Dodaj obroke kako bi ovdje mogao pratiti svoj tjedni napredak.",
-                color =
-                    MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-    }
-}
-
-@Composable
 private fun EmptyDayCard() {
     Surface(
         modifier = Modifier.fillMaxWidth(),
@@ -1162,6 +600,620 @@ private fun EmptyDayCard() {
                     "Za odabrani datum nije evidentiran nijedan obrok.",
                 color =
                     MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+/** "20. – 26. 10. 2026.", preko mjeseca "27. 10. – 2. 11. 2026.", preko godine s obje godine. */
+private fun formatRasponTjedna(pocetak: String, kraj: String): String {
+    val od = LocalDate.parse(pocetak)
+    val doDana = LocalDate.parse(kraj)
+
+    return when {
+        od.year != doDana.year ->
+            "${od.dayOfMonth}. ${od.monthValue}. ${od.year}. – ${doDana.dayOfMonth}. ${doDana.monthValue}. ${doDana.year}."
+        od.monthValue != doDana.monthValue ->
+            "${od.dayOfMonth}. ${od.monthValue}. – ${doDana.dayOfMonth}. ${doDana.monthValue}. ${doDana.year}."
+        else ->
+            "${od.dayOfMonth}. – ${doDana.dayOfMonth}. ${doDana.monthValue}. ${doDana.year}."
+    }
+}
+
+@Composable
+private fun TjedanZaglavlje(
+    tjedan: Tjedan,
+    onPrethodni: () -> Unit,
+    onSljedeci: () -> Unit,
+    onOvajTjedan: () -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+
+        StrelicaTjedna(
+            ikona = Icons.Default.ChevronLeft,
+            opis = "Prethodni tjedan",
+            omoguceno = tjedan.imaPrethodni,
+            onClick = onPrethodni
+        )
+
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .padding(horizontal = 8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+
+            Text(
+                text = formatRasponTjedna(tjedan.pocetak, tjedan.kraj),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface,
+                textAlign = TextAlign.Center
+            )
+
+            // Na tekućem tjednu nema sljedećeg, pa je gumb tada samo oznaka.
+            if (tjedan.imaSljedeci) {
+                TextButton(
+                    onClick = onOvajTjedan,
+                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 0.dp),
+                    modifier = Modifier.height(30.dp)
+                ) {
+                    Text(
+                        text = "Ovaj tjedan",
+                        color = MacroGreen,
+                        fontWeight = FontWeight.SemiBold,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+            } else {
+                Text(
+                    text = "Ovaj tjedan",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(vertical = 6.dp)
+                )
+            }
+        }
+
+        StrelicaTjedna(
+            ikona = Icons.Default.ChevronRight,
+            opis = "Sljedeći tjedan",
+            omoguceno = tjedan.imaSljedeci,
+            onClick = onSljedeci
+        )
+    }
+}
+
+@Composable
+private fun StrelicaTjedna(
+    ikona: androidx.compose.ui.graphics.vector.ImageVector,
+    opis: String,
+    omoguceno: Boolean,
+    onClick: () -> Unit
+) {
+    Surface(
+        shape = CircleShape,
+        color = MaterialTheme.colorScheme.primary.copy(
+            alpha = if (omoguceno) 0.18f else 0.06f
+        )
+    ) {
+        IconButton(
+            onClick = onClick,
+            enabled = omoguceno
+        ) {
+            Icon(
+                imageVector = ikona,
+                contentDescription = opis,
+                tint = MaterialTheme.colorScheme.primary.copy(
+                    alpha = if (omoguceno) 1f else 0.3f
+                )
+            )
+        }
+    }
+}
+
+/**
+ * Stupčasti graf kalorija po danu s isprekidanom linijom cilja. Prvi dodir na stupac pokazuje kcal,
+ * drugi dodir na isti stupac (ili "Otvori dan") otvara karticu "Dan". Dani u budućnosti se ne mogu odabrati.
+ */
+@Composable
+private fun TjedniGrafCard(
+    tjedan: Tjedan,
+    onOtvoriDan: (String) -> Unit
+) {
+    val dani = tjedan.dani
+    val danas = LocalDate.now(ZAGREB)
+
+    var odabraniIndeks by rememberSaveable(tjedan.pocetak) {
+        mutableStateOf<Int?>(null)
+    }
+
+    val bojaUCilju = MacroGreen
+    val bojaIzvanCilja = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f)
+    val bojaObrisa = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.45f)
+    val bojaCilja = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f)
+    val bojaOdabira = MaterialTheme.colorScheme.primary.copy(alpha = 0.10f)
+    val bojaOznake = MaterialTheme.colorScheme.onSurface
+    val bojaPodloge = MaterialTheme.colorScheme.surface
+
+    val textMeasurer = rememberTextMeasurer()
+    val stilOznake = MaterialTheme.typography.labelMedium.copy(
+        color = bojaOznake,
+        fontWeight = FontWeight.Bold
+    )
+
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(26.dp),
+        color = MaterialTheme.colorScheme.surface
+    ) {
+
+        Column(
+            modifier = Modifier.padding(20.dp)
+        ) {
+
+            Text(
+                text = "Kalorije po danima",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Canvas(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(180.dp)
+                    .pointerInput(dani) {
+                        detectTapGestures { pozicija ->
+                            val indeks = (pozicija.x / (size.width / 7f)).toInt().coerceIn(0, 6)
+                            val dan = dani.getOrNull(indeks) ?: return@detectTapGestures
+
+                            if (LocalDate.parse(dan.datum).isAfter(danas)) return@detectTapGestures
+
+                            if (odabraniIndeks == indeks) {
+                                onOtvoriDan(dan.datum)
+                            } else {
+                                odabraniIndeks = indeks
+                            }
+                        }
+                    }
+            ) {
+                val maxVrijednost = maxOf(
+                    dani.maxOfOrNull { it.kalorije } ?: 0.0,
+                    dani.maxOfOrNull { it.ciljKalorije ?: 0.0 } ?: 0.0,
+                    1.0
+                ) * 1.12
+
+                val prostorOznake = 22.dp.toPx()
+                val visinaGrafa = size.height - prostorOznake
+                val sirinaSlota = size.width / 7f
+                val sirinaStupca = minOf(sirinaSlota * 0.56f, 30.dp.toPx())
+                val radijus = CornerRadius(8.dp.toPx())
+                val crtica = 6.dp.toPx()
+                val razmak = 5.dp.toPx()
+
+                fun y(vrijednost: Double): Float =
+                    size.height - (vrijednost / maxVrijednost * visinaGrafa).toFloat()
+
+                dani.forEachIndexed { indeks, dan ->
+                    val lijevo = indeks * sirinaSlota + (sirinaSlota - sirinaStupca) / 2f
+
+                    if (indeks == odabraniIndeks) {
+                        drawRoundRect(
+                            color = bojaOdabira,
+                            topLeft = Offset(indeks * sirinaSlota + 2.dp.toPx(), 0f),
+                            size = Size(sirinaSlota - 4.dp.toPx(), size.height),
+                            cornerRadius = CornerRadius(10.dp.toPx())
+                        )
+                    }
+
+                    if (dan.imaUnos) {
+                        val visina = maxOf(size.height - y(dan.kalorije), 4.dp.toPx())
+
+                        drawRoundRect(
+                            color = if (dan.uCilju) bojaUCilju else bojaIzvanCilja,
+                            topLeft = Offset(lijevo, size.height - visina),
+                            size = Size(sirinaStupca, visina),
+                            cornerRadius = radijus
+                        )
+                    } else {
+                        val visina = 10.dp.toPx()
+                        val debljina = 1.5.dp.toPx()
+                        val vrhStupca = size.height - visina
+
+                        drawRoundRect(
+                            color = bojaObrisa,
+                            topLeft = Offset(lijevo + debljina / 2f, vrhStupca + debljina / 2f),
+                            size = Size(sirinaStupca - debljina, visina - debljina),
+                            cornerRadius = CornerRadius(4.dp.toPx()),
+                            style = Stroke(width = debljina)
+                        )
+                    }
+
+                    // Cilj se crta po danu (preporuka se može promijeniti usred tjedna); faza drži crtice u nizu.
+                    dan.ciljKalorije?.let { cilj ->
+                        val yCilja = y(cilj)
+                        drawLine(
+                            color = bojaCilja,
+                            start = Offset(indeks * sirinaSlota, yCilja),
+                            end = Offset((indeks + 1) * sirinaSlota, yCilja),
+                            strokeWidth = 1.5.dp.toPx(),
+                            pathEffect = PathEffect.dashPathEffect(
+                                floatArrayOf(crtica, razmak),
+                                (indeks * sirinaSlota) % (crtica + razmak)
+                            )
+                        )
+                    }
+
+                }
+
+                // Oznaka se crta zadnja, s podlogom, da je linija cilja ne prekriži.
+                odabraniIndeks?.let { indeks ->
+                    val dan = dani.getOrNull(indeks) ?: return@let
+                    val tekst = if (dan.imaUnos) formatKcalTisuce(dan.kalorije) else "0"
+                    val izmjereno = textMeasurer.measure(tekst, stilOznake)
+                    val ruba = 4.dp.toPx()
+                    val sirina = izmjereno.size.width + 2 * ruba
+                    val visina = izmjereno.size.height.toFloat()
+                    val vrhStupca = if (dan.imaUnos) {
+                        size.height - maxOf(size.height - y(dan.kalorije), 4.dp.toPx())
+                    } else {
+                        size.height - 10.dp.toPx()
+                    }
+                    val x = (indeks * sirinaSlota + (sirinaSlota - sirina) / 2f).coerceIn(0f, size.width - sirina)
+                    val yOznake = (vrhStupca - visina - 4.dp.toPx()).coerceAtLeast(0f)
+
+                    drawRoundRect(
+                        color = bojaPodloge,
+                        topLeft = Offset(x, yOznake),
+                        size = Size(sirina, visina),
+                        cornerRadius = CornerRadius(6.dp.toPx())
+                    )
+                    drawText(izmjereno, topLeft = Offset(x + ruba, yOznake))
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Row(modifier = Modifier.fillMaxWidth()) {
+                dani.forEachIndexed { indeks, dan ->
+                    val jeDanas = dan.datum == danas.toString()
+
+                    Text(
+                        text = OZNAKE_DANA.getOrElse(indeks) { "" },
+                        modifier = Modifier.weight(1f),
+                        textAlign = TextAlign.Center,
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = if (jeDanas || indeks == odabraniIndeks) FontWeight.Bold else FontWeight.Normal,
+                        color = if (jeDanas) MacroGreen else MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            LegendaGrafa(
+                bojaUCilju = bojaUCilju,
+                bojaIzvanCilja = bojaIzvanCilja,
+                bojaObrisa = bojaObrisa,
+                bojaCilja = bojaCilja
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            HorizontalDivider(
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.10f)
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            val odabrani = odabraniIndeks?.let { dani.getOrNull(it) }
+
+            if (odabrani == null) {
+                Text(
+                    text = "Dodirni stupac za kalorije, ponovno za obroke tog dana.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(vertical = 10.dp)
+                )
+            } else {
+                OdabraniDanRed(
+                    dan = odabrani,
+                    naziv = NAZIVI_DANA.getOrElse(odabraniIndeks ?: 0) { "" },
+                    onOtvori = { onOtvoriDan(odabrani.datum) }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun OdabraniDanRed(
+    dan: TjedanDan,
+    naziv: String,
+    onOtvori: () -> Unit
+) {
+    val datum = LocalDate.parse(dan.datum)
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = "$naziv, ${datum.dayOfMonth}. ${datum.monthValue}.",
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+
+            val cilj = dan.ciljKalorije?.let { " · cilj ${formatKcalTisuce(it)}" } ?: ""
+
+            Text(
+                text = if (dan.imaUnos) "${formatKcalTisuce(dan.kalorije)} kcal$cilj" else "Nema unosa$cilj",
+                style = MaterialTheme.typography.bodySmall,
+                color = if (dan.uCilju) MacroGreen else MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+
+        TextButton(onClick = onOtvori) {
+            Text(
+                text = "Otvori dan",
+                color = MacroGreen,
+                fontWeight = FontWeight.SemiBold
+            )
+
+            Icon(
+                imageVector = Icons.Default.ChevronRight,
+                contentDescription = null,
+                tint = MacroGreen,
+                modifier = Modifier.size(18.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun LegendaGrafa(
+    bojaUCilju: Color,
+    bojaIzvanCilja: Color,
+    bojaObrisa: Color,
+    bojaCilja: Color
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        StavkaLegende(tekst = "U cilju") {
+            Box(Modifier.size(10.dp).clip(RoundedCornerShape(3.dp)).background(bojaUCilju))
+        }
+        StavkaLegende(tekst = "Izvan cilja") {
+            Box(Modifier.size(10.dp).clip(RoundedCornerShape(3.dp)).background(bojaIzvanCilja))
+        }
+        StavkaLegende(tekst = "Bez unosa") {
+            Canvas(Modifier.size(10.dp)) {
+                drawRoundRect(
+                    color = bojaObrisa,
+                    cornerRadius = CornerRadius(3.dp.toPx()),
+                    style = Stroke(width = 1.5.dp.toPx())
+                )
+            }
+        }
+        StavkaLegende(tekst = "Cilj") {
+            Canvas(Modifier.size(width = 14.dp, height = 10.dp)) {
+                drawLine(
+                    color = bojaCilja,
+                    start = Offset(0f, size.height / 2f),
+                    end = Offset(size.width, size.height / 2f),
+                    strokeWidth = 1.5.dp.toPx(),
+                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(4.dp.toPx(), 2.dp.toPx()))
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun StavkaLegende(
+    tekst: String,
+    oznaka: @Composable () -> Unit
+) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        oznaka()
+        Spacer(modifier = Modifier.width(5.dp))
+        Text(
+            text = tekst,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+/** Dani u cilju i prosjek kalorija i makronutrijenata preko dana s unosom, uz prosječni cilj tih dana. */
+@Composable
+private fun TjednaStatistikaCard(tjedan: Tjedan) {
+    val prosjek = tjedan.prosjek ?: return
+    val cilj = tjedan.prosjekCilj
+
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(28.dp),
+        color = MacroGreen
+    ) {
+        Column(
+            modifier = Modifier.padding(22.dp)
+        ) {
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column {
+                    Text(
+                        text = "U cilju",
+                        color = Color.White.copy(alpha = 0.78f),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+
+                    Text(
+                        text = "${tjedan.daniUCilju} / ${tjedan.daniSUnosom} dana",
+                        color = Color.White,
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+                Column(horizontalAlignment = Alignment.End) {
+                    Text(
+                        text = "Prosječno dnevno",
+                        color = Color.White.copy(alpha = 0.78f),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+
+                    Text(
+                        text = "${formatKcalTisuce(prosjek.kalorije)} kcal",
+                        color = Color.White,
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    Text(
+                        text = cilj?.let { "cilj ${formatKcalTisuce(it.kalorije)} kcal" } ?: "bez cilja",
+                        color = Color.White.copy(alpha = 0.78f),
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+            }
+
+            Text(
+                text = "±10 % od cilja, samo dani s unosom",
+                color = Color.White.copy(alpha = 0.65f),
+                style = MaterialTheme.typography.labelSmall
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            HorizontalDivider(color = Color.White.copy(alpha = 0.18f))
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            MakroTraka(
+                naziv = "Proteini",
+                vrijednost = prosjek.proteini,
+                cilj = cilj?.proteini,
+                boja = TjedanProteinBlue
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            MakroTraka(
+                naziv = "Ugljikohidrati",
+                vrijednost = prosjek.ugljikohidrati,
+                cilj = cilj?.ugljikohidrati,
+                boja = TjedanCarbsOrange
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            MakroTraka(
+                naziv = "Masti",
+                vrijednost = prosjek.masti,
+                cilj = cilj?.masti,
+                boja = TjedanFatPurple
+            )
+
+            if (cilj == null) {
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Text(
+                    text = "Za dane s unosom nema postavljenog cilja.",
+                    color = Color.White.copy(alpha = 0.78f),
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun MakroTraka(
+    naziv: String,
+    vrijednost: Double,
+    cilj: Double?,
+    boja: Color
+) {
+    Column {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = naziv,
+                color = Color.White,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.SemiBold
+            )
+
+            Text(
+                text = if (cilj != null) "${formatMakro(vrijednost)} / ${formatGrami(cilj)} g"
+                else "${formatMakro(vrijednost)} g",
+                color = Color.White,
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
+
+        if (cilj != null && cilj > 0) {
+            Spacer(modifier = Modifier.height(6.dp))
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(8.dp)
+                    .clip(RoundedCornerShape(4.dp))
+                    .background(Color.White.copy(alpha = 0.25f))
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth((vrijednost / cilj).toFloat().coerceIn(0f, 1f))
+                        .fillMaxHeight()
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(boja)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun PorukaTjednaCard(
+    naslov: String,
+    tekst: String
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(24.dp),
+        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+    ) {
+        Column(
+            modifier = Modifier.padding(20.dp)
+        ) {
+            Text(
+                text = naslov,
+                fontWeight = FontWeight.Bold,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            Text(
+                text = tekst,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }

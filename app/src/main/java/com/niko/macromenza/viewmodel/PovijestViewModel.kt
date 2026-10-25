@@ -1,5 +1,6 @@
 package com.niko.macromenza.viewmodel
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.niko.macromenza.api.RetrofitInstance
@@ -7,15 +8,19 @@ import com.niko.macromenza.model.Obrok
 import com.niko.macromenza.model.ObrokRequest
 import com.niko.macromenza.model.PovijestDana
 import com.niko.macromenza.model.StavkaObrokaRequest
+import com.niko.macromenza.model.Tjedan
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import com.niko.macromenza.model.TjedniPregled
 import kotlinx.coroutines.launch
 import org.json.JSONObject
 import retrofit2.HttpException
+import java.time.LocalDate
 
-class PovijestViewModel : ViewModel() {
+class PovijestViewModel(
+    private val savedStateHandle: SavedStateHandle
+) : ViewModel() {
 
     private val _povijestDana = MutableStateFlow<PovijestDana?>(null)
     val povijestDana = _povijestDana.asStateFlow()
@@ -23,8 +28,20 @@ class PovijestViewModel : ViewModel() {
     private val _obrociDana = MutableStateFlow<List<Obrok>>(emptyList())
     val obrociDana = _obrociDana.asStateFlow()
 
-    private val _tjedniPregled = MutableStateFlow<TjedniPregled?>(null)
-    val tjedniPregled = _tjedniPregled.asStateFlow()
+    private val _tjedan = MutableStateFlow<Tjedan?>(null)
+    val tjedan = _tjedan.asStateFlow()
+
+    private val _greskaTjedna = MutableStateFlow(false)
+    val greskaTjedna = _greskaTjedna.asStateFlow()
+
+    /** Ponedjeljak odabranog tjedna (YYYY-MM-DD); null je tekući tjedan. Preživi i gašenje procesa. */
+    private var odabraniPocetak: String?
+        get() = savedStateHandle[KLJUC_POCETAK_TJEDNA]
+        set(value) {
+            savedStateHandle[KLJUC_POCETAK_TJEDNA] = value
+        }
+
+    private var ucitavanjeTjedna: Job? = null
 
     /** Obrok koji je upravo obrisan; ekran na to nudi "Poništi" i čisti događaj. */
     private val _obrisaniObrok = MutableStateFlow<Obrok?>(null)
@@ -60,16 +77,38 @@ class PovijestViewModel : ViewModel() {
             }
         }
     }
-    fun ucitajTjedniPregled(
-        idKorisnik: Long
-    ) {
-        viewModelScope.launch {
+    /** Učitava odabrani tjedan; novi zahtjev prekida prethodni pa brzo listanje ne prikaže krivi tjedan. */
+    fun ucitajTjedan(idKorisnik: Long) {
+        ucitavanjeTjedna?.cancel()
+        ucitavanjeTjedna = viewModelScope.launch {
             try {
-                _tjedniPregled.value =
-                    RetrofitInstance.api.dohvatiTjedniPregled(idKorisnik)
+                _tjedan.value = RetrofitInstance.api.getTjedan(idKorisnik, odabraniPocetak)
+                _greskaTjedna.value = false
+            } catch (e: CancellationException) {
+                throw e
             } catch (_: Exception) {
+                _greskaTjedna.value = true
             }
         }
+    }
+
+    fun prethodniTjedan(idKorisnik: Long) {
+        val tjedan = _tjedan.value ?: return
+        if (!tjedan.imaPrethodni) return
+        odabraniPocetak = LocalDate.parse(tjedan.pocetak).minusWeeks(1).toString()
+        ucitajTjedan(idKorisnik)
+    }
+
+    fun sljedeciTjedan(idKorisnik: Long) {
+        val tjedan = _tjedan.value ?: return
+        if (!tjedan.imaSljedeci) return
+        odabraniPocetak = LocalDate.parse(tjedan.pocetak).plusWeeks(1).toString()
+        ucitajTjedan(idKorisnik)
+    }
+
+    fun ovajTjedan(idKorisnik: Long) {
+        odabraniPocetak = null
+        ucitajTjedan(idKorisnik)
     }
 
     /** Briše obrok; lista se mijenja tek kad backend potvrdi, a greška ostavlja obrok na mjestu. */
@@ -135,7 +174,7 @@ class PovijestViewModel : ViewModel() {
 
     private fun osvjezi(idKorisnik: Long, datum: String) {
         ucitajDan(idKorisnik, datum)
-        ucitajTjedniPregled(idKorisnik)
+        ucitajTjedan(idKorisnik)
     }
 
     private fun poruka(e: HttpException): String? =
@@ -147,4 +186,7 @@ class PovijestViewModel : ViewModel() {
             null
         }
 
+    private companion object {
+        const val KLJUC_POCETAK_TJEDNA = "pocetakTjedna"
+    }
 }
