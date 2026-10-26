@@ -1,3 +1,83 @@
 <resources>
     <string name="app_name">MacroMenza</string>
+
+    <!-- Dnevni pregled (Home) -->
+    <string name="dp_danas">Danas</string>
+    <string name="dp_datum">%1$s, %2$d. %3$d.</string>
+    <string-array name="dp_dani_u_tjednu">
+        <item>Ponedjeljak</item>
+        <item>Utorak</item>
+        <item>Srijeda</item>
+        <item>Četvrtak</item>
+        <item>Petak</item>
+        <item>Subota</item>
+        <item>Nedjelja</item>
+    </string-array>
+    <string name="dp_prethodni_dan">Prethodni dan</string>
+    <string name="dp_sljedeci_dan">Sljedeći dan</string>
+    <string name="dp_profil">Profil</string>
+
+    <string name="dp_ostaje">Ostaje</string>
+    <string name="dp_preko_cilja">Preko cilja</string>
+    <string name="dp_od_kcal">od %1$s kcal</string>
+    <string name="dp_uneseno">Uneseno</string>
+    <string name="dp_obroka">Obroka</string>
+    <string name="dp_obroka_vrijednost">%1$d/%2$d</string>
+    <string name="dp_bez_cilja">Cilj nije postavljen</string>
+    <string name="dp_postavi_cilj">Postavi cilj</string>
+    <string name="dp_luk_opis">Ostaje %1$s od %2$s kcal. Uneseno %3$s kcal.</string>
+    <string name="dp_luk_opis_preko">Preko cilja %1$s kcal. Uneseno %2$s od %3$s kcal.</string>
+    <string name="dp_luk_opis_bez_cilja">Uneseno %1$s kcal. Cilj nije postavljen.</string>
+
+    <string name="dp_proteini">Proteini</string>
+    <string name="dp_masti">Masti</string>
+    <string name="dp_ugljikohidrati">Ugljikohidrati</string>
+    <string name="dp_makro_vrijednost">%1$s / %2$s g</string>
+    <string name="dp_makro_bez_cilja">%1$s g</string>
+    <string name="dp_makro_opis">%1$s: %2$s od %3$s grama</string>
+    <string name="dp_makro_opis_bez_cilja">%1$s: %2$s grama</string>    <string name="dp_makro_kratko">%1$sP %2$sM %3$sU</string>
+
+    <string name="dp_tvoj_pladanj">Tvoj pladanj</string>
+    <string name="dp_pladanj_opis">Pladanj. %1$s</string>
+    <string name="dp_utor_pun">%1$s: %2$s kcal</string>
+    <string name="dp_utor_prazan">%1$s: prazno</string>
+    <string name="dp_dodaj">dodaj</string>
+    <string name="dp_dodaj_u">Dodaj obrok: %1$s</string>
+    <string name="dp_cilj_dosegnut">Cilj dana dosegnut</string>
+
+    <string name="dp_tip_dorucak">Doručak</string>
+    <string name="dp_tip_rucak">Ručak</string>
+    <string name="dp_tip_uzina">Užina</string>
+    <string name="dp_tip_vecera">Večera</string>
+
+    <string name="dp_danas_jedes">Danas jedeš</string>
+    <string name="dp_kcal_vrijednost">%1$s kcal</string>
+    <string name="dp_red_vrijeme"> · %1$s</string>
+    <string name="dp_red_opis">%1$s u %2$s, %3$s kcal, %4$s</string>
+    <string name="dp_porcija_jedna">%1$s porcija</string>
+    <string name="dp_porcija_dvije">%1$s porcije</string>
+    <string name="dp_porcija_vise">%1$s porcija</string>
+    <string name="dp_jelo_detalj">%1$s · %2$s</string>
+    <string name="dp_uredi">Uredi</string>
+    <string name="dp_obrisi">Obriši</string>
+    <string name="dp_obrisi_obrok">Obriši obrok</string>
+    <string name="dp_prosiri">Prikaži jela</string>
+    <string name="dp_sazmi">Sakrij jela</string>
+
+    <string name="dp_prazno_naslov">Što si danas jeo u menzi?</string>
+    <string name="dp_prazno_tekst">Dodirni prazan utor na pladnju ili „Dodaj obrok”.</string>
+
+    <string name="dp_savjet_dana">Savjet dana</string>
+    <string name="dp_jelo_savjet">%1$s kcal · %2$s g proteina</string>
+
+    <string name="dp_okvirno">Vrijednosti su okvirne (receptura menze × USDA/EU tablice).</string>
+    <string name="dp_odakle">Odakle su kalorije</string>
+
+    <string name="dp_dodaj_obrok">Dodaj obrok</string>
+    <string name="dp_slika_ili_opis">Slika ili opis</string>
+
+    <string name="dp_greska_naslov">Pregled dana trenutno nije dostupan</string>
+    <string name="dp_greska_tekst">Provjeri vezu s poslužiteljem pa pokušaj ponovno.</string>
+    <string name="dp_pokusaj_ponovno">Pokušaj ponovno</string>
+    <string name="dp_ucitavanje">Učitavanje pregleda dana</string>
 </resources>

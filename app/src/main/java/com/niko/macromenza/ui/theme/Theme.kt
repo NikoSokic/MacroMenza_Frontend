@@ -8,29 +8,70 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
-private val DarkColorScheme = darkColorScheme(
-    primary = MacroLightGreen,
-    secondary = MacroGreen,
-    background = MacroDark,
-    surface = MacroDarkSurface,
-    onPrimary = MacroDark,
-    onBackground = Color.White,
-    onSurface = Color.White,
-    error = MacroError
+private val LightColorScheme = lightColorScheme(
+    primary = Paprika,
+    onPrimary = Color.White,
+    primaryContainer = PaprikaKontejner,
+    onPrimaryContainer = NaPaprikaKontejneru,
+    secondary = Orah,
+    onSecondary = Krem,
+    secondaryContainer = PorculanTamniji,
+    onSecondaryContainer = Tinta,
+    tertiary = ProteiniTamni,
+    onTertiary = Porculan,
+    background = Papir,
+    onBackground = Tinta,
+    surface = Porculan,
+    onSurface = Tinta,
+    surfaceVariant = PorculanTamniji,
+    onSurfaceVariant = TintaPrigusena,
+    surfaceContainerLowest = Porculan,
+    surfaceContainerLow = Porculan,
+    surfaceContainer = Papir,
+    surfaceContainerHigh = PorculanTamniji,
+    surfaceContainerHighest = PorculanTamniji,
+    inverseSurface = Orah,
+    inverseOnSurface = Krem,
+    inversePrimary = PaprikaSvijetla,
+    outline = TintaPrigusena,
+    outlineVariant = LinijaSvijetla,
+    error = GreskaSvijetla,
+    onError = Porculan
 )
 
-private val LightColorScheme = lightColorScheme(
-    primary = MacroGreen,
-    secondary = MacroLightGreen,
-    background = MacroBackground,
-    surface = MacroSurface,
-    onPrimary = Color.White,
-    onBackground = MacroText,
-    onSurface = MacroText,
-    error = MacroError
+private val DarkColorScheme = darkColorScheme(
+    primary = PaprikaSvijetla,
+    onPrimary = Noc,
+    primaryContainer = PaprikaKontejnerTamni,
+    onPrimaryContainer = Krem,
+    secondary = Krem,
+    onSecondary = Noc,
+    secondaryContainer = NocPovrsinaVisa,
+    onSecondaryContainer = Krem,
+    tertiary = ProteiniSvijetli,
+    onTertiary = Noc,
+    background = Noc,
+    onBackground = Krem,
+    surface = NocPovrsina,
+    onSurface = Krem,
+    surfaceVariant = NocPovrsinaVisa,
+    onSurfaceVariant = KremPrigusena,
+    surfaceContainerLowest = Noc,
+    surfaceContainerLow = NocPovrsina,
+    surfaceContainer = NocPovrsina,
+    surfaceContainerHigh = NocPovrsinaVisa,
+    surfaceContainerHighest = NocPovrsinaVisa,
+    inverseSurface = Krem,
+    inverseOnSurface = Noc,
+    inversePrimary = Paprika,
+    outline = KremPrigusena,
+    outlineVariant = LinijaTamna,
+    error = GreskaTamna,
+    onError = Noc
 )
 
 @Composable
@@ -50,9 +91,15 @@ fun MacroMenzaTheme(
         else -> LightColorScheme
     }
 
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography = Typography,
-        content = content
-    )
+    CompositionLocalProvider(
+        LocalMacroBoje provides if (darkTheme) MacroBojeTamne else MacroBojeSvijetle,
+        LocalMacroTipografija provides MacroTipografijaZadana
+    ) {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            typography = Typography,
+            shapes = MacroShapes,
+            content = content
+        )
+    }
 }
