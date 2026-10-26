@@ -1,4 +1,4 @@
-package com.niko.macromenza.screens.dnevnipregled
+package com.niko.macromenza.ui.components
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row

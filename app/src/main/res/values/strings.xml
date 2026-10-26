@@ -15,7 +15,6 @@
     </string-array>
     <string name="dp_prethodni_dan">Prethodni dan</string>
     <string name="dp_sljedeci_dan">Sljedeći dan</string>
-    <string name="dp_profil">Profil</string>
 
     <string name="dp_ostaje">Ostaje</string>
     <string name="dp_preko_cilja">Preko cilja</string>
@@ -29,34 +28,35 @@
     <string name="dp_luk_opis_preko">Preko cilja %1$s kcal. Uneseno %2$s od %3$s kcal.</string>
     <string name="dp_luk_opis_bez_cilja">Uneseno %1$s kcal. Cilj nije postavljen.</string>
 
-    <string name="dp_proteini">Proteini</string>
-    <string name="dp_masti">Masti</string>
-    <string name="dp_ugljikohidrati">Ugljikohidrati</string>
-    <string name="dp_makro_vrijednost">%1$s / %2$s g</string>
-    <string name="dp_makro_bez_cilja">%1$s g</string>
-    <string name="dp_makro_opis">%1$s: %2$s od %3$s grama</string>
-    <string name="dp_makro_opis_bez_cilja">%1$s: %2$s grama</string>    <string name="dp_makro_kratko">%1$sP %2$sM %3$sU</string>
+    <string name="kom_proteini">Proteini</string>
+    <string name="kom_masti">Masti</string>
+    <string name="kom_ugljikohidrati">Ugljikohidrati</string>
+    <string name="kom_makro_vrijednost">%1$s / %2$s g</string>
+    <string name="kom_makro_bez_cilja">%1$s g</string>
+    <string name="kom_makro_opis">%1$s: %2$s od %3$s grama</string>
+    <string name="kom_makro_opis_bez_cilja">%1$s: %2$s grama</string>    <string name="kom_kcal_makro">%1$s kcal · %2$s</string>
+    <string name="kom_makro_kratko">%1$sP %2$sM %3$sU</string>
 
     <string name="dp_tvoj_pladanj">Tvoj pladanj</string>
-    <string name="dp_pladanj_opis">Pladanj. %1$s</string>
-    <string name="dp_utor_pun">%1$s: %2$s kcal</string>
-    <string name="dp_utor_prazan">%1$s: prazno</string>
-    <string name="dp_dodaj">dodaj</string>
-    <string name="dp_dodaj_u">Dodaj obrok: %1$s</string>
+    <string name="kom_pladanj_opis">Pladanj. %1$s</string>
+    <string name="kom_utor_pun">%1$s: %2$s kcal</string>
+    <string name="kom_utor_prazan">%1$s: prazno</string>
+    <string name="kom_dodaj">dodaj</string>
+    <string name="kom_dodaj_u">Dodaj obrok: %1$s</string>
     <string name="dp_cilj_dosegnut">Cilj dana dosegnut</string>
 
-    <string name="dp_tip_dorucak">Doručak</string>
-    <string name="dp_tip_rucak">Ručak</string>
-    <string name="dp_tip_uzina">Užina</string>
-    <string name="dp_tip_vecera">Večera</string>
+    <string name="kom_tip_dorucak">Doručak</string>
+    <string name="kom_tip_rucak">Ručak</string>
+    <string name="kom_tip_uzina">Užina</string>
+    <string name="kom_tip_vecera">Večera</string>
 
     <string name="dp_danas_jedes">Danas jedeš</string>
-    <string name="dp_kcal_vrijednost">%1$s kcal</string>
+    <string name="kom_kcal_vrijednost">%1$s kcal</string>
     <string name="dp_red_vrijeme"> · %1$s</string>
     <string name="dp_red_opis">%1$s u %2$s, %3$s kcal, %4$s</string>
-    <string name="dp_porcija_jedna">%1$s porcija</string>
-    <string name="dp_porcija_dvije">%1$s porcije</string>
-    <string name="dp_porcija_vise">%1$s porcija</string>
+    <string name="kom_porcija_jedna">%1$s porcija</string>
+    <string name="kom_porcija_dvije">%1$s porcije</string>
+    <string name="kom_porcija_vise">%1$s porcija</string>
     <string name="dp_jelo_detalj">%1$s · %2$s</string>
     <string name="dp_uredi">Uredi</string>
     <string name="dp_obrisi">Obriši</string>

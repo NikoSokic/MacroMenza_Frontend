@@ -61,7 +61,11 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextOverflow
 import com.niko.macromenza.R
+import com.niko.macromenza.ui.components.PorcijaGlif
+import com.niko.macromenza.ui.components.makroKratko
+import com.niko.macromenza.ui.components.nazivTipa
 import com.niko.macromenza.ui.components.skalaPritiska
+import com.niko.macromenza.ui.components.tekstPorcije
 import com.niko.macromenza.ui.theme.MacroDimenzije
 import com.niko.macromenza.ui.theme.MacroOblici
 import com.niko.macromenza.ui.theme.MacroRazmaci
@@ -70,8 +74,8 @@ import com.niko.macromenza.ui.theme.Trajanje
 import com.niko.macromenza.ui.theme.Ublazavanje
 import com.niko.macromenza.ui.theme.opruga
 import com.niko.macromenza.util.formatKcal
-import kotlinx.coroutines.launch
 import kotlin.math.abs
+import kotlinx.coroutines.launch
 
 fun ikonaTipa(tip: String): ImageVector = when (tip) {
     "DORUCAK" -> Icons.Rounded.BreakfastDining
@@ -107,7 +111,7 @@ fun ObrokRed(
     val prag = with(gustoca) { MacroDimenzije.pragBrisanja.toPx() }
 
     val naziv = nazivTipa(obrok.tip)
-    val kcalTekst = stringResource(R.string.dp_kcal_vrijednost, formatKcal(obrok.makro.kcal))
+    val kcalTekst = stringResource(R.string.kom_kcal_vrijednost, formatKcal(obrok.makro.kcal))
     val makroTekst = makroKratko(obrok.makro)
     val tekstObrisi = stringResource(R.string.dp_obrisi_obrok)
     val tekstUredi = stringResource(R.string.dp_uredi)

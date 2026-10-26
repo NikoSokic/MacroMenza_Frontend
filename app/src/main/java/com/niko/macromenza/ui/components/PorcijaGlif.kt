@@ -1,4 +1,4 @@
-package com.niko.macromenza.screens.dnevnipregled
+package com.niko.macromenza.ui.components
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.Canvas

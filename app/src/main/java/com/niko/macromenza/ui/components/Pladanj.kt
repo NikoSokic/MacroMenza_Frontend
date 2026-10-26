@@ -1,4 +1,4 @@
-package com.niko.macromenza.screens.dnevnipregled
+package com.niko.macromenza.ui.components
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.RepeatMode
@@ -29,8 +29,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.State
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -58,7 +59,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.lerp
 import com.niko.macromenza.R
-import com.niko.macromenza.ui.components.skalaPritiska
 import com.niko.macromenza.ui.theme.Kasnjenje
 import com.niko.macromenza.ui.theme.MacroDimenzije
 import com.niko.macromenza.ui.theme.MacroOblici
@@ -73,13 +73,22 @@ import com.niko.macromenza.ui.theme.macroBoje
 import com.niko.macromenza.ui.theme.macroTipografija
 import com.niko.macromenza.ui.theme.opruga
 import com.niko.macromenza.util.formatKcal
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import kotlin.math.cos
 import kotlin.math.sin
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 private const val BROJ_ISKRI = 14
 private const val BROJ_ZRNA = 18
+
+/** Utor na pladnju; [makro] je null kad je utor prazan. [vrijeme] je vrijeme prvog obroka tog tipa. */
+@Immutable
+data class TanjurUi(
+    val tip: String,
+    val makro: Makro?,
+    val vrijeme: String? = null,
+    val jeUzina: Boolean = false
+)
 
 /**
  * "Tvoj pladanj": pladanj od oraha (crtan u Canvasu) s utorom za doručak, ručak i večeru (+ tanjurić za užinu).
@@ -125,10 +134,10 @@ fun Pladanj(
 
     val opisUtora = tanjuri.map { t ->
         val naziv = nazivTipa(t.tip)
-        if (t.makro != null) stringResource(R.string.dp_utor_pun, naziv, formatKcal(t.makro.kcal))
-        else stringResource(R.string.dp_utor_prazan, naziv)
+        if (t.makro != null) stringResource(R.string.kom_utor_pun, naziv, formatKcal(t.makro.kcal))
+        else stringResource(R.string.kom_utor_prazan, naziv)
     }
-    val opisPladnja = stringResource(R.string.dp_pladanj_opis, opisUtora.joinToString(", "))
+    val opisPladnja = stringResource(R.string.kom_pladanj_opis, opisUtora.joinToString(", "))
 
     Column(
         modifier = modifier
@@ -194,7 +203,7 @@ fun Pladanj(
         }
 
         Spacer(Modifier.height(MacroRazmaci.s))
-        Legenda()
+        PladanjLegenda()
     }
 }
 
@@ -211,25 +220,12 @@ private fun Utor(
     modifier: Modifier = Modifier
 ) {
     val boje = MaterialTheme.macroBoje
-    val gustoca = LocalDensity.current
     val pun = tanjur.makro != null
     val maxPromjer = if (tanjur.jeUzina) MacroDimenzije.tanjurUzinaMax else MacroDimenzije.tanjurMax
 
-    // Sve vrijednosti crteža su Animatable i čitaju se u fazi crtanja (bez rekompozicije po kadru).
-    val promjerAnim = remember { Animatable(promjer.value) }
-    val (p, m, u) = tanjur.makro?.udjeli() ?: Triple(0f, 0f, 0f)
-    val udioP = remember { Animatable(p) }
-    val udioM = remember { Animatable(m) }
-    val udioU = remember { Animatable(u) }
     val sletanje = remember { Animatable(if (pun && !animirajUlaz) 1f else 0f) }
     var prviPut by remember { mutableStateOf(true) }
 
-    LaunchedEffect(promjer) { promjerAnim.animateTo(promjer.value, opruga(Opruge.blaga(), smanjeno)) }
-    LaunchedEffect(p, m, u) {
-        launch { udioP.animateTo(p, opruga(Opruge.blaga(), smanjeno)) }
-        launch { udioM.animateTo(m, opruga(Opruge.blaga(), smanjeno)) }
-        launch { udioU.animateTo(u, opruga(Opruge.blaga(), smanjeno)) }
-    }
     LaunchedEffect(pun) {
         if (pun) {
             if (sletanje.value < 1f) {
@@ -243,8 +239,8 @@ private fun Utor(
     }
 
     val naziv = nazivTipa(tanjur.tip)
-    val opisKlika = if (pun) stringResource(R.string.dp_utor_pun, naziv, formatKcal(tanjur.makro!!.kcal))
-    else stringResource(R.string.dp_dodaj_u, naziv)
+    val opisKlika = if (pun) stringResource(R.string.kom_utor_pun, naziv, formatKcal(tanjur.makro!!.kcal))
+    else stringResource(R.string.kom_dodaj_u, naziv)
     val izvor = remember { MutableInteractionSource() }
 
     Column(
@@ -286,62 +282,21 @@ private fun Utor(
             }
 
             // Tanjur
-            Box(
-                modifier = Modifier
-                    .size(maxPromjer)
-                    .graphicsLayer {
-                        val s = sletanje.value
-                        val skokSada = skok()
-                        alpha = s.coerceIn(0f, 1f)
-                        translationY = (1f - s) * -POMAK_TANJURA_DP.dp.toPx()
-                        val skala = (SKALA_TANJURA + (1f - SKALA_TANJURA) * s) * skokSada
-                        scaleX = skala
-                        scaleY = skala
-                    },
-                contentAlignment = Alignment.Center
-            ) {
-                Canvas(modifier = Modifier.fillMaxSize()) {
-                    val d = promjerAnim.value.dp.toPx()
-                    val r = d / 2
-                    val sredina = Offset(size.width / 2, size.height / 2)
-                    drawCircle(boje.sjenaTanjura, r, sredina + Offset(0f, MacroDimenzije.sjenaTanjura.toPx()))
-                    drawCircle(boje.tanjur, r, sredina)
-                    drawCircle(
-                        boje.tanjurUdubljenje, r * MacroOmjeri.udubljenjeTanjura, sredina,
-                        style = Stroke(MacroDimenzije.obrubIsprekidan.toPx())
-                    )
-
-                    val debljinaRuba = d * MacroOmjeri.rubTanjura
-                    val rRuba = r - debljinaRuba / 2 - debljinaRuba * 0.25f
-                    val razmak = 360f * MacroOmjeri.razmakSegmenata
-                    var kut = -90f
-                    listOf(udioP.value to boje.tanjurProteini, udioM.value to boje.tanjurMasti, udioU.value to boje.tanjurUgljikohidrati)
-                        .forEach { (udio, boja) ->
-                            val raspon = 360f * udio
-                            if (raspon > razmak) {
-                                drawArc(
-                                    color = boja,
-                                    startAngle = kut + razmak / 2,
-                                    sweepAngle = raspon - razmak,
-                                    useCenter = false,
-                                    topLeft = Offset(sredina.x - rRuba, sredina.y - rRuba),
-                                    size = Size(rRuba * 2, rRuba * 2),
-                                    style = Stroke(debljinaRuba, cap = StrokeCap.Butt)
-                                )
-                            }
-                            kut += raspon
-                        }
+            Tanjur(
+                makro = tanjur.makro,
+                promjer = promjer,
+                okvir = maxPromjer,
+                smanjeno = smanjeno,
+                modifier = Modifier.graphicsLayer {
+                    val s = sletanje.value
+                    val skokSada = skok()
+                    alpha = s.coerceIn(0f, 1f)
+                    translationY = (1f - s) * -POMAK_TANJURA_DP.dp.toPx()
+                    val skala = (SKALA_TANJURA + (1f - SKALA_TANJURA) * s) * skokSada
+                    scaleX = skala
+                    scaleY = skala
                 }
-                if (pun) {
-                    val velicina = with(gustoca) { (promjer * MacroOmjeri.kcalTanjura).toSp() }
-                    Text(
-                        text = formatKcal(tanjur.makro!!.kcal),
-                        style = MaterialTheme.macroTipografija.kcalTanjura.copy(fontSize = velicina, lineHeight = velicina),
-                        color = boje.tanjurTekst,
-                        maxLines = 1
-                    )
-                }
-            }
+            )
         }
 
         Text(
@@ -352,7 +307,7 @@ private fun Utor(
             overflow = TextOverflow.Ellipsis
         )
         Text(
-            text = if (pun) tanjur.vrijeme.orEmpty() else stringResource(R.string.dp_dodaj),
+            text = if (pun) tanjur.vrijeme.orEmpty() else stringResource(R.string.kom_dodaj),
             style = MaterialTheme.typography.labelMedium,
             color = boje.naOrahuPrigusen,
             maxLines = 1
@@ -360,10 +315,89 @@ private fun Utor(
     }
 }
 
-/** Legenda se prelama u novi red pri velikom fontu. */
+/**
+ * Tanjur odozgo: porculanski krug čiji je rub podijeljen po udjelu P/M/U (kcal), s brojem kcal u sredini.
+ * [promjer] je stvarni promjer tanjura, [okvir] je prostor koji tanjur zauzima (promjer se animira unutar njega).
+ * Promjer i udjeli prelaze Opruge.blaga pri promjeni; [makro] = null crta prazan tanjur bez broja.
+ * Slijetanje i skok dolaze izvana preko [modifier] (graphicsLayer).
+ */
+@Composable
+fun Tanjur(
+    makro: Makro?,
+    promjer: Dp,
+    okvir: Dp,
+    smanjeno: Boolean,
+    modifier: Modifier = Modifier
+) {
+    val boje = MaterialTheme.macroBoje
+    val gustoca = LocalDensity.current
+
+    // Sve vrijednosti crteža su Animatable i čitaju se u fazi crtanja (bez rekompozicije po kadru).
+    val promjerAnim = remember { Animatable(promjer.value) }
+    val (p, m, u) = makro?.udjeli() ?: Triple(0f, 0f, 0f)
+    val udioP = remember { Animatable(p) }
+    val udioM = remember { Animatable(m) }
+    val udioU = remember { Animatable(u) }
+
+    LaunchedEffect(promjer) { promjerAnim.animateTo(promjer.value, opruga(Opruge.blaga(), smanjeno)) }
+    LaunchedEffect(p, m, u) {
+        launch { udioP.animateTo(p, opruga(Opruge.blaga(), smanjeno)) }
+        launch { udioM.animateTo(m, opruga(Opruge.blaga(), smanjeno)) }
+        launch { udioU.animateTo(u, opruga(Opruge.blaga(), smanjeno)) }
+    }
+
+    Box(
+        modifier = modifier.size(okvir),
+        contentAlignment = Alignment.Center
+    ) {
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            val d = promjerAnim.value.dp.toPx()
+            val r = d / 2
+            val sredina = Offset(size.width / 2, size.height / 2)
+            drawCircle(boje.sjenaTanjura, r, sredina + Offset(0f, MacroDimenzije.sjenaTanjura.toPx()))
+            drawCircle(boje.tanjur, r, sredina)
+            drawCircle(
+                boje.tanjurUdubljenje, r * MacroOmjeri.udubljenjeTanjura, sredina,
+                style = Stroke(MacroDimenzije.obrubIsprekidan.toPx())
+            )
+
+            val debljinaRuba = d * MacroOmjeri.rubTanjura
+            val rRuba = r - debljinaRuba / 2 - debljinaRuba * 0.25f
+            val razmak = 360f * MacroOmjeri.razmakSegmenata
+            var kut = -90f
+            listOf(udioP.value to boje.tanjurProteini, udioM.value to boje.tanjurMasti, udioU.value to boje.tanjurUgljikohidrati)
+                .forEach { (udio, boja) ->
+                    val raspon = 360f * udio
+                    if (raspon > razmak) {
+                        drawArc(
+                            color = boja,
+                            startAngle = kut + razmak / 2,
+                            sweepAngle = raspon - razmak,
+                            useCenter = false,
+                            topLeft = Offset(sredina.x - rRuba, sredina.y - rRuba),
+                            size = Size(rRuba * 2, rRuba * 2),
+                            style = Stroke(debljinaRuba, cap = StrokeCap.Butt)
+                        )
+                    }
+                    kut += raspon
+                }
+        }
+        if (makro != null) {
+            val velicina = with(gustoca) { (promjer * MacroOmjeri.kcalTanjura).toSp() }
+            Text(
+                text = formatKcal(makro.kcal),
+                style = MaterialTheme.macroTipografija.kcalTanjura.copy(fontSize = velicina, lineHeight = velicina),
+                color = boje.tanjurTekst,
+                maxLines = 1
+            )
+        }
+    }
+}
+
+/** Legenda P/M/U ispod pladnja; prelama se u novi red pri velikom fontu. */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun Legenda() {
+fun PladanjLegenda() {
     val boje = MaterialTheme.macroBoje
     FlowRow(
         modifier = Modifier.fillMaxWidth(),
@@ -371,9 +405,9 @@ private fun Legenda() {
         verticalArrangement = Arrangement.spacedBy(MacroRazmaci.xs)
     ) {
         listOf(
-            R.string.dp_proteini to boje.tanjurProteini,
-            R.string.dp_masti to boje.tanjurMasti,
-            R.string.dp_ugljikohidrati to boje.tanjurUgljikohidrati
+            R.string.kom_proteini to boje.tanjurProteini,
+            R.string.kom_masti to boje.tanjurMasti,
+            R.string.kom_ugljikohidrati to boje.tanjurUgljikohidrati
         ).forEach { (tekst, boja) ->
             Row(verticalAlignment = Alignment.CenterVertically) {
                 // Točka u malom tanjuru, kao na rubu pravog tanjura (vidljiva i na tamnom orahu)

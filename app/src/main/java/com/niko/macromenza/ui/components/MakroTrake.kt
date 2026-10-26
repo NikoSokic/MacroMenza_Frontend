@@ -1,4 +1,4 @@
-package com.niko.macromenza.screens.dnevnipregled
+package com.niko.macromenza.ui.components
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.Canvas
@@ -52,9 +52,9 @@ fun MakroTrake(
 ) {
     val boje = MaterialTheme.macroBoje
     val redovi = listOf(
-        Triple(stringResource(R.string.dp_proteini), pojedeno.proteini to cilj?.proteini, boje.proteini),
-        Triple(stringResource(R.string.dp_masti), pojedeno.masti to cilj?.masti, boje.masti),
-        Triple(stringResource(R.string.dp_ugljikohidrati), pojedeno.ugljikohidrati to cilj?.ugljikohidrati, boje.ugljikohidrati)
+        Triple(stringResource(R.string.kom_proteini), pojedeno.proteini to cilj?.proteini, boje.proteini),
+        Triple(stringResource(R.string.kom_masti), pojedeno.masti to cilj?.masti, boje.masti),
+        Triple(stringResource(R.string.kom_ugljikohidrati), pojedeno.ugljikohidrati to cilj?.ugljikohidrati, boje.ugljikohidrati)
     )
 
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(MacroRazmaci.l)) {
@@ -97,15 +97,15 @@ private fun MakroTraka(
         udio.animateTo(ciljniUdio, spec)
     }
 
-    val opis = if (cilj != null) stringResource(R.string.dp_makro_opis, naziv, formatGrami(vrijednost), formatGrami(cilj))
-    else stringResource(R.string.dp_makro_opis_bez_cilja, naziv, formatGrami(vrijednost))
+    val opis = if (cilj != null) stringResource(R.string.kom_makro_opis, naziv, formatGrami(vrijednost), formatGrami(cilj))
+    else stringResource(R.string.kom_makro_opis_bez_cilja, naziv, formatGrami(vrijednost))
 
     Column(modifier = Modifier.clearAndSetSemantics { contentDescription = opis }) {
         Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.Bottom) {
             Text(naziv, style = tip.titleSmall, color = shema.onSurface, modifier = Modifier.weight(1f))
             // "71 / 160 g": pojedena vrijednost istaknuta, ostatak prigušen
-            val puni = if (cilj != null) stringResource(R.string.dp_makro_vrijednost, formatGrami(vrijednost), formatGrami(cilj))
-            else stringResource(R.string.dp_makro_bez_cilja, formatGrami(vrijednost))
+            val puni = if (cilj != null) stringResource(R.string.kom_makro_vrijednost, formatGrami(vrijednost), formatGrami(cilj))
+            else stringResource(R.string.kom_makro_bez_cilja, formatGrami(vrijednost))
             val istaknuto = formatGrami(vrijednost)
             val vrijednostTekst = buildAnnotatedString {
                 withStyle(SpanStyle(color = shema.onSurface, fontWeight = FontWeight.Bold)) { append(istaknuto) }

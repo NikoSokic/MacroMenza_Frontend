@@ -32,7 +32,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
-import androidx.compose.material.icons.rounded.AccountCircle
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.ChevronLeft
@@ -80,6 +79,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.niko.macromenza.R
 import com.niko.macromenza.model.Savjet
+import com.niko.macromenza.ui.components.MakroTrake
+import com.niko.macromenza.ui.components.Pladanj
+import com.niko.macromenza.ui.components.TanjurUi
 import com.niko.macromenza.ui.components.screenBottomPadding
 import com.niko.macromenza.ui.components.skalaPritiska
 import com.niko.macromenza.ui.theme.Kasnjenje
@@ -97,9 +99,9 @@ import com.niko.macromenza.ui.theme.macroTipografija
 import com.niko.macromenza.ui.theme.rememberSmanjeniPokret
 import com.niko.macromenza.util.formatGrami
 import com.niko.macromenza.util.formatKcal
+import java.time.LocalDate
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import java.time.LocalDate
 
 /** Granice "u cilju" (kao u Povijesti: ±10 %). */
 private const val CILJ_DONJA = 0.9
@@ -126,7 +128,6 @@ fun DnevniPregledSadrzaj(
     proslava: Boolean,
     onProslavaGotova: () -> Unit,
     onPrethodniDan: () -> Unit,
-    onProfil: () -> Unit,
     onPostaviCilj: () -> Unit,
     onDodajObrok: (tip: String?) -> Unit,
     onSlikaIliOpis: () -> Unit,
@@ -147,7 +148,7 @@ fun DnevniPregledSadrzaj(
             .background(MaterialTheme.colorScheme.background)
     ) {
         Column(modifier = Modifier.statusBarsPadding()) {
-            GornjaTraka(datum = datum, onPrethodniDan = onPrethodniDan, onProfil = onProfil)
+            GornjaTraka(datum = datum, onPrethodniDan = onPrethodniDan)
 
             val kljuc = when (stanje) {
                 DnevniPregledStanje.Ucitavanje -> 0
@@ -339,7 +340,7 @@ private fun Modifier.ulazReda(indeks: Int, aktivno: Boolean): Modifier = compose
 }
 
 @Composable
-private fun GornjaTraka(datum: LocalDate, onPrethodniDan: () -> Unit, onProfil: () -> Unit) {
+private fun GornjaTraka(datum: LocalDate, onPrethodniDan: () -> Unit) {
     val shema = MaterialTheme.colorScheme
     Row(
         modifier = Modifier
@@ -369,12 +370,9 @@ private fun GornjaTraka(datum: LocalDate, onPrethodniDan: () -> Unit, onProfil: 
                 overflow = TextOverflow.Ellipsis
             )
         }
-        // Budući dani nemaju unos: strelica je vidljiva radi simetrije, ali onemogućena.
+        // Budući dani nemaju unos: strelica je onemogućena, a drži naslov točno u sredini.
         IconButton(onClick = {}, enabled = false) {
             Icon(Icons.Rounded.ChevronRight, contentDescription = stringResource(R.string.dp_sljedeci_dan))
-        }
-        IconButton(onClick = onProfil) {
-            Icon(Icons.Rounded.AccountCircle, contentDescription = stringResource(R.string.dp_profil), tint = shema.onSurface)
         }
     }
 }
@@ -686,7 +684,6 @@ private fun PreviewOkvir(tamna: Boolean, stanje: DnevniPregledStanje, prosireni:
             proslava = false,
             onProslavaGotova = {},
             onPrethodniDan = {},
-            onProfil = {},
             onPostaviCilj = {},
             onDodajObrok = {},
             onSlikaIliOpis = {},

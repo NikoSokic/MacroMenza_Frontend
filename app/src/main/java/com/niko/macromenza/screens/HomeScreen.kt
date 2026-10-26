@@ -132,13 +132,6 @@ fun HomeScreen(
         proslava = proslava,
         onProslavaGotova = { proslava = false },
         onPrethodniDan = { navController.navigate("detalj_dana/${danas.minusDays(1)}") },
-        onProfil = {
-            navController.navigate(BottomNavItem.Profil.route) {
-                popUpTo(BottomNavItem.Home.route) { saveState = true }
-                launchSingleTop = true
-                restoreState = true
-            }
-        },
         onPostaviCilj = { navController.navigate("postavke_ciljeva") },
         onDodajObrok = { tip ->
             navController.navigate("unos_obroka/${tip ?: zadaniTipZaVrijeme(LocalTime.now(ZAGREB))}")

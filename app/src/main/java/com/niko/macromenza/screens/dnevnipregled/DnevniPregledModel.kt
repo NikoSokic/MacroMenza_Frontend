@@ -5,6 +5,9 @@ import com.niko.macromenza.model.DanPregled
 import com.niko.macromenza.model.NutritivneVrijednosti
 import com.niko.macromenza.model.Obrok
 import com.niko.macromenza.model.Savjet
+import com.niko.macromenza.ui.components.Makro
+import com.niko.macromenza.ui.components.TanjurUi
+import com.niko.macromenza.ui.components.uMakro
 import java.time.LocalDate
 
 /** Tipovi obroka koji imaju utor na pladnju (menza: doručak, ručak, večera). */
@@ -14,32 +17,6 @@ val TIPOVI_UTORA = listOf("DORUCAK", "RUCAK", "VECERA")
 const val TIP_UZINA = "UZINA"
 
 private val REDOSLIJED_TIPOVA = listOf("DORUCAK", "RUCAK", "UZINA", "VECERA")
-
-@Immutable
-data class Makro(
-    val kcal: Double,
-    val proteini: Double,
-    val masti: Double,
-    val ugljikohidrati: Double
-) {
-    operator fun plus(o: Makro) = Makro(kcal + o.kcal, proteini + o.proteini, masti + o.masti, ugljikohidrati + o.ugljikohidrati)
-
-    /** Udjeli kcal iz P (×4), M (×9) i U (×4) za rub tanjura; zbroj je 1 ili su svi 0. */
-    fun udjeli(): Triple<Float, Float, Float> {
-        val p = proteini * 4
-        val m = masti * 9
-        val u = ugljikohidrati * 4
-        val ukupno = p + m + u
-        if (ukupno <= 0.0) return Triple(0f, 0f, 0f)
-        return Triple((p / ukupno).toFloat(), (m / ukupno).toFloat(), (u / ukupno).toFloat())
-    }
-
-    companion object {
-        val NULA = Makro(0.0, 0.0, 0.0, 0.0)
-    }
-}
-
-fun NutritivneVrijednosti.uMakro() = Makro(kalorije, proteini, masti, ugljikohidrati)
 
 @Immutable
 data class JeloUi(
@@ -60,15 +37,6 @@ data class ObrokUi(
     val makro: Makro,
     val jela: List<JeloUi>,
     val izvor: Obrok?
-)
-
-/** Utor na pladnju; [makro] je null kad je utor prazan. [vrijeme] je vrijeme prvog obroka tog tipa. */
-@Immutable
-data class TanjurUi(
-    val tip: String,
-    val makro: Makro?,
-    val vrijeme: String? = null,
-    val jeUzina: Boolean = false
 )
 
 @Immutable
