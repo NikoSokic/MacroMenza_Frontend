@@ -13,7 +13,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.niko.macromenza.ui.theme.MacroGreen
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.runtime.getValue
@@ -80,6 +79,8 @@ private fun RowScope.BottomBarItem(
         label = "bottomNavWeight"
     )
 
+    val shema = MaterialTheme.colorScheme
+
     Box(
         modifier = Modifier
             .weight(animatedWeight)
@@ -87,7 +88,7 @@ private fun RowScope.BottomBarItem(
             .clip(RoundedCornerShape(20.dp))
             .background(
                 if (selected)
-                    MacroGreen
+                    shema.secondaryContainer
                 else
                     Color.Transparent
             )
@@ -106,9 +107,9 @@ private fun RowScope.BottomBarItem(
                 modifier = Modifier.size(24.dp),
                 tint =
                     if (selected)
-                        Color.White
+                        shema.secondary
                     else
-                        MaterialTheme.colorScheme.onSurfaceVariant
+                        shema.onSurfaceVariant
             )
 
             if (selected) {
@@ -118,7 +119,7 @@ private fun RowScope.BottomBarItem(
 
                 Text(
                     text = item.title,
-                    color = Color.White,
+                    color = shema.secondary,
                     fontWeight = FontWeight.SemiBold,
                     style = MaterialTheme.typography.bodyMedium,
                     maxLines = 1

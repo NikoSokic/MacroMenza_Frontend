@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.niko.macromenza.api.RetrofitInstance
 import com.niko.macromenza.model.DanPregled
-import com.niko.macromenza.model.PovijestDana
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -15,9 +14,6 @@ class HomeViewModel : ViewModel() {
 
     private val _danPregled = MutableStateFlow<DanPregled?>(null)
     val danPregled = _danPregled.asStateFlow()
-
-    private val _danasnjiObroci = MutableStateFlow<PovijestDana?>(null)
-    val danasnjiObroci = _danasnjiObroci.asStateFlow()
 
     private val _ucitava = MutableStateFlow(false)
     val ucitava = _ucitava.asStateFlow()
@@ -32,12 +28,6 @@ class HomeViewModel : ViewModel() {
 
                 _danPregled.value =
                     RetrofitInstance.api.getDanPregled(idKorisnik = idKorisnik, datum = danas)
-
-                _danasnjiObroci.value =
-                    RetrofitInstance.api.dohvatiPovijestZaDan(
-                        idKorisnik = idKorisnik,
-                        datum = danas
-                    )
 
             } catch (_: Exception) {
             } finally {
