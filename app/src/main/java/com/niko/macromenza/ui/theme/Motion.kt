@@ -49,6 +49,9 @@ object Trajanje {
 
     /** Iskre proslave. */
     const val proslava = 900
+
+    /** Odlazni ekran u prijelazu "fade-through": brži od dolaznog (~60 % njegova trajanja). */
+    const val izlaz = 140
 }
 
 object Kasnjenje {
@@ -62,6 +65,15 @@ object Kasnjenje {
 
     /** Redovi obroka nakon traka. */
     const val redoviPocetak = 450
+
+    /** Dolazni ekran kreće tek kad odlazni nestane (fade-through). */
+    const val nakonPrijelaza = Trajanje.izlaz
+
+    /** Redovi unosa kreću malo nakon pretrage i prvog naslova. */
+    const val unosRedovi = 100
+
+    /** Jedan blagi puls predloženog utora, nakon što su tanjuri sjeli. */
+    const val pulsa = 520
 }
 
 object Ublazavanje {
@@ -84,6 +96,18 @@ const val POMAK_ULAZA_DP = 12f
 /** Visina s koje tanjur "pada" na pladanj (u dp) i početna skala. */
 const val POMAK_TANJURA_DP = 18f
 const val SKALA_TANJURA = 1.07f
+
+/** Najviše toliko redova liste animira ulaz (ostali su odmah tu). */
+const val MAKS_ANIMIRANIH_REDOVA = 8
+
+/** Puls predloženog utora: jedan blagi porast i povratak. */
+const val SKALA_PULSA = 1.05f
+
+/** Početna skala dolaznog ekrana u prijelazu fade-through. */
+const val SKALA_EKRANA = 0.96f
+
+/** Početna skala kontrole za dodavanje koja se pretvara u glif porcije. */
+const val SKALA_GUMBA = 0.8f
 
 /** Tween za ulaz s usporavanjem; kod smanjenog pokreta postaje skok na kraj. */
 fun <T> ulazniTween(trajanje: Int, kasnjenje: Int = 0, smanjeno: Boolean): FiniteAnimationSpec<T> =

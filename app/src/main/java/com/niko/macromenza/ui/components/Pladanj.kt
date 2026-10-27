@@ -50,6 +50,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -327,7 +328,9 @@ fun Tanjur(
     promjer: Dp,
     okvir: Dp,
     smanjeno: Boolean,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    /** True: rub se pri prvom prikazu puni od nule (Opruge.blaga); zadano je odmah pun. */
+    punjenjeRuba: Boolean = false
 ) {
     val boje = MaterialTheme.macroBoje
     val gustoca = LocalDensity.current
@@ -335,9 +338,10 @@ fun Tanjur(
     // Sve vrijednosti crteža su Animatable i čitaju se u fazi crtanja (bez rekompozicije po kadru).
     val promjerAnim = remember { Animatable(promjer.value) }
     val (p, m, u) = makro?.udjeli() ?: Triple(0f, 0f, 0f)
-    val udioP = remember { Animatable(p) }
-    val udioM = remember { Animatable(m) }
-    val udioU = remember { Animatable(u) }
+    val puniSe = punjenjeRuba && !smanjeno && !LocalInspectionMode.current
+    val udioP = remember { Animatable(if (puniSe) 0f else p) }
+    val udioM = remember { Animatable(if (puniSe) 0f else m) }
+    val udioU = remember { Animatable(if (puniSe) 0f else u) }
 
     LaunchedEffect(promjer) { promjerAnim.animateTo(promjer.value, opruga(Opruge.blaga(), smanjeno)) }
     LaunchedEffect(p, m, u) {

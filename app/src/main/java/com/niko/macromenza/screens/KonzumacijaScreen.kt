@@ -1,5 +1,7 @@
 package com.niko.macromenza.screens
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -35,6 +37,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -43,6 +46,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -51,9 +56,11 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import kotlinx.coroutines.delay
 import com.niko.macromenza.R
 import com.niko.macromenza.model.Obrok
 import com.niko.macromenza.screens.dnevnipregled.naslovDatuma
@@ -64,11 +71,19 @@ import com.niko.macromenza.ui.components.nazivTipa
 import com.niko.macromenza.ui.components.screenBottomPadding
 import com.niko.macromenza.ui.components.screenTopPadding
 import com.niko.macromenza.ui.components.skalaPritiska
+import com.niko.macromenza.ui.theme.Kasnjenje
 import com.niko.macromenza.ui.theme.MacroDimenzije
 import com.niko.macromenza.ui.theme.MacroMenzaTheme
 import com.niko.macromenza.ui.theme.MacroOblici
 import com.niko.macromenza.ui.theme.MacroRazmaci
+import com.niko.macromenza.ui.theme.Opruge
+import com.niko.macromenza.ui.theme.POMAK_TANJURA_DP
+import com.niko.macromenza.ui.theme.SKALA_PULSA
+import com.niko.macromenza.ui.theme.SKALA_TANJURA
+import com.niko.macromenza.ui.theme.Trajanje
+import com.niko.macromenza.ui.theme.Ublazavanje
 import com.niko.macromenza.ui.theme.macroBoje
+import com.niko.macromenza.ui.theme.opruga
 import com.niko.macromenza.ui.theme.rememberSmanjeniPokret
 import com.niko.macromenza.util.formatKcal
 import com.niko.macromenza.viewmodel.PovijestViewModel
@@ -253,9 +268,10 @@ private fun PladanjUnosa(
             .padding(MacroDimenzije.pladanjOkvir),
         horizontalArrangement = Arrangement.spacedBy(MacroRazmaci.xs)
     ) {
-        utori.forEach { utor ->
+        utori.forEachIndexed { indeks, utor ->
             UtorPladnja(
                 utor = utor,
+                indeks = indeks,
                 predlozen = utor.tip == predlozeniTip,
                 smanjeno = smanjeno,
                 onClick = { onUtor(utor) },
@@ -268,6 +284,7 @@ private fun PladanjUnosa(
 @Composable
 private fun UtorPladnja(
     utor: UtorUnosa,
+    indeks: Int,
     predlozen: Boolean,
     smanjeno: Boolean,
     onClick: () -> Unit,
@@ -276,13 +293,46 @@ private fun UtorPladnja(
     val boje = MaterialTheme.macroBoje
     val naziv = nazivTipa(utor.tip)
     val makro = utor.makro
+    val pun = makro != null
     val osnovniOpis = if (makro != null) stringResource(R.string.ko_utor_pun, naziv, formatKcal(makro.kcal))
     else stringResource(R.string.ko_utor_prazan, naziv)
     val opis = if (predlozen) stringResource(R.string.ko_predlozeno, osnovniOpis) else osnovniOpis
     val izvor = remember { MutableInteractionSource() }
 
+    // Previewi i smanjeni pokret odmah prikazuju završno stanje.
+    val bezPokreta = smanjeno || LocalInspectionMode.current
+
+    // Utor sjeda na pladanj (stupnjevano), kao tanjuri na Home.
+    val ulaz = remember { Animatable(if (bezPokreta) 1f else 0f) }
+    LaunchedEffect(Unit) {
+        if (ulaz.value < 1f) {
+            delay((indeks * Kasnjenje.tanjuri).toLong())
+            ulaz.animateTo(1f, Opruge.slijeganje())
+        }
+    }
+
+    // Tanjur sjeda i rub mu se puni kad obrok stigne (ili odmah pri prvom prikazu); prazan utor ostaje isprekidan.
+    val sletanje = remember { Animatable(if (pun && bezPokreta) 1f else 0f) }
+    LaunchedEffect(pun) {
+        if (pun) sletanje.animateTo(1f, opruga(Opruge.slijeganje(), smanjeno)) else sletanje.snapTo(0f)
+    }
+
+    // Predloženi utor: jedan blagi puls nakon ulaza, nikad u petlji.
+    val puls = remember { Animatable(1f) }
+    LaunchedEffect(predlozen) {
+        if (predlozen && !bezPokreta) {
+            delay(Kasnjenje.pulsa.toLong())
+            puls.animateTo(SKALA_PULSA, tween(Trajanje.kratko, easing = Ublazavanje.usporavanje))
+            puls.animateTo(1f, tween(Trajanje.kratko, easing = Ublazavanje.usporavanje))
+        }
+    }
+
     Column(
         modifier = modifier
+            .graphicsLayer {
+                scaleX = puls.value
+                scaleY = puls.value
+            }
             .clip(MacroOblici.utor)
             .background(if (predlozen) boje.utorIstaknut else boje.orah)
             .clickable(interactionSource = izvor, indication = null, role = Role.Button, onClick = onClick)
@@ -294,32 +344,53 @@ private fun UtorPladnja(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(MacroDimenzije.tanjurMax),
+                .height(MacroDimenzije.tanjurMax)
+                .graphicsLayer {
+                    val s = ulaz.value
+                    alpha = s.coerceIn(0f, 1f)
+                    translationY = (1f - s) * -POMAK_TANJURA_DP.dp.toPx()
+                    val skala = SKALA_TANJURA + (1f - SKALA_TANJURA) * s
+                    scaleX = skala
+                    scaleY = skala
+                },
             contentAlignment = Alignment.Center
         ) {
-            if (makro != null) {
-                Tanjur(
-                    makro = makro,
-                    promjer = MacroDimenzije.tanjurPrazan,
-                    okvir = MacroDimenzije.tanjurPrazan,
-                    smanjeno = smanjeno
-                )
-            } else {
-                // Prazan utor: isprekidani obris s "+" (isti jezik kao prazan utor na Home)
-                Canvas(modifier = Modifier.size(MacroDimenzije.tanjurPrazan)) {
+            // Prazan utor: isprekidani obris s "+" (nestaje dok tanjur slijeće, kao na Home)
+            Canvas(modifier = Modifier.size(MacroDimenzije.tanjurPrazan)) {
+                val alfa = (1f - sletanje.value).coerceIn(0f, 1f)
+                if (alfa > 0f) {
                     val obrub = MacroDimenzije.obrubIsprekidan.toPx()
                     val crtica = MacroDimenzije.crtica.toPx()
                     drawCircle(
-                        color = boje.naOrahuPrigusen,
+                        color = boje.naOrahuPrigusen.copy(alpha = alfa),
                         radius = size.minDimension / 2 - obrub,
                         style = Stroke(width = obrub, pathEffect = PathEffect.dashPathEffect(floatArrayOf(crtica, crtica)))
                     )
                 }
+            }
+            if (!pun) {
                 Icon(
                     imageVector = Icons.Rounded.Add,
                     contentDescription = null,
                     tint = boje.naOrahu,
                     modifier = Modifier.size(MacroDimenzije.ikona)
+                )
+            }
+            if (makro != null) {
+                Tanjur(
+                    makro = makro,
+                    promjer = MacroDimenzije.tanjurPrazan,
+                    okvir = MacroDimenzije.tanjurPrazan,
+                    smanjeno = smanjeno,
+                    punjenjeRuba = true,
+                    modifier = Modifier.graphicsLayer {
+                        val s = sletanje.value
+                        alpha = s.coerceIn(0f, 1f)
+                        translationY = (1f - s) * -POMAK_TANJURA_DP.dp.toPx()
+                        val skala = SKALA_TANJURA + (1f - SKALA_TANJURA) * s
+                        scaleX = skala
+                        scaleY = skala
+                    }
                 )
             }
         }

@@ -37,7 +37,9 @@ fun PorcijaGlif(
     smanjeno: Boolean,
     modifier: Modifier = Modifier,
     /** Boja ispune; zadano orah/krem, u gumbu za dodavanje paprika. */
-    ispuna: Color = MaterialTheme.colorScheme.secondary
+    ispuna: Color = MaterialTheme.colorScheme.secondary,
+    /** False: pri prvom prikazu glif je odmah pun (red koji se vratio u prikaz); promjene se i dalje nalijevaju. */
+    animirajUlaz: Boolean = true
 ) {
     val shema = MaterialTheme.colorScheme
     val opis = tekstPorcije(kolicina)
@@ -46,8 +48,9 @@ fun PorcijaGlif(
     val straznji = (kolicina - 1.0).coerceIn(0.0, 1.0).toFloat()
     // U previewu nema animacije, pa glif odmah prikazuje završno stanje.
     val pregled = LocalInspectionMode.current
-    val razina = remember { Animatable(if (pregled) prednji else 0f) }
-    val visak = remember { Animatable(if (pregled) straznji else 0f) }
+    val odmahPun = pregled || !animirajUlaz
+    val razina = remember { Animatable(if (odmahPun) prednji else 0f) }
+    val visak = remember { Animatable(if (odmahPun) straznji else 0f) }
     LaunchedEffect(prednji, straznji) {
         razina.animateTo(prednji, nalijevanjeTween(smanjeno))
         visak.animateTo(straznji, nalijevanjeTween(smanjeno))

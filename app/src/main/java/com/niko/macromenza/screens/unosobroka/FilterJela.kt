@@ -1,5 +1,10 @@
 package com.niko.macromenza.screens.unosobroka
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.snap
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -10,10 +15,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.material3.Button
@@ -26,24 +33,33 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.SelectableChipColors
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.IntOffset
 import com.niko.macromenza.R
 import com.niko.macromenza.model.KategorijaJela
 import com.niko.macromenza.ui.theme.MacroDimenzije
 import com.niko.macromenza.ui.theme.MacroOblici
 import com.niko.macromenza.ui.theme.MacroRazmaci
+import com.niko.macromenza.ui.theme.Opruge
+import com.niko.macromenza.ui.theme.Trajanje
+import com.niko.macromenza.ui.theme.Ublazavanje
+import com.niko.macromenza.ui.theme.rememberSmanjeniPokret
 import com.niko.macromenza.util.formatKcal
 import com.niko.macromenza.util.formatKolicina
 import com.niko.macromenza.viewmodel.MakroFilter
@@ -81,51 +97,88 @@ private val BRZI_FILTERI = listOf(
 private fun imaVlastitiRaspon(f: MakroFilter): Boolean =
     BRZI_FILTERI.fold(f) { a, b -> if (b.aktivan(a)) b.prebaci(a, false) else a }.aktivan
 
-@Composable
-private fun bojeCipa(): SelectableChipColors {
-    val shema = MaterialTheme.colorScheme
-    return FilterChipDefaults.filterChipColors(
-        containerColor = shema.surface,
-        labelColor = shema.onSurface,
-        iconColor = shema.onSurfaceVariant,
-        selectedContainerColor = shema.secondaryContainer,
-        selectedLabelColor = shema.onSecondaryContainer,
-        selectedLeadingIconColor = shema.onSecondaryContainer,
-        selectedTrailingIconColor = shema.onSecondaryContainer
-    )
-}
-
+/**
+ * Čip filtera: odabir animira boju spremnika, teksta i ruba (Trajanje.kratko) i uvodi kvačicu koja se
+ * povećava od nule. Čipovi s vlastitom ikonom ([ikona]) nemaju kvačicu, samo promjenu boje.
+ * Kvačica proširuje čip pa se susjedi pomaknu odmah (bez animiranja širine); sama kvačica skalira graphicsLayerom.
+ */
 @Composable
 fun MacroCip(
     oznaka: String,
     odabran: Boolean,
     onClick: () -> Unit,
-    ikona: (@Composable () -> Unit)? = null,
-    zavrsnaIkona: (@Composable () -> Unit)? = null
+    modifier: Modifier = Modifier,
+    ikona: (@Composable () -> Unit)? = null
 ) {
     val shema = MaterialTheme.colorScheme
+    val smanjeno = rememberSmanjeniPokret()
+    val prijelaz = if (smanjeno) snap<Color>() else tween(Trajanje.kratko, easing = Ublazavanje.usporavanje)
+
+    val spremnik by animateColorAsState(if (odabran) shema.secondaryContainer else shema.surface, prijelaz, label = "cipSpremnik")
+    val tekst by animateColorAsState(if (odabran) shema.onSecondaryContainer else shema.onSurface, prijelaz, label = "cipTekst")
+    val rub by animateColorAsState(if (odabran) shema.secondaryContainer else shema.outlineVariant, prijelaz, label = "cipRub")
+
     FilterChip(
         selected = odabran,
         onClick = onClick,
+        modifier = modifier,
         label = { Text(oznaka, style = MaterialTheme.typography.labelLarge, maxLines = 1) },
-        leadingIcon = ikona,
-        trailingIcon = zavrsnaIkona,
+        leadingIcon = ikona ?: if (odabran) {
+            { Kvacica(tekst) }
+        } else null,
         shape = MacroOblici.cip,
-        colors = bojeCipa(),
+        colors = FilterChipDefaults.filterChipColors(
+            containerColor = spremnik,
+            labelColor = tekst,
+            iconColor = tekst,
+            selectedContainerColor = spremnik,
+            selectedLabelColor = tekst,
+            selectedLeadingIconColor = tekst
+        ),
         border = FilterChipDefaults.filterChipBorder(
             enabled = true,
             selected = odabran,
-            borderColor = shema.outlineVariant,
-            selectedBorderColor = shema.secondaryContainer,
+            borderColor = rub,
+            selectedBorderColor = rub,
             borderWidth = MacroDimenzije.linija
         )
         // FilterChip sam proširuje dodirni cilj na 48 dp (minimumInteractiveComponentSize).
     )
 }
 
+/** Kvačica odabranog čipa: raste od nule pri prvom prikazu (Trajanje.kratko); previewi i smanjeni pokret je odmah pokazuju. */
+@Composable
+private fun Kvacica(boja: Color) {
+    val bezPokreta = rememberSmanjeniPokret() || LocalInspectionMode.current
+    val skala = remember { Animatable(if (bezPokreta) 1f else 0f) }
+    LaunchedEffect(Unit) {
+        if (skala.value < 1f) skala.animateTo(1f, tween(Trajanje.kratko, easing = Ublazavanje.usporavanje))
+    }
+    Icon(
+        imageVector = Icons.Rounded.Check,
+        contentDescription = null,
+        tint = boja,
+        modifier = Modifier
+            .size(MacroDimenzije.ikonaSitna)
+            .graphicsLayer {
+                scaleX = skala.value
+                scaleY = skala.value
+            }
+    )
+}
+
+/** Čipovi koji se pojave ili nestanu ("Poništi filtere") guraju susjede uz Opruge.slijeganje umjesto skoka. */
+@OptIn(ExperimentalFoundationApi::class)
+private fun LazyItemScope.pomakCipa(smanjeno: Boolean): Modifier =
+    if (smanjeno) Modifier else Modifier.animateItem(
+        fadeInSpec = tween(Trajanje.kratko),
+        placementSpec = Opruge.slijeganje<IntOffset>(),
+        fadeOutSpec = tween(Trajanje.kratko, easing = Ublazavanje.ubrzavanje)
+    )
+
 /**
  * Traka filtera ispod pretrage: brzi rasponi, "Raspon" (sheet s min/max za kcal, P, U, M) i kategorije.
- * Odabrana kategorija se ponovnim dodirom (ili X) uklanja.
+ * Odabrani čip ima kvačicu; ponovnim dodirom se odabir uklanja.
  */
 @Composable
 fun FilterTraka(
@@ -137,6 +190,7 @@ fun FilterTraka(
     onKategorija: (String?) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val smanjeno = rememberSmanjeniPokret()
     LazyRow(
         modifier = modifier.fillMaxWidth(),
         contentPadding = PaddingValues(horizontal = MacroRazmaci.rubEkrana),
@@ -145,6 +199,7 @@ fun FilterTraka(
     ) {
         item(key = "raspon") {
             MacroCip(
+                modifier = pomakCipa(smanjeno),
                 oznaka = stringResource(R.string.uo_raspon),
                 odabran = imaVlastitiRaspon(filter),
                 onClick = onRaspon,
@@ -155,6 +210,7 @@ fun FilterTraka(
             val brzi = BRZI_FILTERI[i]
             val aktivan = brzi.aktivan(filter)
             MacroCip(
+                modifier = pomakCipa(smanjeno),
                 oznaka = brzi.oznaka(),
                 odabran = aktivan,
                 onClick = { onFilter(brzi.prebaci(filter, !aktivan)) }
@@ -164,6 +220,7 @@ fun FilterTraka(
         if (filter.aktivan) {
             item(key = "ponisti") {
                 MacroCip(
+                    modifier = pomakCipa(smanjeno),
                     oznaka = stringResource(R.string.uo_ponisti_filtere),
                     odabran = false,
                     onClick = { onFilter(MakroFilter()) },
@@ -183,12 +240,10 @@ fun FilterTraka(
         items(kategorije, key = { "k-${it.naziv}" }) { k ->
             val odabrana = kategorija == k.naziv
             MacroCip(
+                modifier = pomakCipa(smanjeno),
                 oznaka = k.naziv,
                 odabran = odabrana,
-                onClick = { onKategorija(if (odabrana) null else k.naziv) },
-                zavrsnaIkona = if (odabrana) {
-                    { Icon(Icons.Rounded.Close, contentDescription = null, modifier = Modifier.size(MacroDimenzije.ikonaSitna)) }
-                } else null
+                onClick = { onKategorija(if (odabrana) null else k.naziv) }
             )
         }
     }

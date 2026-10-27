@@ -1,5 +1,10 @@
 package com.niko.macromenza.screens.unosobroka
 
+import android.os.SystemClock
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.snap
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -51,12 +56,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -71,19 +79,36 @@ import com.niko.macromenza.model.Jelo
 import com.niko.macromenza.model.MeniDTO
 import com.niko.macromenza.ui.components.nazivTipa
 import com.niko.macromenza.ui.components.skalaPritiska
+import com.niko.macromenza.ui.theme.Kasnjenje
+import com.niko.macromenza.ui.theme.MAKS_ANIMIRANIH_REDOVA
 import com.niko.macromenza.ui.theme.MacroDimenzije
 import com.niko.macromenza.ui.theme.MacroMenzaTheme
 import com.niko.macromenza.ui.theme.MacroOblici
 import com.niko.macromenza.ui.theme.MacroRazmaci
+import com.niko.macromenza.ui.theme.Opruge
+import com.niko.macromenza.ui.theme.Trajanje
+import com.niko.macromenza.ui.theme.Ublazavanje
 import com.niko.macromenza.ui.theme.macroBoje
 import com.niko.macromenza.ui.theme.macroTipografija
+import com.niko.macromenza.ui.theme.rememberSmanjeniPokret
 import com.niko.macromenza.util.formatKcal
 import com.niko.macromenza.viewmodel.MakroFilter
+import kotlinx.coroutines.delay
 import java.time.format.DateTimeFormatter
 
 private val TIPOVI_OBROKA = listOf("DORUCAK", "RUCAK", "UZINA", "VECERA")
 private val FORMAT_DATUMA = DateTimeFormatter.ofPattern("d.M.yyyy.")
 private val FORMAT_VREMENA = DateTimeFormatter.ofPattern("HH:mm")
+
+/** Redni broj ulaza elemenata liste; gradi se redom kojim se elementi deklariraju u LazyColumnu. */
+private class BrojacUlaza {
+    private var n = 0
+
+    fun sljedeci(): Int = n++
+
+    /** Rezervira [broj] uzastopnih brojeva i vraća prvi. */
+    fun rezerviraj(broj: Int): Int = n.also { n += broj }
+}
 
 /** Prije "Prikaži sve menije" vidi se ovoliko menija. */
 private const val MENIJA_SAZETO = 3
@@ -107,10 +132,29 @@ fun UnosObrokaSadrzaj(
     val shema = MaterialTheme.colorScheme
     val pretraga = ui.upit.isNotBlank()
     val stanjeListe = rememberLazyListState()
+    val scope = rememberCoroutineScope()
+
+    // Ulaz: dok traje (prvi prikaz liste), novi redovi izblijeđuju stupnjevano; poslije toga samo animateItem.
+    // Previewi (statični kadar) i smanjeni pokret odmah prikazuju završno stanje.
+    val smanjeno = rememberSmanjeniPokret() || LocalInspectionMode.current
+    val pocetak = remember { SystemClock.uptimeMillis() }
+    var ulazTraje by remember { mutableStateOf(true) }
+    val jelaStigla = ui.jela is StanjeJela.Sadrzaj
+    LaunchedEffect(jelaStigla) {
+        if (jelaStigla) {
+            delay((Kasnjenje.nakonPrijelaza + Kasnjenje.unosRedovi + MAKS_ANIMIRANIH_REDOVA * Kasnjenje.redovi + Trajanje.srednje).toLong())
+            ulazTraje = false
+        }
+    }
+    val pokret = PokretUnosa(aktivan = ulazTraje, smanjeno = smanjeno, pocetak = pocetak)
+
+    // Traka filtera se skuplja pri listanju prema dolje i vraća pri listanju prema gore; pretraga ostaje prikvačena.
+    val trake = remember(smanjeno) { SkupljanjeTrake(scope, smanjeno) { stanjeListe.canScrollForward } }
 
     // Novi upit, kategorija ili filter daju novu listu: kreće se od vrha, inače prvi rezultat ostaje skriven.
     LaunchedEffect(ui.upit, ui.kategorija, ui.makroFilter) {
         stanjeListe.scrollToItem(0)
+        trake.prikazi()
     }
 
     Box(
@@ -118,7 +162,7 @@ fun UnosObrokaSadrzaj(
             .fillMaxSize()
             .background(shema.background)
     ) {
-        Column(modifier = Modifier.statusBarsPadding()) {
+        Column(modifier = Modifier.statusBarsPadding().nestedScroll(trake.veza)) {
             GornjaTraka(ui, akcije)
 
             if (ui.ucitavanjeObroka) {
@@ -136,7 +180,8 @@ fun UnosObrokaSadrzaj(
                 prikaziSliku = !ui.uredivanje,
                 slikaOmogucena = !ui.spremanjeUTijeku,
                 onUpit = akcije.onUpit,
-                onSlikaIliOpis = akcije.onSlikaIliOpis
+                onSlikaIliOpis = akcije.onSlikaIliOpis,
+                modifier = Modifier.ulazZaglavlja(0, smanjeno)
             )
 
             FilterTraka(
@@ -146,7 +191,12 @@ fun UnosObrokaSadrzaj(
                 onFilter = akcije.onMakroFilter,
                 onRaspon = akcije.onRaspon,
                 onKategorija = akcije.onKategorija,
-                modifier = Modifier.padding(top = MacroRazmaci.s, bottom = MacroRazmaci.xs)
+                modifier = Modifier
+                    .skupljajuca(trake)
+                    // Skupljena traka je nevidljiva i čitaču zaslona (vraća se listanjem prema gore).
+                    .then(if (trake.skupljena) Modifier.clearAndSetSemantics { } else Modifier)
+                    .ulazZaglavlja(1, smanjeno)
+                    .padding(top = MacroRazmaci.s, bottom = MacroRazmaci.xs)
             )
 
             LazyColumn(
@@ -154,11 +204,13 @@ fun UnosObrokaSadrzaj(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(bottom = donjiRazmak)
             ) {
+                // Svaki element dobiva redni broj ulaza (najviše MAKS_ANIMIRANIH_REDOVA animira, ostali su odmah tu).
+                val brojac = BrojacUlaza()
                 if (!pretraga && ui.kategorija == null) {
-                    sekcijaMenija(ui, akcije)
-                    sekcijaCesto(ui, akcije)
+                    sekcijaMenija(ui, akcije, pokret, brojac)
+                    sekcijaCesto(ui, akcije, pokret, brojac)
                 }
-                sekcijaJela(ui, akcije, pretraga)
+                sekcijaJela(ui, akcije, pretraga, pokret, brojac)
             }
         }
 
@@ -302,14 +354,31 @@ private fun DioPilule(tekst: String, opis: String, onClick: () -> Unit) {
     }
 }
 
-/** "1510 / 2400 kcal": pojedeno na odabrani datum zajedno s ovim obrokom; preko cilja u višnji. */
+/**
+ * "1510 / 2400 kcal": pojedeno na odabrani datum zajedno s ovim obrokom; preko cilja u višnji.
+ * Broj prelazi na novi iznos uz Opruge.blaga (kao brojke na Home), a boja uz Trajanje.kratko.
+ */
 @Composable
 private fun NapredakPilula(nakonObroka: Double?, cilj: Double?) {
     val shema = MaterialTheme.colorScheme
+    val smanjeno = rememberSmanjeniPokret()
     val pojedeno = nakonObroka ?: return
     val prekoCilja = cilj != null && pojedeno > cilj
-    val tekst = if (cilj != null) stringResource(R.string.uo_napredak, formatKcal(pojedeno), formatKcal(cilj))
-    else stringResource(R.string.uo_napredak_bez_cilja, formatKcal(pojedeno))
+
+    val prikazano by animateFloatAsState(
+        targetValue = pojedeno.toFloat(),
+        animationSpec = if (smanjeno) snap() else Opruge.blaga(),
+        label = "napredakKcal"
+    )
+    val boja by animateColorAsState(
+        targetValue = if (prekoCilja) MaterialTheme.macroBoje.visnja else shema.onSurface,
+        animationSpec = if (smanjeno) snap() else tween(Trajanje.kratko, easing = Ublazavanje.usporavanje),
+        label = "napredakBoja"
+    )
+
+    val tekst = if (cilj != null) stringResource(R.string.uo_napredak, formatKcal(prikazano.toDouble()), formatKcal(cilj))
+    else stringResource(R.string.uo_napredak_bez_cilja, formatKcal(prikazano.toDouble()))
+    // Čitač zaslona dobiva završni iznos, ne vrijednost usred prijelaza.
     val opis = if (cilj != null) stringResource(R.string.uo_napredak_opis, formatKcal(pojedeno), formatKcal(cilj))
     else stringResource(R.string.uo_napredak_opis_bez_cilja, formatKcal(pojedeno))
 
@@ -322,7 +391,7 @@ private fun NapredakPilula(nakonObroka: Double?, cilj: Double?) {
         Text(
             text = tekst,
             style = MaterialTheme.typography.labelLarge,
-            color = if (prekoCilja) MaterialTheme.macroBoje.visnja else shema.onSurface,
+            color = boja,
             modifier = Modifier
                 .background(shema.surfaceVariant, MacroOblici.pilula)
                 .padding(horizontal = MacroRazmaci.m, vertical = MacroRazmaci.s)
@@ -365,7 +434,8 @@ private fun PoljePretrage(
     prikaziSliku: Boolean,
     slikaOmogucena: Boolean,
     onUpit: (String) -> Unit,
-    onSlikaIliOpis: () -> Unit
+    onSlikaIliOpis: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val shema = MaterialTheme.colorScheme
     OutlinedTextField(
@@ -406,7 +476,7 @@ private fun PoljePretrage(
             focusedPlaceholderColor = shema.onSurfaceVariant,
             unfocusedPlaceholderColor = shema.onSurfaceVariant
         ),
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = MacroRazmaci.rubEkrana)
             .padding(top = MacroRazmaci.s)
@@ -415,11 +485,12 @@ private fun PoljePretrage(
 
 // ---------- Sekcije liste ----------
 
-private fun LazyListScope.sekcijaMenija(ui: UnosObrokaUi, akcije: UnosObrokaAkcije) {
+private fun LazyListScope.sekcijaMenija(ui: UnosObrokaUi, akcije: UnosObrokaAkcije, pokret: PokretUnosa, brojac: BrojacUlaza) {
     // Ručak i večera sami biraju tip menija; za doručak i užinu menza nema menije, pa se biraju čipom.
     val tipOdredjen = ui.tip == "RUCAK" || ui.tip == "VECERA"
     val tipFiltera = if (tipOdredjen) ui.tip else ui.tipMenija
 
+    val naslovUlaz = brojac.sljedeci()
     item(key = "meniji-naslov") {
         NaslovSekcije(
             tekst = stringResource(
@@ -429,7 +500,8 @@ private fun LazyListScope.sekcijaMenija(ui: UnosObrokaUi, akcije: UnosObrokaAkci
                     else -> R.string.uo_meniji
                 }
             ),
-            prva = true
+            prva = true,
+            modifier = pomakReda(pokret).ulazUnosa(naslovUlaz, pokret, pomak = false)
         ) {
             MacroCip(
                 oznaka = stringResource(R.string.uo_vegetarijanski),
@@ -440,8 +512,14 @@ private fun LazyListScope.sekcijaMenija(ui: UnosObrokaUi, akcije: UnosObrokaAkci
     }
 
     if (!tipOdredjen) {
+        val bezMenijaUlaz = brojac.sljedeci()
         item(key = "meniji-bez-tipa") {
-            BezMenijaZaTip(tip = ui.tip, tipMenija = ui.tipMenija, onTipMenija = akcije.onTipMenija)
+            BezMenijaZaTip(
+                tip = ui.tip,
+                tipMenija = ui.tipMenija,
+                onTipMenija = akcije.onTipMenija,
+                modifier = pomakReda(pokret).ulazUnosa(bezMenijaUlaz, pokret)
+            )
         }
         if (ui.tipMenija == null) return
     }
@@ -452,7 +530,7 @@ private fun LazyListScope.sekcijaMenija(ui: UnosObrokaUi, akcije: UnosObrokaAkci
         }
 
         is StanjeMenija.Greska -> item(key = "meniji-greska") {
-            KratkaGreska(poruka = stanje.poruka, onPonovi = akcije.onPonoviMenije)
+            KratkaGreska(poruka = stanje.poruka, onPonovi = akcije.onPonoviMenije, modifier = pomakReda(pokret))
         }
 
         is StanjeMenija.Sadrzaj -> {
@@ -461,11 +539,12 @@ private fun LazyListScope.sekcijaMenija(ui: UnosObrokaUi, akcije: UnosObrokaAkci
             }
             if (prikazani.isEmpty()) {
                 item(key = "meniji-prazno") {
-                    TihaPoruka(stringResource(R.string.uo_nema_menija_filter))
+                    TihaPoruka(stringResource(R.string.uo_nema_menija_filter), modifier = pomakReda(pokret))
                 }
             } else {
+                val baza = brojac.rezerviraj(minOf(prikazani.size, MENIJA_SAZETO))
                 item(key = "meniji-lista") {
-                    ListaMenija(prikazani, akcije.onDodajMeni)
+                    ListaMenija(prikazani, akcije.onDodajMeni, pokret, baza)
                 }
             }
         }
@@ -474,8 +553,8 @@ private fun LazyListScope.sekcijaMenija(ui: UnosObrokaUi, akcije: UnosObrokaAkci
 
 /** Doručak i užina nemaju menije u menzi; korisnik ipak može dodati meni za ručak ili večeru. */
 @Composable
-private fun BezMenijaZaTip(tip: String, tipMenija: String?, onTipMenija: (String?) -> Unit) {
-    Column(modifier = Modifier.padding(horizontal = MacroRazmaci.rubEkrana)) {
+private fun BezMenijaZaTip(tip: String, tipMenija: String?, onTipMenija: (String?) -> Unit, modifier: Modifier = Modifier) {
+    Column(modifier = modifier.padding(horizontal = MacroRazmaci.rubEkrana)) {
         Text(
             text = stringResource(if (tip == "UZINA") R.string.uo_nema_menija_uzina else R.string.uo_nema_menija_dorucak),
             style = MaterialTheme.typography.bodyMedium,
@@ -502,13 +581,18 @@ private fun BezMenijaZaTip(tip: String, tipMenija: String?, onTipMenija: (String
 }
 
 @Composable
-private fun ListaMenija(meniji: List<MeniDTO>, onDodaj: (MeniDTO) -> Unit) {
+private fun ListaMenija(meniji: List<MeniDTO>, onDodaj: (MeniDTO) -> Unit, pokret: PokretUnosa, ulazBaza: Int) {
     var svi by rememberSaveable { mutableStateOf(false) }
     val vidljivi = if (svi) meniji else meniji.take(MENIJA_SAZETO)
 
     Column {
         vidljivi.forEachIndexed { i, meni ->
-            MeniRed(meni = meni, onDodaj = { onDodaj(meni) }, crta = i > 0)
+            MeniRed(
+                meni = meni,
+                onDodaj = { onDodaj(meni) },
+                crta = i > 0,
+                modifier = Modifier.ulazUnosa(ulazBaza + i, pokret)
+            )
         }
         if (meniji.size > MENIJA_SAZETO) {
             TextButton(
@@ -527,19 +611,23 @@ private fun ListaMenija(meniji: List<MeniDTO>, onDodaj: (MeniDTO) -> Unit) {
     }
 }
 
-private fun LazyListScope.sekcijaCesto(ui: UnosObrokaUi, akcije: UnosObrokaAkcije) {
+private fun LazyListScope.sekcijaCesto(ui: UnosObrokaUi, akcije: UnosObrokaAkcije, pokret: PokretUnosa, brojac: BrojacUlaza) {
     // Makro filter vrijedi i za "Često jedeš".
     val cesto = ui.cesto.filter { ui.makroFilter.propusta(it.jelo) }
     if (cesto.isEmpty()) return
 
+    val naslovUlaz = brojac.sljedeci()
     item(key = "cesto-naslov") {
         NaslovSekcije(
             tekst = stringResource(R.string.uo_cesto),
-            podnaslov = stringResource(R.string.uo_cesto_tekst)
+            podnaslov = stringResource(R.string.uo_cesto_tekst),
+            modifier = pomakReda(pokret).ulazUnosa(naslovUlaz, pokret, pomak = false)
         )
     }
+    val baza = brojac.rezerviraj(cesto.size)
     itemsIndexed(cesto, key = { _, c -> "c-${c.jelo.id}" }) { i, c ->
         JeloRed(
+            modifier = pomakReda(pokret).ulazUnosa(baza + i, pokret),
             naziv = c.jelo.naziv,
             makro = c.jelo.uMakro(),
             kolicina = ui.kolicine[c.jelo.id] ?: 0.0,
@@ -552,10 +640,22 @@ private fun LazyListScope.sekcijaCesto(ui: UnosObrokaUi, akcije: UnosObrokaAkcij
 }
 
 @OptIn(ExperimentalFoundationApi::class)
-private fun LazyListScope.sekcijaJela(ui: UnosObrokaUi, akcije: UnosObrokaAkcije, pretraga: Boolean) {
+private fun LazyListScope.sekcijaJela(
+    ui: UnosObrokaUi,
+    akcije: UnosObrokaAkcije,
+    pretraga: Boolean,
+    pokret: PokretUnosa,
+    brojac: BrojacUlaza
+) {
     // Bez pretrage i kategorije ova sekcija dolazi nakon menija i "Često jedeš", pa ima svoj naslov.
     if (!pretraga && ui.kategorija == null) {
-        item(key = "jela-naslov") { NaslovSekcije(tekst = stringResource(R.string.uo_sva_jela)) }
+        val naslovUlaz = brojac.sljedeci()
+        item(key = "jela-naslov") {
+            NaslovSekcije(
+                tekst = stringResource(R.string.uo_sva_jela),
+                modifier = pomakReda(pokret).ulazUnosa(naslovUlaz, pokret, pomak = false)
+            )
+        }
     } else {
         item(key = "jela-razmak") { Spacer(Modifier.height(MacroRazmaci.s)) }
     }
@@ -573,6 +673,7 @@ private fun LazyListScope.sekcijaJela(ui: UnosObrokaUi, akcije: UnosObrokaAkcije
             if (stanje.jela.isEmpty()) {
                 item(key = "jela-prazno") {
                     BezRezultata(
+                        modifier = pomakReda(pokret),
                         upit = ui.upit.trim().takeIf { pretraga },
                         imaFiltera = ui.makroFilter.aktivan || ui.kategorija != null,
                         onPonistiFiltere = {
@@ -585,11 +686,23 @@ private fun LazyListScope.sekcijaJela(ui: UnosObrokaUi, akcije: UnosObrokaAkcije
             }
 
             grupirajPoKategoriji(stanje.jela, ui.kategorije).forEach { skupina ->
+                val naslovUlaz = brojac.sljedeci()
+                // Ljepljivi naslov: samo izblijeđivanje (bez pomaka), da se pri prianjanju uz vrh ne trzne.
                 stickyHeader(key = "kat-${skupina.kategorija}") {
-                    NaslovKategorije(skupina.kategorija ?: stringResource(R.string.uo_ostalo))
+                    NaslovKategorije(
+                        tekst = skupina.kategorija ?: stringResource(R.string.uo_ostalo),
+                        modifier = pomakReda(pokret, naslov = true).ulazUnosa(naslovUlaz, pokret, pomak = false)
+                    )
                 }
+                val baza = brojac.rezerviraj(skupina.jela.size)
                 itemsIndexed(skupina.jela, key = { _, j -> "j-${j.id}" }) { i, jelo ->
-                    RedJela(jelo, i > 0, ui, akcije)
+                    RedJela(
+                        jelo = jelo,
+                        crta = i > 0,
+                        ui = ui,
+                        akcije = akcije,
+                        modifier = pomakReda(pokret).ulazUnosa(baza + i, pokret)
+                    )
                 }
             }
         }
@@ -597,8 +710,9 @@ private fun LazyListScope.sekcijaJela(ui: UnosObrokaUi, akcije: UnosObrokaAkcije
 }
 
 @Composable
-private fun RedJela(jelo: Jelo, crta: Boolean, ui: UnosObrokaUi, akcije: UnosObrokaAkcije) {
+private fun RedJela(jelo: Jelo, crta: Boolean, ui: UnosObrokaUi, akcije: UnosObrokaAkcije, modifier: Modifier) {
     JeloRed(
+        modifier = modifier,
         naziv = jelo.naziv,
         makro = jelo.uMakro(),
         kolicina = ui.kolicine[jelo.id] ?: 0.0,
@@ -612,18 +726,18 @@ private fun RedJela(jelo: Jelo, crta: Boolean, ui: UnosObrokaUi, akcije: UnosObr
 // ---------- Stanja ----------
 
 @Composable
-private fun TihaPoruka(tekst: String) {
+private fun TihaPoruka(tekst: String, modifier: Modifier = Modifier) {
     Text(
         text = tekst,
         style = MaterialTheme.typography.bodyMedium,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier = Modifier.padding(horizontal = MacroRazmaci.rubEkrana)
+        modifier = modifier.padding(horizontal = MacroRazmaci.rubEkrana)
     )
 }
 
 @Composable
-private fun KratkaGreska(poruka: String, onPonovi: () -> Unit) {
-    Column(modifier = Modifier.padding(horizontal = MacroRazmaci.rubEkrana)) {
+private fun KratkaGreska(poruka: String, onPonovi: () -> Unit, modifier: Modifier = Modifier) {
+    Column(modifier = modifier.padding(horizontal = MacroRazmaci.rubEkrana)) {
         Text(poruka, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface)
         TextButton(
             onClick = onPonovi,
@@ -640,10 +754,10 @@ private fun KratkaGreska(poruka: String, onPonovi: () -> Unit) {
 }
 
 @Composable
-private fun BezRezultata(upit: String?, imaFiltera: Boolean, onPonistiFiltere: () -> Unit) {
+private fun BezRezultata(upit: String?, imaFiltera: Boolean, onPonistiFiltere: () -> Unit, modifier: Modifier = Modifier) {
     val shema = MaterialTheme.colorScheme
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = MacroRazmaci.rubEkrana, vertical = MacroRazmaci.xl),
         horizontalAlignment = Alignment.CenterHorizontally

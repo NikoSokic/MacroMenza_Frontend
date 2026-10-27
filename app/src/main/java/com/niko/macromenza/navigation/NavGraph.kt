@@ -138,7 +138,12 @@ fun AppNavigation(
                 )
             }
 
-            composable(BottomNavItem.Konzumacija.route) {
+            // Fade-through prema unosu obroka i natrag; za sve ostalo vrijede zadani prijelazi.
+            composable(
+                route = BottomNavItem.Konzumacija.route,
+                exitTransition = { if (jeRutaUnosa(targetState.destination.route)) prijelazIzlaz() else null },
+                popEnterTransition = { if (jeRutaUnosa(initialState.destination.route)) prijelazUlaz() else null }
+            ) {
                 KonzumacijaScreen(navController)
             }
 
@@ -181,7 +186,9 @@ fun AppNavigation(
                         type = NavType.LongType
                         defaultValue = -1L
                     }
-                )
+                ),
+                enterTransition = { if (jeRutaKarticeUnos(initialState.destination.route)) prijelazUlaz() else null },
+                popExitTransition = { if (jeRutaKarticeUnos(targetState.destination.route)) prijelazIzlaz() else null }
             ) { backStackEntry ->
                 val tipObroka =
                     backStackEntry.arguments?.getString("tipObroka")
