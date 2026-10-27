@@ -10,6 +10,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
@@ -34,10 +35,11 @@ private const val ALFA_PUNO = 0.9f
 fun PorcijaGlif(
     kolicina: Double,
     smanjeno: Boolean,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    /** Boja ispune; zadano orah/krem, u gumbu za dodavanje paprika. */
+    ispuna: Color = MaterialTheme.colorScheme.secondary
 ) {
     val shema = MaterialTheme.colorScheme
-    val ispuna = shema.secondary
     val opis = tekstPorcije(kolicina)
 
     val prednji = kolicina.coerceIn(0.0, 1.0).toFloat()

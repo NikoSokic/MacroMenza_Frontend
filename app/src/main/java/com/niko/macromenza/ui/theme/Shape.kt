@@ -12,6 +12,8 @@ object MacroOblici {
     val gumb = RoundedCornerShape(18.dp)
     val cip = RoundedCornerShape(12.dp)
     val traka = RoundedCornerShape(3.dp)
+    /** Pilule u gornjoj traci, pretraga i gumb porcije. */
+    val pilula = RoundedCornerShape(percent = 50)
 }
 
 val MacroShapes = Shapes(

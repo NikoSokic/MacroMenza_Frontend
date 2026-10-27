@@ -68,6 +68,11 @@ object MacroDimenzije {
     // Primarna akcija
     val fabVisina = 56.dp
     val prostorZaFab = 96.dp
+
+    // Unos obroka: krug "+" u redu jela i kostur reda
+    val gumbDodaj = 32.dp
+    val kosturNaziv = 14.dp
+    val kosturMakro = 10.dp
 }
 
 /** Omjeri za crteže u Canvasu (dio promjera ili širine). */
@@ -86,4 +91,8 @@ object MacroOmjeri {
     const val razmakSegmenata = 0.025f
     const val udubljenjeTanjura = 0.70f
     const val kcalTanjura = 0.21f
+
+    /** Širine traka u kosturu reda jela (dio širine teksta). */
+    const val kosturNaziv = 0.6f
+    const val kosturMakro = 0.4f
 }

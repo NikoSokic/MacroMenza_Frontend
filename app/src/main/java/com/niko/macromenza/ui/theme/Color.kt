@@ -74,7 +74,9 @@ data class MacroBoje(
     val pladanjRub: Color,
     val pladanjZrnoSvijetlo: Color,
     val pladanjZrnoTamno: Color,
-    val kostur: Color
+    val kostur: Color,
+    /** Predloženi utor na pladnju (blago svjetliji orah). */
+    val utorIstaknut: Color
 )
 
 val MacroBojeSvijetle = MacroBoje(
@@ -102,7 +104,8 @@ val MacroBojeSvijetle = MacroBoje(
     pladanjRub = Krem.copy(alpha = 0.07f),
     pladanjZrnoSvijetlo = Krem.copy(alpha = 0.035f),
     pladanjZrnoTamno = Color.Black.copy(alpha = 0.09f),
-    kostur = PorculanTamniji
+    kostur = PorculanTamniji,
+    utorIstaknut = Krem.copy(alpha = 0.08f)
 )
 
 val MacroBojeTamne = MacroBoje(
@@ -130,7 +133,8 @@ val MacroBojeTamne = MacroBoje(
     pladanjRub = Krem.copy(alpha = 0.06f),
     pladanjZrnoSvijetlo = Krem.copy(alpha = 0.03f),
     pladanjZrnoTamno = Color.Black.copy(alpha = 0.10f),
-    kostur = NocPovrsinaVisa
+    kostur = NocPovrsinaVisa,
+    utorIstaknut = Krem.copy(alpha = 0.07f)
 )
 
 val LocalMacroBoje = staticCompositionLocalOf { MacroBojeSvijetle }

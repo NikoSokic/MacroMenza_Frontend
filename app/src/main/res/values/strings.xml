@@ -80,4 +80,92 @@
     <string name="dp_greska_tekst">Provjeri vezu s poslužiteljem pa pokušaj ponovno.</string>
     <string name="dp_pokusaj_ponovno">Pokušaj ponovno</string>
     <string name="dp_ucitavanje">Učitavanje pregleda dana</string>
+
+    <!-- Unos: odabir obroka (KonzumacijaScreen) -->
+    <string name="ko_naslov">Što jedeš?</string>
+    <string name="ko_uredi">Uredi</string>
+    <string name="ko_dodaj">Dodaj</string>
+    <string name="ko_utor_pun">%1$s: %2$s kcal. Uredi obrok</string>
+    <string name="ko_utor_prazan">Dodaj obrok: %1$s</string>
+    <string name="ko_predlozeno">%1$s. Predloženo za ovo doba dana</string>
+    <string name="ko_jos_obrok">Dodaj još jedan obrok</string>
+    <string name="ko_slika_naslov">Slika ili opis</string>
+    <string name="ko_slika_tekst">Uslikaj pladanj ili opiši što si jeo</string>
+
+    <!-- Unos obroka (UnosObrokaScreen) -->
+    <string name="uo_natrag">Natrag</string>
+    <string name="uo_uredivanje">Uređivanje obroka</string>
+    <string name="uo_promijeni_tip">Vrsta obroka: %1$s. Promijeni</string>
+    <string name="uo_danas">Danas</string>
+    <string name="uo_datum_opis">Datum: %1$s. Promijeni datum</string>
+    <string name="uo_vrijeme_opis">Vrijeme: %1$s. Promijeni vrijeme</string>
+    <string name="uo_napredak">%1$s / %2$s kcal</string>
+    <string name="uo_napredak_bez_cilja">%1$s kcal</string>
+    <string name="uo_napredak_opis">Danas s ovim obrokom %1$s od %2$s kcal</string>
+    <string name="uo_napredak_opis_bez_cilja">Danas s ovim obrokom %1$s kcal</string>
+    <string name="uo_vise_opcija">Više opcija</string>
+    <string name="uo_obrisi_obrok">Obriši obrok</string>
+
+    <string name="uo_pretrazi">Pretraži jela iz menze</string>
+    <string name="uo_ocisti_pretragu">Očisti pretragu</string>
+    <string name="uo_slika_ili_opis">Slika ili opis</string>
+    <string name="uo_raspon">Raspon</string>
+    <string name="uo_ponisti_filtere">Poništi filtere</string>
+    <string name="uo_do_kcal">Do %1$s kcal</string>
+    <string name="uo_proteini_od">Proteini %1$s+ g</string>
+    <string name="uo_masti_do">Do %1$s g masti</string>
+
+    <string name="uo_meniji_rucak">Meniji za ručak</string>
+    <string name="uo_meniji_vecera">Meniji za večeru</string>
+    <string name="uo_meniji">Meniji menze</string>
+    <string name="uo_nema_menija_dorucak">Za doručak menza nema menije.</string>
+    <string name="uo_nema_menija_uzina">Za užinu menza nema menije.</string>
+    <string name="uo_nema_menija_tekst">Možeš dodati meni za ručak ili večeru.</string>
+    <string name="uo_nema_menija_filter">Nema menija za odabrane filtere.</string>
+    <string name="uo_vegetarijanski">Vegetarijanski</string>
+    <string name="uo_prikazi_sve_menije">Prikaži sve menije (%1$d)</string>
+    <string name="uo_prikazi_manje">Prikaži manje</string>
+    <string name="uo_meni_naziv">%1$s %2$s</string>
+    <string name="uo_dodaj_meni">Dodaj meni %1$s</string>
+    <string name="uo_dodan_meni">Dodan meni %1$s</string>
+    <string name="uo_ponisti">Poništi</string>
+    <string name="uo_priblizno">Približna vrijednost: jelo nema vlastitu recepturu, uzeto je slično jelo.</string>
+    <string name="uo_ucitavanje_menija">Učitavanje menija</string>
+
+    <string name="uo_cesto">Često jedeš</string>
+    <string name="uo_cesto_tekst">Jela iz tvojih obroka u zadnjih 60 dana</string>
+    <string name="uo_cesto_puta">%1$d× u 60 dana</string>
+    <string name="uo_sva_jela">Sva jela</string>
+    <string name="uo_ostalo">Ostalo</string>
+    <string name="uo_jelo_dodatak">%1$s · %2$s</string>
+    <string name="uo_dodaj_jelo">Dodaj %1$s</string>
+    <string name="uo_dodano_jelo">%1$s: %2$s u obroku. Dodaj još pola porcije</string>
+    <string name="uo_jelo_detalj">%1$s, %2$s. Otvori detalj jela</string>
+
+    <string name="uo_nema_rezultata">Nema jela za „%1$s”. Probaj kraće.</string>
+    <string name="uo_nema_jela_filter">Nema jela za odabrane filtere.</string>
+    <string name="uo_greska_jela_naslov">Jela se nisu učitala</string>
+    <string name="uo_greska_jela_tekst">Provjeri vezu s poslužiteljem pa pokušaj ponovno.</string>
+    <string name="uo_pokusaj_ponovno">Pokušaj ponovno</string>
+    <string name="uo_ucitavanje">Učitavanje jela</string>
+
+    <string name="uo_prijedlog_dodan">Prijedlog je dodan u obrok. Provjeri jela i količine.</string>
+    <string name="uo_odbaciti_naslov">Odbaciti promjene?</string>
+    <string name="uo_odbaciti_tekst">Promjene ovog obroka neće biti spremljene.</string>
+    <string name="uo_odbaci">Odbaci</string>
+    <string name="uo_nastavi">Nastavi uređivati</string>
+    <string name="uo_u_redu">U redu</string>
+    <string name="uo_odustani">Odustani</string>
+    <string name="uo_spremi">Spremi</string>
+    <string name="uo_spremi_promjene">Spremi promjene</string>
+
+    <string name="uo_filter_naslov">Filtriraj jela</string>
+    <string name="uo_filter_tekst">Raspon vrijedi za jednu porciju.</string>
+    <string name="uo_kalorije">Kalorije</string>
+    <string name="uo_jos_filtera">Još filtera</string>
+    <string name="uo_sakrij_filtere">Sakrij dodatne filtere</string>
+    <string name="uo_min">Min</string>
+    <string name="uo_max">Max</string>
+    <string name="uo_primijeni">Primijeni filtere</string>
+    <string name="uo_resetiraj">Resetiraj filtere</string>
 </resources>
