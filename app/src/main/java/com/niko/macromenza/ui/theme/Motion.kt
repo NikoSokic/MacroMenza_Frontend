@@ -156,6 +156,8 @@ object UlazUSesiji {
     const val POVIJEST = "povijest"
     const val PROFIL = "profil"
     const val MOJE_MJERE = "moje_mjere"
+    const val PRIJAVA = "prijava"
+    const val REGISTRACIJA = "registracija"
 
     private val vidjeni = mutableSetOf<String>()
 

@@ -1,28 +1,46 @@
 package com.niko.macromenza.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Login
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.compose.ui.autofill.ContentType
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavController
-import com.niko.macromenza.ui.theme.MacroGreen
+import com.niko.macromenza.R
+import com.niko.macromenza.ui.components.GumbSpremi
+import com.niko.macromenza.ui.components.PoljeUnosa
+import com.niko.macromenza.ui.components.ZnakAplikacije
+import com.niko.macromenza.ui.components.screenBottomPadding
+import com.niko.macromenza.ui.components.screenTopPadding
+import com.niko.macromenza.ui.theme.MacroMenzaTheme
+import com.niko.macromenza.ui.theme.MacroRazmaci
+import com.niko.macromenza.ui.theme.UlazUSesiji
 import com.niko.macromenza.viewmodel.AuthViewModel
 
 @Composable
@@ -37,7 +55,7 @@ fun LoginScreen(
 
     var email by remember { mutableStateOf("") }
     var lozinka by remember { mutableStateOf("") }
-    var prikaziLozinku by remember { mutableStateOf(false) }
+    val prviUlaz = rememberPrviUlaz(UlazUSesiji.PRIJAVA)
 
     DisposableEffect(Unit) {
         viewModel.ocistiPoruku()
@@ -65,234 +83,192 @@ fun LoginScreen(
         }
     }
 
-    Box(
+    LoginSadrzaj(
+        email = email,
+        onEmail = { email = it },
+        lozinka = lozinka,
+        onLozinka = { lozinka = it },
+        poruka = poruka,
+        ucitavanje = ucitavanje,
+        animirajUlaz = prviUlaz,
+        onPrijava = {
+            viewModel.prijava(
+                email = email.trim(),
+                lozinka = lozinka
+            )
+        },
+        onRegistracija = {
+            viewModel.ocistiPoruku()
+            navController.navigate("register")
+        }
+    )
+}
+
+/** Izgled prijave bez ViewModela (pages/prijava.md); koristi ga ekran i previewi. */
+@OptIn(ExperimentalComposeUiApi::class)
+@Composable
+internal fun LoginSadrzaj(
+    email: String,
+    onEmail: (String) -> Unit,
+    lozinka: String,
+    onLozinka: (String) -> Unit,
+    poruka: String?,
+    ucitavanje: Boolean,
+    animirajUlaz: Boolean,
+    onPrijava: () -> Unit,
+    onRegistracija: () -> Unit
+) {
+    val shema = MaterialTheme.colorScheme
+    val tip = MaterialTheme.typography
+    val fokus = LocalFocusManager.current
+    val moze = email.isNotBlank() && lozinka.isNotBlank() && !ucitavanje
+
+    Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(shema.background)
+            .imePadding()
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = MacroRazmaci.rubEkrana)
+            .padding(top = screenTopPadding() + MacroRazmaci.xl, bottom = screenBottomPadding(hasBottomNavigation = false)),
+        horizontalAlignment = Alignment.Start
     ) {
-
-        // Dekoracija gore lijevo
-        Box(
-            modifier = Modifier
-                .size(210.dp)
-                .offset(x = (-110).dp, y = (-95).dp)
-                .clip(CircleShape)
-                .background(
-                    MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
-                )
-        )
-
-        // Dekoracija dolje desno
-        Box(
-            modifier = Modifier
-                .size(260.dp)
-                .align(Alignment.BottomEnd)
-                .offset(x = 120.dp, y = 110.dp)
-                .clip(CircleShape)
-                .background(
-                    MacroGreen.copy(alpha = 0.08f)
-                )
-        )
+        ZnakAplikacije(Modifier.ulazAuth(0, animirajUlaz))
 
         Column(
             modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 28.dp)
-                .padding(top = 90.dp, bottom = 32.dp),
-            horizontalAlignment = Alignment.Start
+                .padding(top = MacroRazmaci.xl)
+                .ulazAuth(1, animirajUlaz)
         ) {
-
-            // Ikona
-            Box(
-                modifier = Modifier
-                    .size(72.dp)
-                    .clip(RoundedCornerShape(22.dp))
-                    .background(
-                        MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Login,
-                    contentDescription = null,
-                    tint = MacroGreen,
-                    modifier = Modifier.size(36.dp)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(28.dp))
-
             Text(
-                text = "Dobrodošao natrag",
-                fontSize = 32.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
+                text = stringResource(R.string.auth_prijava_naslov),
+                style = tip.headlineSmall,
+                color = shema.onSurface,
+                modifier = Modifier.semantics { heading() }
             )
-
-            Spacer(modifier = Modifier.height(6.dp))
-
             Text(
-                text = "Prijavi se u svoj MacroMenza račun.",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                text = stringResource(R.string.auth_prijava_podnaslov),
+                style = tip.bodyLarge,
+                color = shema.onSurfaceVariant,
+                modifier = Modifier.padding(top = MacroRazmaci.xs)
             )
-
-            Spacer(modifier = Modifier.height(36.dp))
-
-            OutlinedTextField(
-                value = email,
-                onValueChange = {
-                    email = it
-                },
-                label = {
-                    Text("Email")
-                },
-                singleLine = true,
-                shape = RoundedCornerShape(16.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(64.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MacroGreen,
-                    focusedLabelColor = MacroGreen,
-                    cursorColor = MacroGreen
-                )
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            OutlinedTextField(
-                value = lozinka,
-                onValueChange = {
-                    lozinka = it
-                },
-                label = {
-                    Text("Lozinka")
-                },
-                singleLine = true,
-                shape = RoundedCornerShape(16.dp),
-                visualTransformation =
-                    if (prikaziLozinku) {
-                        VisualTransformation.None
-                    } else {
-                        PasswordVisualTransformation()
-                    },
-                trailingIcon = {
-                    IconButton(
-                        onClick = {
-                            prikaziLozinku = !prikaziLozinku
-                        }
-                    ) {
-                        Icon(
-                            imageVector =
-                                if (prikaziLozinku) {
-                                    Icons.Default.VisibilityOff
-                                } else {
-                                    Icons.Default.Visibility
-                                },
-                            contentDescription =
-                                if (prikaziLozinku) {
-                                    "Sakrij lozinku"
-                                } else {
-                                    "Prikaži lozinku"
-                                }
-                        )
-                    }
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(64.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MacroGreen,
-                    focusedLabelColor = MacroGreen,
-                    cursorColor = MacroGreen
-                )
-            )
-
-            poruka?.let {
-                Spacer(modifier = Modifier.height(14.dp))
-
-                Surface(
-                    color = MaterialTheme.colorScheme.error.copy(alpha = 0.08f),
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        text = it,
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.padding(14.dp)
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(28.dp))
-
-            Button(
-                onClick = {
-                    viewModel.prijava(
-                        email = email.trim(),
-                        lozinka = lozinka
-                    )
-                },
-                enabled =
-                    email.isNotBlank() &&
-                            lozinka.isNotBlank() &&
-                            !ucitavanje,
-                shape = RoundedCornerShape(18.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MacroGreen,
-                    contentColor = Color.White,
-                    disabledContainerColor = MacroGreen.copy(alpha = 0.30f)
-                ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(58.dp)
-            ) {
-                if (ucitavanje) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(24.dp),
-                        strokeWidth = 2.dp,
-                        color = Color.White
-                    )
-                } else {
-                    Text(
-                        text = "Prijavi se",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(18.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-
-                Text(
-                    text = "Nemaš račun?",
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-
-                TextButton(
-                    onClick = {
-                        viewModel.ocistiPoruku()
-                        navController.navigate("register")
-                    }
-                ) {
-                    Text(
-                        text = "Registriraj se",
-                        color = MacroGreen,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
         }
+
+        Spacer(Modifier.height(MacroRazmaci.xxl))
+
+        PoljeUnosa(
+            vrijednost = email,
+            onPromjena = onEmail,
+            oznaka = stringResource(R.string.auth_email),
+            tipkovnica = KeyboardType.Email,
+            imeAction = ImeAction.Next,
+            sadrzaj = ContentType.EmailAddress,
+            modifier = Modifier.ulazAuth(2, animirajUlaz)
+        )
+
+        Spacer(Modifier.height(MacroRazmaci.l))
+
+        PoljeUnosa(
+            vrijednost = lozinka,
+            onPromjena = onLozinka,
+            oznaka = stringResource(R.string.auth_lozinka),
+            lozinka = true,
+            imeAction = ImeAction.Done,
+            sadrzaj = ContentType.Password,
+            keyboardActions = KeyboardActions(onDone = {
+                fokus.clearFocus()
+                if (moze) onPrijava()
+            }),
+            modifier = Modifier.ulazAuth(3, animirajUlaz)
+        )
+
+        Spacer(Modifier.height(MacroRazmaci.xl))
+
+        GumbSpremi(
+            tekst = stringResource(R.string.auth_prijava_gumb),
+            onClick = onPrijava,
+            enabled = moze,
+            sprema = ucitavanje,
+            tekstStanja = stringResource(R.string.auth_prijava_u_tijeku),
+            modifier = Modifier.ulazAuth(4, animirajUlaz)
+        )
+
+        TihaPoruka(tekst = poruka, uspjeh = false)
+
+        Spacer(Modifier.height(MacroRazmaci.s))
+
+        LinkAuth(
+            pitanje = stringResource(R.string.auth_nema_racun),
+            radnja = stringResource(R.string.auth_registriraj_link),
+            onClick = onRegistracija,
+            modifier = Modifier.ulazAuth(5, animirajUlaz)
+        )
     }
 }
+
+// ---------- Previewi ----------
+
+private const val GRESKA_PRIMJER = "Pogrešan email ili lozinka."
+
+@Composable
+private fun PreviewLogin(
+    tamna: Boolean,
+    email: String = "",
+    lozinka: String = "",
+    poruka: String? = null,
+    ucitavanje: Boolean = false
+) {
+    MacroMenzaTheme(darkTheme = tamna) {
+        LoginSadrzaj(
+            email = email,
+            onEmail = {},
+            lozinka = lozinka,
+            onLozinka = {},
+            poruka = poruka,
+            ucitavanje = ucitavanje,
+            animirajUlaz = false,
+            onPrijava = {},
+            onRegistracija = {}
+        )
+    }
+}
+
+@Preview(name = "Svijetla · prazno", widthDp = 360, heightDp = 760)
+@Composable
+private fun PreviewSvijetlaPrazno() = PreviewLogin(false)
+
+@Preview(name = "Tamna · prazno", widthDp = 360, heightDp = 760)
+@Composable
+private fun PreviewTamnaPrazno() = PreviewLogin(true)
+
+@Preview(name = "Svijetla · popunjeno", widthDp = 360, heightDp = 760)
+@Composable
+private fun PreviewSvijetlaPopunjeno() = PreviewLogin(false, "niko@student.fesb.hr", "tajna123")
+
+@Preview(name = "Tamna · popunjeno", widthDp = 360, heightDp = 760)
+@Composable
+private fun PreviewTamnaPopunjeno() = PreviewLogin(true, "niko@student.fesb.hr", "tajna123")
+
+@Preview(name = "Svijetla · prijava u tijeku", widthDp = 360, heightDp = 760)
+@Composable
+private fun PreviewSvijetlaUTijeku() = PreviewLogin(false, "niko@student.fesb.hr", "tajna123", ucitavanje = true)
+
+@Preview(name = "Tamna · prijava u tijeku", widthDp = 360, heightDp = 760)
+@Composable
+private fun PreviewTamnaUTijeku() = PreviewLogin(true, "niko@student.fesb.hr", "tajna123", ucitavanje = true)
+
+@Preview(name = "Svijetla · greška", widthDp = 360, heightDp = 760)
+@Composable
+private fun PreviewSvijetlaGreska() = PreviewLogin(false, "niko@student.fesb.hr", "kriva", GRESKA_PRIMJER)
+
+@Preview(name = "Tamna · greška", widthDp = 360, heightDp = 760)
+@Composable
+private fun PreviewTamnaGreska() = PreviewLogin(true, "niko@student.fesb.hr", "kriva", GRESKA_PRIMJER)
+
+@Preview(name = "Svijetla · greška · fontScale 1,3", widthDp = 360, heightDp = 1000, fontScale = 1.3f)
+@Composable
+private fun PreviewSvijetlaGreskaVelika() = PreviewLogin(false, "niko@student.fesb.hr", "kriva", GRESKA_PRIMJER)
+
+@Preview(name = "Tamna · greška · fontScale 1,3", widthDp = 360, heightDp = 1000, fontScale = 1.3f)
+@Composable
+private fun PreviewTamnaGreskaVelika() = PreviewLogin(true, "niko@student.fesb.hr", "kriva", GRESKA_PRIMJER)

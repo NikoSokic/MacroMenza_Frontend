@@ -375,6 +375,9 @@
     <!-- Forme (ui/components: ZaglavljePodekrana, PoljeUnosa, IzborOpcije, GumbSpremi) i objašnjenje izračuna -->
     <string name="kom_natrag">Natrag</string>
     <string name="kom_spremam">Spremam…</string>
+    <string name="kom_prikazi_lozinku">Prikaži lozinku</string>
+    <string name="kom_sakrij_lozinku">Sakrij lozinku</string>
+    <string name="kom_znak_aplikacije">M</string>
     <string name="kom_kako_smo_izracunali">Kako smo izračunali</string>
     <string name="kom_izracun_bmr">1. BMR (Mifflin-St Jeor)</string>
     <string name="kom_izracun_bmr_racun">BMR = %1$s = %2$s kcal</string>
@@ -536,4 +539,22 @@
     <string name="odakle_meniji_tekst">Meni je zbroj jela koja ga čine. Stavka označena s „≈” nema vlastitu recepturu, pa je zamijenjena sličnim jelom iz baze; ta se vrijednost ubraja u ukupni zbroj menija.</string>
     <string name="odakle_zasto">Zašto su vrijednosti okvirne</string>
     <string name="odakle_zasto_tekst">Receptura je normativ, a ne vaga: stvarna porcija može biti veća ili manja, količina ulja i način pripreme se razlikuju, a tablice namirnica su prosjeci. Zato brojevi pokazuju red veličine i trend, a ne laboratorijsku točnost.</string>
+
+    <!-- Prijava i registracija (pages/prijava.md) -->
+    <string name="auth_email">Email</string>
+    <string name="auth_lozinka">Lozinka</string>
+    <string name="auth_ponovi_lozinku">Ponovi lozinku</string>
+    <string name="auth_lozinke_ne_poklapaju">Lozinke se ne poklapaju.</string>
+    <string name="auth_prijava_naslov">Dobrodošao natrag</string>
+    <string name="auth_prijava_podnaslov">Prijavi se u svoj MacroMenza račun.</string>
+    <string name="auth_prijava_gumb">Prijavi se</string>
+    <string name="auth_prijava_u_tijeku">Prijavljujem…</string>
+    <string name="auth_nema_racun">Nemaš račun?</string>
+    <string name="auth_registriraj_link">Registriraj se</string>
+    <string name="auth_registracija_naslov">Krenimo</string>
+    <string name="auth_registracija_podnaslov">Napravi svoj MacroMenza račun.</string>
+    <string name="auth_registracija_gumb">Registriraj se</string>
+    <string name="auth_registracija_u_tijeku">Registriram…</string>
+    <string name="auth_imas_racun">Već imaš račun?</string>
+    <string name="auth_prijavi_link">Prijavi se</string>
 </resources>

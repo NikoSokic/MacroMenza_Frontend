@@ -16,7 +16,7 @@ import com.niko.macromenza.ui.theme.MacroDimenzije
 import com.niko.macromenza.ui.theme.MacroOblici
 
 /**
- * Primarni gumb forme (jedina paprika na ekranu). Dok [sprema], gumb je onemogućen i piše „Spremam…".
+ * Primarni gumb forme (jedina paprika na ekranu). Dok [sprema], gumb je onemogućen i piše „Spremam…" (ili [tekstStanja], npr. „Prijavljujem…").
  * [punaSirina] = false: gumb je širok koliko tekst (npr. u retku sažetka obroka).
  */
 @Composable
@@ -26,7 +26,8 @@ fun GumbSpremi(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     sprema: Boolean = false,
-    punaSirina: Boolean = true
+    punaSirina: Boolean = true,
+    tekstStanja: String? = null
 ) {
     val izvor = remember { MutableInteractionSource() }
     Button(
@@ -40,7 +41,7 @@ fun GumbSpremi(
             .skalaPritiska(izvor)
     ) {
         Text(
-            text = if (sprema) stringResource(R.string.kom_spremam) else tekst,
+            text = if (sprema) tekstStanja ?: stringResource(R.string.kom_spremam) else tekst,
             style = MaterialTheme.typography.labelLarge,
             textAlign = TextAlign.Center,
             maxLines = if (punaSirina) Int.MAX_VALUE else 1
