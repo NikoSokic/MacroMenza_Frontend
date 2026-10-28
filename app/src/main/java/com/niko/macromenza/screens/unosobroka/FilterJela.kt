@@ -338,8 +338,9 @@ private fun BrojPolje(vrijednost: String, onChange: (String) -> Unit, oznaka: St
         shape = MacroOblici.utor,
         textStyle = MaterialTheme.typography.bodyLarge,
         colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = shema.secondary,
-            focusedLabelColor = shema.secondary,
+            focusedBorderColor = shema.onSurface,
+            focusedLabelColor = shema.onSurface,
+            unfocusedLabelColor = shema.onSurfaceVariant,
             cursorColor = shema.onSurface,
             unfocusedBorderColor = shema.outlineVariant,
             focusedContainerColor = shema.surface,

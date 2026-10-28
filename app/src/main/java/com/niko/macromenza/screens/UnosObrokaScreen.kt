@@ -36,6 +36,7 @@ import com.niko.macromenza.R
 import com.niko.macromenza.model.Jelo
 import com.niko.macromenza.model.MeniDTO
 import com.niko.macromenza.screens.unosobroka.FilterRasponaSheet
+import com.niko.macromenza.ui.components.DijalogPotvrde
 import com.niko.macromenza.ui.components.PotvrdaBrisanjaObrokaDialog
 import com.niko.macromenza.screens.unosobroka.StanjeJela
 import com.niko.macromenza.screens.unosobroka.StanjeMenija
@@ -404,25 +405,17 @@ fun UnosObrokaScreen(
     }
 
     if (showOdbaciDialog) {
-        AlertDialog(
-            onDismissRequest = { showOdbaciDialog = false },
-            title = { Text(stringResource(R.string.uo_odbaciti_naslov)) },
-            text = { Text(stringResource(R.string.uo_odbaciti_tekst)) },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        showOdbaciDialog = false
-                        navController.popBackStack()
-                    }
-                ) {
-                    Text(stringResource(R.string.uo_odbaci), color = MaterialTheme.colorScheme.error)
-                }
+        DijalogPotvrde(
+            naslov = stringResource(R.string.uo_odbaciti_naslov),
+            tekst = stringResource(R.string.uo_odbaciti_tekst),
+            oznakaPotvrde = stringResource(R.string.uo_odbaci),
+            destruktivna = true,
+            onPotvrdi = {
+                showOdbaciDialog = false
+                navController.popBackStack()
             },
-            dismissButton = {
-                TextButton(onClick = { showOdbaciDialog = false }) {
-                    Text(stringResource(R.string.uo_nastavi))
-                }
-            }
+            onOdustani = { showOdbaciDialog = false },
+            oznakaOdustani = stringResource(R.string.uo_nastavi)
         )
     }
 
@@ -457,12 +450,12 @@ fun UnosObrokaScreen(
                         showDatePicker = false
                     }
                 ) {
-                    Text(stringResource(R.string.uo_u_redu))
+                    Text(stringResource(R.string.uo_u_redu), color = shema.onSurface)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDatePicker = false }) {
-                    Text(stringResource(R.string.uo_odustani), color = shema.onSurfaceVariant)
+                    Text(stringResource(R.string.uo_odustani), color = shema.onSurface)
                 }
             }
         ) {
@@ -511,12 +504,12 @@ fun UnosObrokaScreen(
                         showTimePicker = false
                     }
                 ) {
-                    Text(stringResource(R.string.uo_u_redu))
+                    Text(stringResource(R.string.uo_u_redu), color = shema.onSurface)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showTimePicker = false }) {
-                    Text(stringResource(R.string.uo_odustani), color = shema.onSurfaceVariant)
+                    Text(stringResource(R.string.uo_odustani), color = shema.onSurface)
                 }
             },
             text = {

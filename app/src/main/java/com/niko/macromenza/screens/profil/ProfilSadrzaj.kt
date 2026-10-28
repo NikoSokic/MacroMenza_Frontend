@@ -39,15 +39,11 @@ import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.MonitorWeight
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.Settings
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
@@ -79,6 +75,7 @@ import com.niko.macromenza.R
 import com.niko.macromenza.model.Korisnik
 import com.niko.macromenza.model.Mjerenje
 import com.niko.macromenza.model.Preporuka
+import com.niko.macromenza.ui.components.DijalogPotvrde
 import com.niko.macromenza.ui.components.Makro
 import com.niko.macromenza.ui.components.TablicniBroj
 import com.niko.macromenza.ui.components.makroKratko
@@ -272,7 +269,11 @@ fun ProfilSadrzaj(
     }
 
     if (prikaziOdjavu) {
-        OdjavaDialog(
+        DijalogPotvrde(
+            naslov = stringResource(R.string.prof_odjava_naslov),
+            tekst = stringResource(R.string.prof_odjava_tekst),
+            oznakaPotvrde = stringResource(R.string.prof_odjava),
+            destruktivna = true,
             onPotvrdi = {
                 prikaziOdjavu = false
                 akcije.onOdjava()
@@ -555,48 +556,6 @@ private fun Link(tekst: String, onClick: () -> Unit, ikona: ImageVector? = null)
         }
         Text(text = tekst, style = MaterialTheme.typography.labelLarge, color = boja)
     }
-}
-
-@Composable
-private fun OdjavaDialog(onPotvrdi: () -> Unit, onOdustani: () -> Unit) {
-    val shema = MaterialTheme.colorScheme
-    AlertDialog(
-        onDismissRequest = onOdustani,
-        shape = MacroOblici.pladanj,
-        containerColor = shema.surface,
-        title = {
-            Text(stringResource(R.string.prof_odjava_naslov), style = MaterialTheme.typography.headlineSmall, color = shema.onSurface)
-        },
-        text = {
-            Text(stringResource(R.string.prof_odjava_tekst), style = MaterialTheme.typography.bodyMedium, color = shema.onSurfaceVariant)
-        },
-        confirmButton = {
-            val izvor = remember { MutableInteractionSource() }
-            Button(
-                onClick = onPotvrdi,
-                interactionSource = izvor,
-                shape = MacroOblici.gumb,
-                colors = ButtonDefaults.buttonColors(containerColor = shema.error, contentColor = shema.onError),
-                modifier = Modifier
-                    .heightIn(min = MacroDimenzije.dodirniCilj)
-                    .skalaPritiska(izvor)
-            ) {
-                Text(stringResource(R.string.prof_odjava), style = MaterialTheme.typography.labelLarge)
-            }
-        },
-        dismissButton = {
-            val izvor = remember { MutableInteractionSource() }
-            TextButton(
-                onClick = onOdustani,
-                interactionSource = izvor,
-                modifier = Modifier
-                    .heightIn(min = MacroDimenzije.dodirniCilj)
-                    .skalaPritiska(izvor)
-            ) {
-                Text(stringResource(R.string.prof_odustani), style = MaterialTheme.typography.labelLarge, color = shema.onSurface)
-            }
-        }
-    )
 }
 
 /** Učitavanje: kostur zaglavlja, cilja i četiri reda (bez spinnera), s blagim pulsiranjem. */

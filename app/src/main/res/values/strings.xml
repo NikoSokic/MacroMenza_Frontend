@@ -371,7 +371,6 @@
     <string name="prof_odjava">Odjavi se</string>
     <string name="prof_odjava_naslov">Odjava</string>
     <string name="prof_odjava_tekst">Želiš li se odjaviti iz MacroMenze?</string>
-    <string name="prof_odustani">Odustani</string>
 
     <!-- Forme (ui/components: ZaglavljePodekrana, PoljeUnosa, IzborOpcije, GumbSpremi) i objašnjenje izračuna -->
     <string name="kom_natrag">Natrag</string>

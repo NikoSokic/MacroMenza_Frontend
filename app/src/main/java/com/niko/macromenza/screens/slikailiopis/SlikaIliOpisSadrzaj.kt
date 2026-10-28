@@ -496,7 +496,7 @@ private fun PoljeOpisa(opis: String, najvise: Int, omoguceno: Boolean, onOpis: (
             unfocusedBorderColor = shema.outlineVariant,
             disabledBorderColor = shema.outlineVariant,
             focusedLabelColor = shema.secondary,
-            cursorColor = shema.secondary
+            cursorColor = shema.onSurface
         ),
         supportingText = {
             Text(

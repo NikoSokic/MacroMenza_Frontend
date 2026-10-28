@@ -6,7 +6,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.text.selection.TextSelectionColors
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -19,7 +18,6 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import com.niko.macromenza.ui.theme.MacroOblici
-import com.niko.macromenza.ui.theme.MacroOmjeri
 import com.niko.macromenza.ui.theme.Trajanje
 import com.niko.macromenza.ui.theme.rememberSmanjeniPokret
 
@@ -119,10 +117,6 @@ private fun bojePolja(): TextFieldColors {
         disabledLabelColor = shema.onSurfaceVariant,
         disabledTextColor = shema.onSurfaceVariant,
         disabledSupportingTextColor = shema.onSurfaceVariant,
-        cursorColor = shema.onSurface,
-        selectionColors = TextSelectionColors(
-            handleColor = shema.onSurface,
-            backgroundColor = shema.onSurface.copy(alpha = MacroOmjeri.oznakaTeksta)
-        )
+        cursorColor = shema.onSurface
     )
 }

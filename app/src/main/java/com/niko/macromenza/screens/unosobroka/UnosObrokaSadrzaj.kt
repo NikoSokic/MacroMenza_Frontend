@@ -497,7 +497,7 @@ private fun PoljePretrage(
         colors = OutlinedTextFieldDefaults.colors(
             focusedContainerColor = shema.surface,
             unfocusedContainerColor = shema.surface,
-            focusedBorderColor = shema.secondary,
+            focusedBorderColor = shema.onSurface,
             unfocusedBorderColor = shema.outlineVariant,
             cursorColor = shema.onSurface,
             focusedLeadingIconColor = shema.onSurfaceVariant,

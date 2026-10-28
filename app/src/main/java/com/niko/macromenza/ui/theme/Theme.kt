@@ -1,6 +1,8 @@
 package com.niko.macromenza.ui.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.text.selection.LocalTextSelectionColors
+import androidx.compose.foundation.text.selection.TextSelectionColors
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
@@ -80,9 +82,16 @@ fun MacroMenzaTheme(
         else -> LightColorScheme
     }
 
+    // Ručice i pozadina odabira teksta u onSurface (ne paprika), za sva polja unosa u aplikaciji.
+    val odabirTeksta = TextSelectionColors(
+        handleColor = colorScheme.onSurface,
+        backgroundColor = colorScheme.onSurface.copy(alpha = MacroOmjeri.oznakaTeksta)
+    )
+
     CompositionLocalProvider(
         LocalMacroBoje provides if (darkTheme) MacroBojeTamne else MacroBojeSvijetle,
-        LocalMacroTipografija provides MacroTipografijaZadana
+        LocalMacroTipografija provides MacroTipografijaZadana,
+        LocalTextSelectionColors provides odabirTeksta
     ) {
         MaterialTheme(
             colorScheme = colorScheme,
