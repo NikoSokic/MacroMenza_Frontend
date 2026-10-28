@@ -296,4 +296,37 @@
     <string name="pov_dan_ucitavanje">Učitavanje dana</string>
     <string name="pov_natrag">Natrag</string>
     <string name="pov_detalj_dana">Detalj dana</string>
+
+    <!-- Profil (pages/profil.md) -->
+    <string name="prof_naslov">Profil</string>
+    <string name="prof_ucitavanje">Učitavanje profila</string>
+    <string name="prof_greska_naslov">Profil nije dostupan</string>
+    <string name="prof_greska_tekst">Provjeri vezu s poslužiteljem.</string>
+    <string name="prof_pokusaj_ponovno">Pokušaj ponovno</string>
+    <string name="prof_bez_imena">Ime nije upisano</string>
+    <string name="prof_uredi_profil">Uredi profil</string>
+    <string name="prof_tvoj_cilj">Tvoj cilj</string>
+    <string name="prof_cilj_mrsavljenje">Mršavljenje</string>
+    <string name="prof_cilj_odrzavanje">Održavanje težine</string>
+    <string name="prof_cilj_dobivanje_mase">Dobivanje mase</string>
+    <string name="prof_kcal_dnevno">kcal dnevno</string>
+    <string name="prof_kg_zadnja_masa">kg · zadnja masa</string>
+    <string name="prof_cilj_opis">Dnevni cilj %1$s kcal</string>
+    <string name="prof_masa_opis">Zadnja masa %1$s</string>
+    <string name="prof_preporuka">Preporuka: %1$s</string>
+    <string name="prof_cilj_nije_postavljen">Dnevni cilj nije postavljen</string>
+    <string name="prof_postavi_cilj">Postavi cilj</string>
+    <string name="prof_postavke">Postavke</string>
+    <string name="prof_postavke_ciljeva">Postavke ciljeva</string>
+    <string name="prof_postavke_ciljeva_opis">Cilj, aktivnost i dnevna preporuka</string>
+    <string name="prof_moje_mjere">Moje mjere</string>
+    <string name="prof_moje_mjere_opis">Masa kroz vrijeme i brzo mjerenje</string>
+    <string name="prof_odakle">Odakle su kalorije</string>
+    <string name="prof_odakle_opis">Recepture menze i tablice namirnica</string>
+    <string name="prof_postavke_aplikacije">Postavke aplikacije</string>
+    <string name="prof_postavke_aplikacije_opis">Tema, stanje sustava i tvoji podaci</string>
+    <string name="prof_odjava">Odjavi se</string>
+    <string name="prof_odjava_naslov">Odjava</string>
+    <string name="prof_odjava_tekst">Želiš li se odjaviti iz MacroMenze?</string>
+    <string name="prof_odustani">Odustani</string>
 </resources>

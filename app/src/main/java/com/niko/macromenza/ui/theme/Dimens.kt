@@ -70,6 +70,9 @@ object MacroDimenzije {
     /** Vodoravno povlačenje dulje od ovoga mijenja tjedan. */
     val pragListanja = 80.dp
 
+    // Profil: krug s inicijalima u zaglavlju korisnika
+    val avatarProfila = 64.dp
+
     // Redovi obroka i glif porcije
     val ikonaObroka = 40.dp
     val glifPorcije = 22.dp
