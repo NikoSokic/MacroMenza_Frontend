@@ -213,9 +213,9 @@ P1 = vidljivo korisniku, P2 = sitno.
 | `dodajProfil` (`api/ApiService.kt:213-216`) | Onboarding koristi `registracijaProfil` | `rg -w`: samo `ApiService.kt` | da (model `ProfilPodaci` ostaje, koristi se drugdje) — ✅ obrisano (korak 1) |
 | `KarticaUnosa`, `_kartica`, `kartica`, `postaviKarticu` (`viewmodel/JelaViewModel.kt:93`, `:146-147`, `:253-256`) | Ostatak starih kartica Jela/Meniji | `rg -w` izvan `JelaViewModel.kt` bez pogodaka | provjeriti (`postaviKarticu` poziva `ucitajMenije`; potvrditi da se meniji učitavaju drugim putem) |
 | `ExampleUnitTest.kt`, `ExampleInstrumentedTest.kt` (`app/src/test/…`, `app/src/androidTest/…`) | Predlošci (`assertEquals(4, 2 + 2)`) | sadržaj datoteka | provjeriti (s njima idu i `junit`/`espresso` ovisnosti) |
-| `app/release/` (`app-release.apk`, `baselineProfiles/`, `output-metadata.json`), 12 MB | Izlaz builda u gitu | `git ls-files` | da (iz gita i dodati u `.gitignore`) |
-| `.kotlin/errors/*.log` (6 datoteka) | Logovi pada Kotlin daemona u gitu | `git ls-files` | da (i `.kotlin/` u `.gitignore`) |
-| `.idea/` lokalne datoteke u gitu: `copilot.data.migration.ask2agent.xml`, `deviceManager.xml`, `deploymentTargetSelector.xml`, `appInsightsSettings.xml` | Postavke IDE-a za jedno računalo | `git ls-files .idea` | provjeriti (ostale `.idea` datoteke su uobičajene) |
+| `app/release/` (`app-release.apk`, `baselineProfiles/`, `output-metadata.json`), 12 MB | Izlaz builda u gitu | `git ls-files` | da — ✅ uklonjeno iz gita (korak 2) |
+| `.kotlin/errors/*.log` (6 datoteka) | Logovi pada Kotlin daemona u gitu | `git ls-files` | da — ✅ uklonjeno iz gita (korak 2) |
+| `.idea/` lokalne datoteke u gitu: `copilot.data.migration.ask2agent.xml`, `deviceManager.xml`, `deploymentTargetSelector.xml`, `appInsightsSettings.xml` | Postavke IDE-a za jedno računalo | `git ls-files .idea` | da — ✅ uklonjeno iz gita (korak 2); ostale `.idea` datoteke ostaju |
 | `keystore/macromenza-release.jks` u gitu | Ključ za potpis ne pripada javnom repozitoriju | `git ls-files` | **provjeriti, ne brisati sada**: treba za potpis izdanja; spada u korak 18 (vjerodajnice) |
 | `formatTipObrokaSpremljen` (`screens/ObrokSpremljenScreen.kt:209-219`) | Duplikat `nazivTipa` | usporedba s `ui/components/Tekstovi.kt:12-18` | da, u istom koraku kad se prebacuje ObrokSpremljen |
 | `ProteinBlue`, `CarbsOrange`, `FatPurple` (`SazetakObrokaBar.kt:42-44`, `JeloDetaljSheet.kt:36-38`) | Stare makro boje, duplicirane u dvije datoteke | `rg` | da, u koraku prebacivanja tih datoteka |

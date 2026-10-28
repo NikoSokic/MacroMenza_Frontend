@@ -13,3 +13,13 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Lokalno / generirano
+/app/release/
+.kotlin/
+*.apk
+*.aab
+/.idea/copilot.data.migration.ask2agent.xml
+/.idea/deviceManager.xml
+/.idea/deploymentTargetSelector.xml
+/.idea/appInsightsSettings.xml
