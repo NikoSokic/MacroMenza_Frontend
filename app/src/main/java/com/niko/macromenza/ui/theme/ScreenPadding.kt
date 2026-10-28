@@ -9,7 +9,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 object ScreenSpacing {
-    val Horizontal = 22.dp
     val TopExtra = 16.dp
 
     // prostor koji sadržaj treba ostaviti za floating bottom nav

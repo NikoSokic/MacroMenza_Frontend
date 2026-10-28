@@ -30,7 +30,6 @@ import com.niko.macromenza.model.IzracunPreporukeRequest
 import com.niko.macromenza.model.RegistracijaProfilRequest
 import com.niko.macromenza.session.UserSessionManager
 import com.niko.macromenza.ui.theme.MacroGreen
-import com.niko.macromenza.ui.theme.MacroLightGreen
 import com.niko.macromenza.util.filtrirajUnosMase
 import com.niko.macromenza.util.parsirajMasu
 import kotlinx.coroutines.launch

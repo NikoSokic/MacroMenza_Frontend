@@ -23,7 +23,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.niko.macromenza.ui.theme.MacroGreen
-import com.niko.macromenza.ui.theme.MacroLightGreen
 import com.niko.macromenza.viewmodel.AuthViewModel
 
 @Composable

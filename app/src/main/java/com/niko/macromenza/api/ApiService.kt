@@ -7,12 +7,10 @@ import com.niko.macromenza.model.JeloDetalj
 import com.niko.macromenza.model.KategorijaJela
 import com.niko.macromenza.model.PovijestDana
 import retrofit2.http.GET
-import com.niko.macromenza.model.KonzumacijaRequest
 import com.niko.macromenza.model.Tjedan
 import retrofit2.http.Body
 import retrofit2.http.POST
 import retrofit2.http.Query
-import com.niko.macromenza.model.UkupniUnos
 import com.niko.macromenza.model.Korisnik
 import com.niko.macromenza.model.ProfilPodaci
 import com.niko.macromenza.model.Mjerenje
@@ -70,11 +68,6 @@ interface ApiService {
         @Query("limit") limit: Int = 10
     ): List<CestoJedenoJelo>
 
-    @POST("api/konzumacije")
-    suspend fun spremiKonzumaciju(
-        @Body request: KonzumacijaRequest
-    )
-
     @POST("api/obroci")
     suspend fun spremiObrok(
         @Body request: ObrokRequest
@@ -117,39 +110,17 @@ interface ApiService {
         @Query("idKorisnik") idKorisnik: Long
     ): Response<Unit>
 
-    @GET("api/jela/filter")
-    suspend fun filtrirajJela(
-        @Query("minKalorije") minKalorije: Double? = null,
-        @Query("maxKalorije") maxKalorije: Double? = null,
-        @Query("minProteini") minProteini: Double? = null,
-        @Query("maxProteini") maxProteini: Double? = null,
-        @Query("minUgljikohidrati") minUgljikohidrati: Double? = null,
-        @Query("maxUgljikohidrati") maxUgljikohidrati: Double? = null,
-        @Query("minMasti") minMasti: Double? = null,
-        @Query("maxMasti") maxMasti: Double? = null
-    ): List<Jelo>
-
     @GET("api/meniji")
     suspend fun getMeniji(
         @Query("tip") tip: String? = null,
         @Query("vegetarijanski") vegetarijanski: Boolean? = null
     ): List<MeniDTO>
 
-    @GET("api/meniji/{id}")
-    suspend fun getMeni(
-        @Path("id") id: Long
-    ): MeniDTO
-
     @GET("api/konzumacije/povijest/{idKorisnik}")
     suspend fun dohvatiPovijestZaDan(
         @Path("idKorisnik") idKorisnik: Long,
         @Query("datum") datum: String
     ): PovijestDana
-
-    @GET("api/konzumacije/ukupno/{idKorisnik}")
-    suspend fun dohvatiUkupniUnos(
-        @Path("idKorisnik") idKorisnik: Long
-    ): UkupniUnos
 
     @GET("korisnici/{id}")
     suspend fun dohvatiKorisnika(
@@ -209,11 +180,6 @@ interface ApiService {
     suspend fun pronadiIliDodajKorisnikaPrekoSupabase(
         @Body korisnik: Korisnik
     ): Korisnik
-
-    @POST("profil")
-    suspend fun dodajProfil(
-        @Body profil: ProfilPodaci
-    ): ProfilPodaci
 
     @POST("korisnici/registracija-profil")
     suspend fun registracijaProfil(
