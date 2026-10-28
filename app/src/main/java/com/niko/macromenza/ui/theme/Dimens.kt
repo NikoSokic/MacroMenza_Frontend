@@ -98,6 +98,13 @@ object MacroDimenzije {
     val gumbDodaj = 32.dp
     val kosturNaziv = 14.dp
     val kosturMakro = 10.dp
+
+    // Sažetak obroka i detalj jela: ručka, prag povlačenja, najveća visina liste stavki, stupci sastojaka
+    val rucka = DpSize(32.dp, 4.dp)
+    val pragPovlacenjaSazetka = 40.dp
+    val sazetakListaMaks = 320.dp
+    val stupacGrami = 56.dp
+    val stupacKcal = 72.dp
 }
 
 /** Omjeri za crteže u Canvasu (dio promjera ili širine). */
@@ -133,4 +140,10 @@ object MacroOmjeri {
     /** Disanje praznog tanjura i pulsiranje kostura: alfa između ovih vrijednosti (kao prazni utori na Home). */
     const val disanjeMin = 0.45f
     const val disanjeMaks = 0.8f
+
+    /** Ručka sažetka obroka i sheeta: onSurfaceVariant s ovom neprozirnošću (ukras, ne nosi značenje). */
+    const val rucka = 0.4f
+
+    /** Onemogućen gumb koračnika (M3 disabled). */
+    const val onemoguceno = 0.38f
 }

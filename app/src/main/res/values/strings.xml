@@ -174,6 +174,36 @@
     <string name="uo_max">Max</string>
     <string name="uo_primijeni">Primijeni filtere</string>
     <string name="uo_resetiraj">Resetiraj filtere</string>
+    <!-- Unos obroka: sažetak obroka (paket 2) -->
+    <string name="uo_sazetak_prazno">Dodaj jelo ili meni</string>
+    <string name="uo_sazetak_kcal">kcal</string>
+    <string name="uo_sazetak_stavke_makro">%1$s · %2$s</string>
+    <string name="uo_nakon_obroka">Nakon ovog obroka: %1$s / %2$s kcal</string>
+    <string name="uo_nakon_obroka_bez_cilja">Nakon ovog obroka: %1$s kcal</string>
+    <string name="uo_preko_cilja">Preko cilja</string>
+    <string name="uo_sazetak_prikazi">Prikaži stavke obroka</string>
+    <string name="uo_sazetak_sakrij">Sakrij stavke obroka</string>
+    <string name="uo_sazetak_otvoren">stavke prikazane</string>
+    <string name="uo_sazetak_zatvoren">stavke skrivene</string>
+    <string name="uo_ukloni_stavku">Ukloni %1$s iz obroka</string>
+    <!-- Detalj jela (paket 2) -->
+    <string name="jd_po_porciji">po porciji</string>
+    <string name="jd_za_kolicinu">za %1$s</string>
+    <string name="jd_kcal">kcal</string>
+    <string name="jd_tanjur_opis">%1$s kcal, %2$s</string>
+    <string name="jd_masa">Porcija %1$s g</string>
+    <string name="jd_cijena">%1$s €</string>
+    <string name="jd_razdjelnik"> · </string>
+    <string name="jd_napomena">Napomena</string>
+    <string name="jd_sastojci">Sastojci</string>
+    <string name="jd_nema_recepture">Za ovo jelo nema recepture.</string>
+    <string name="jd_grami">%1$s g</string>
+    <string name="jd_kcal_vrijednost">%1$s kcal</string>
+    <string name="jd_okvirno">Vrijednosti su okvirne (USDA/EU tablice), izračunate iz normativa NN 120/2013.</string>
+    <string name="jd_odakle">Odakle su kalorije?</string>
+    <string name="jd_dodaj">Dodaj u obrok</string>
+    <string name="jd_pokusaj_ponovno">Pokušaj ponovno</string>
+    <string name="jd_ucitavanje">Učitavanje jela</string>
 
     <!-- Slika ili opis (sio_) -->
     <string name="sio_natrag">Natrag</string>
@@ -284,6 +314,8 @@
         <item quantity="other">%d stavki</item>
     </plurals>
     <string name="kom_odustani">Odustani</string>
+    <string name="kom_smanji_pola">Smanji za pola porcije</string>
+    <string name="kom_povecaj_pola">Povećaj za pola porcije</string>
     <!-- Povijest: kartica Dan i Detalj dana -->
     <string name="pov_datum_godina">%1$s, %2$d. %3$d. %4$d.</string>
     <string name="pov_obroci">Obroci</string>

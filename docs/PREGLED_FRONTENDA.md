@@ -27,8 +27,8 @@ Stupci: **Pladanj** = boje, tipografija, oblici i razmaci iz `ui/theme/`; **spec
 | Home (`HomeScreen.kt`, `screens/dnevnipregled/`) | da | `daily-overview.md` | sva (kostur, prazno, greška, preko cilja) | ok | ok prema kodu | otvara stari `JeloDetaljSheet` (`HomeScreen.kt:166`) |
 | Kartica Unos (`KonzumacijaScreen.kt`) | da | `meal-logging.md` | ok | ok | ok | otvara stari `JeloDetaljSheet` (`:189`); prefiks resursa `ko_` uz `uo_` |
 | Unos obroka (`UnosObrokaScreen.kt`, `screens/unosobroka/`) | djelomično | `meal-logging.md` (paket 1) | ok | ok | ok | dno ekrana je stari `SazetakObrokaBar` (`:354`), dijalog odbacivanja na zadanom M3 (`:407-427`) |
-| Sažetak obroka (`SazetakObrokaBar.kt`) | ne | nema („paket 2 još nije prebačen", `meal-logging.md:4`) | — | plava/narančasta/ljubičasta iste u obje teme (`:42-44`) | gumbi 32 i 40 dp (`:327`, `:345`, `:356`), tekst 11 sp (`:281`) | animira visinu (`:90-91`) |
-| Detalj jela (`JeloDetaljSheet.kt`) | ne | nema (paket 2) | spinner (`:114`), greška s „Pokušaj ponovno" u zelenoj (`:102`) | narančasta podloga napomene (`:270`) | gumbi 40 dp (`:399`, `:424`), tekst 11 sp (`:157`, `:377`) | koriste ga Home, kartica Unos i unos obroka |
+| Sažetak obroka (`SazetakObrokaBar.kt`) | da (korak 3) | nema („paket 2 još nije prebačen", `meal-logging.md:4`) | — | plava/narančasta/ljubičasta iste u obje teme (`:42-44`) | gumbi 32 i 40 dp (`:327`, `:345`, `:356`), tekst 11 sp (`:281`) | animira visinu (`:90-91`) |
+| Detalj jela (`JeloDetaljSheet.kt`) | da (korak 3) | nema (paket 2) | spinner (`:114`), greška s „Pokušaj ponovno" u zelenoj (`:102`) | narančasta podloga napomene (`:270`) | gumbi 40 dp (`:399`, `:424`), tekst 11 sp (`:157`, `:377`) | koriste ga Home, kartica Unos i unos obroka |
 | Obrok spremljen (`ObrokSpremljenScreen.kt`) | ne | nema | — | `Color.White` na zelenom krugu (`:108`) | — | MASTER §8 traži `Tanjur` na potvrdi spremanja, ovdje ga nema |
 | Povijest (`PovijestScreen.kt`, `screens/povijest/`) | da | `povijest.md` | sva | ok | ok | — |
 | Detalj dana (`DetaljDanaScreen.kt`) | da | `povijest.md` § Detalj dana | ok | ok | ok | tekst snackbara u kodu (`:181-182`) |
