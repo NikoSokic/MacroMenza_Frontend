@@ -432,4 +432,66 @@
     <string name="mj_promjena_cilja">Cilj: %1$s kcal (prije %2$s kcal)</string>
     <string name="mj_povijest">Povijest mjerenja</string>
     <string name="mj_red">%1$s · %2$s</string>
+
+    <!-- Postavke aplikacije (pages/profil.md § Postavke aplikacije) -->
+    <string name="post_naslov">Postavke aplikacije</string>
+    <string name="post_tema">Tema aplikacije</string>
+    <string name="post_tema_sustav">Sustav</string>
+    <string name="post_tema_sustav_opis">Prati postavku telefona</string>
+    <string name="post_tema_svijetla">Svijetla</string>
+    <string name="post_tema_tamna">Tamna</string>
+    <string name="post_status">Status sustava</string>
+    <string name="post_status_backend">Backend</string>
+    <string name="post_status_baza">Baza podataka</string>
+    <string name="post_status_baza_vrijednost">Supabase PostgreSQL</string>
+    <string name="post_status_auth">Autentifikacija</string>
+    <string name="post_status_auth_vrijednost">Supabase Auth</string>
+    <string name="post_status_radi">Radi</string>
+    <string name="post_status_nedostupno">Nedostupno</string>
+    <string name="post_status_provjera">Provjeravam…</string>
+    <string name="post_status_opis">%1$s: %2$s</string>
+    <string name="post_status_provjeri">Provjeri ponovno</string>
+    <string name="post_podaci">Moji podaci</string>
+    <string name="post_podaci_opis">Briše sve tvoje obroke, mjerenja mase i izračunate ciljeve. Račun i osnovni profil ostaju.</string>
+    <string name="post_obrisi_podatke">Obriši sve moje podatke</string>
+    <string name="post_brisanje_naslov">Obrisati sve podatke?</string>
+    <string name="post_brisanje_brise">Briše se:</string>
+    <string name="post_brisanje_obroci">svi tvoji obroci (i primjer tjedna)</string>
+    <string name="post_brisanje_mjerenja">sva mjerenja mase</string>
+    <string name="post_brisanje_ciljevi">izračunati dnevni ciljevi</string>
+    <string name="post_brisanje_ostaje">Ostaje:</string>
+    <string name="post_brisanje_racun">tvoj račun i prijava</string>
+    <string name="post_brisanje_profil">profil (spol, visina, dob)</string>
+    <string name="post_brisanje_upozorenje">Ovo se ne može poništiti. Nakon brisanja ponovno postavljaš masu i cilj.</string>
+    <string name="post_brisanje_polje">Upiši OBRIŠI za potvrdu</string>
+    <string name="post_brisanje_potvrdi">Obriši</string>
+    <string name="post_brisanje_u_tijeku">Brišem…</string>
+    <string name="post_brisanje_greska_http">Brisanje nije uspjelo (greška %1$d).</string>
+    <string name="post_brisanje_greska_veza">Brisanje nije uspjelo. Provjeri vezu s poslužiteljem.</string>
+    <string name="post_o_aplikaciji">O aplikaciji</string>
+    <string name="post_o_ime">MacroMenza</string>
+    <string name="post_o_verzija">Verzija %1$s</string>
+    <string name="post_o_opis">Aplikacija za praćenje prehrane, kalorija i makronutrijenata u menzi.</string>
+    <string name="post_o_platforma">Platforma</string>
+    <string name="post_o_platforma_vrijednost">Android</string>
+    <string name="post_o_aplikacija">Aplikacija</string>
+    <string name="post_o_aplikacija_vrijednost">MacroMenza %1$s</string>
+
+    <!-- Odakle su kalorije (pages/profil.md § Odakle su kalorije) -->
+    <string name="odakle_naslov">Odakle su kalorije</string>
+    <string name="odakle_okvirno_naslov">Vrijednosti su okvirne</string>
+    <string name="odakle_okvirno_tekst">Kalorije i makronutrijenti izračunati su iz službenih receptura menze (%1$s) i nutritivnih tablica namirnica (USDA, EU). Koristi ih kao procjenu, ne kao mjerenje.</string>
+    <string name="odakle_jela">jela</string>
+    <string name="odakle_namirnica">namirnica</string>
+    <string name="odakle_menija">menija</string>
+    <string name="odakle_brojke_opis">%1$s jela, %2$s namirnica, %3$s menija</string>
+    <string name="odakle_ucitavanje">Učitavanje brojeva</string>
+    <string name="odakle_recepture">Recepture</string>
+    <string name="odakle_recepture_tekst">Jela se računaju iz službenih receptura menze (%1$s). Za svaki sastojak uzima se količina u gramima iz recepture, a vrijednost se računa iz nutritivnih vrijednosti namirnice na 100 g (USDA i EU tablice): vrijednost na 100 g × grami ÷ 100. Zbroj svih sastojaka je vrijednost jedne porcije.</string>
+    <string name="odakle_ili">„Ili” i komadi</string>
+    <string name="odakle_ili_tekst">Kad receptura nudi alternativu („ili”), uzima se prva opcija. Za namirnice koje se mjere u komadima (kom) koristi se prosječna masa jednog komada u gramima.</string>
+    <string name="odakle_meniji">Meniji</string>
+    <string name="odakle_meniji_tekst">Meni je zbroj jela koja ga čine. Stavka označena s „≈” nema vlastitu recepturu, pa je zamijenjena sličnim jelom iz baze; ta se vrijednost ubraja u ukupni zbroj menija.</string>
+    <string name="odakle_zasto">Zašto su vrijednosti okvirne</string>
+    <string name="odakle_zasto_tekst">Receptura je normativ, a ne vaga: stvarna porcija može biti veća ili manja, količina ulja i način pripreme se razlikuju, a tablice namirnica su prosjeci. Zato brojevi pokazuju red veličine i trend, a ne laboratorijsku točnost.</string>
 </resources>

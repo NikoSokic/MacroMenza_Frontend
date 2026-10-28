@@ -400,7 +400,7 @@ private fun GreskaRed(onPonovi: () -> Unit) {
                 .heightIn(min = MacroDimenzije.dodirniCilj)
                 .skalaPritiska(izvor)
         ) {
-            Text(stringResource(R.string.mj_pokusaj_ponovno), style = MaterialTheme.typography.labelLarge, color = shema.onSurface)
+            Text(stringResource(R.string.mj_pokusaj_ponovno), style = MaterialTheme.typography.labelLarge, color = shema.primary)
         }
     }
 }

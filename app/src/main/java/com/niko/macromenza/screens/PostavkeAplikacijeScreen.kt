@@ -1,61 +1,136 @@
 package com.niko.macromenza.screens
 
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.snap
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.border
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.CloudDone
-import androidx.compose.material.icons.filled.DarkMode
-import androidx.compose.material.icons.filled.DeleteForever
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.LightMode
-import androidx.compose.material.icons.filled.Palette
-import androidx.compose.material.icons.filled.SettingsSuggest
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.CloudOff
+import androidx.compose.material.icons.rounded.DeleteForever
+import androidx.compose.material.icons.rounded.ErrorOutline
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
+import com.niko.macromenza.BuildConfig
+import com.niko.macromenza.R
 import com.niko.macromenza.api.RetrofitInstance
 import com.niko.macromenza.navigation.BottomNavItem
 import com.niko.macromenza.session.ThemeManager
 import com.niko.macromenza.session.UserSessionManager
+import com.niko.macromenza.ui.components.IzborOpcije
+import com.niko.macromenza.ui.components.KosturOblik
+import com.niko.macromenza.ui.components.Opcija
+import com.niko.macromenza.ui.components.PoljeUnosa
+import com.niko.macromenza.ui.components.ZaglavljePodekrana
 import com.niko.macromenza.ui.components.screenBottomPadding
-import com.niko.macromenza.ui.components.screenTopPadding
+import com.niko.macromenza.ui.components.skalaPritiska
 import com.niko.macromenza.ui.theme.AppTheme
-import com.niko.macromenza.ui.theme.MacroGreen
-import com.niko.macromenza.ui.theme.MacroLightGreen
-
+import com.niko.macromenza.ui.theme.MacroDimenzije
+import com.niko.macromenza.ui.theme.MacroMenzaTheme
+import com.niko.macromenza.ui.theme.MacroOblici
+import com.niko.macromenza.ui.theme.MacroRazmaci
+import com.niko.macromenza.ui.theme.Trajanje
+import com.niko.macromenza.ui.theme.macroBoje
+import com.niko.macromenza.ui.theme.rememberSmanjeniPokret
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import retrofit2.HttpException
+import java.io.IOException
+import java.util.concurrent.TimeUnit
+
+/** Riječ koju korisnik upisuje za potvrdu brisanja; backend prima "OBRISI" (bez dijakritika), kao i prije. */
+private const val POTVRDA_BRISANJA = "OBRIŠI"
+
+/**
+ * Javni health endpoint Supabase Autha (isti projekt kao u SupabaseAuthInstance). Poziv ne nosi ključ:
+ * svaki HTTP odgovor (i 401) znači da servis radi, a prekid veze da je nedostupan.
+ */
+private const val AUTH_ZDRAVLJE_URL = "https://nncjmtrxderijntybnhb.supabase.co/auth/v1/health"
+
+private const val AUTH_PROVJERA_TIMEOUT_S = 5L
+
+enum class StanjeServisa { PROVJERA, RADI, NEDOSTUPNO }
+
+/** Backend i baza: upit izvora podataka ide u bazu, pa jedan odgovor kaže za oboje. */
+private suspend fun provjeriBackend(): Pair<StanjeServisa, StanjeServisa> =
+    try {
+        RetrofitInstance.api.getIzvoriPodataka()
+        StanjeServisa.RADI to StanjeServisa.RADI
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: HttpException) {
+        // Backend je odgovorio greškom: radi, ali baza nije dala podatke.
+        StanjeServisa.RADI to StanjeServisa.NEDOSTUPNO
+    } catch (e: Exception) {
+        // Aplikacija do baze dolazi samo preko backenda, pa bez njega baza nije provjerljiva.
+        StanjeServisa.NEDOSTUPNO to StanjeServisa.NEDOSTUPNO
+    }
+
+private suspend fun provjeriAuth(): StanjeServisa = withContext(Dispatchers.IO) {
+    try {
+        val klijent = OkHttpClient.Builder().callTimeout(AUTH_PROVJERA_TIMEOUT_S, TimeUnit.SECONDS).build()
+        klijent.newCall(Request.Builder().url(AUTH_ZDRAVLJE_URL).build()).execute().use { StanjeServisa.RADI }
+    } catch (e: IOException) {
+        StanjeServisa.NEDOSTUPNO
+    }
+}
 
 @Composable
 fun PostavkeAplikacijeScreen(
     navController: NavController
 ) {
     val context = LocalContext.current
-
-    val themeManager = remember {
-        ThemeManager(context)
-    }
-
+    val themeManager = remember { ThemeManager(context) }
     val scope = rememberCoroutineScope()
-
-    val sessionManager = remember {
-        UserSessionManager(context)
-    }
-
+    val sessionManager = remember { UserSessionManager(context) }
     val korisnikId by sessionManager.korisnikId.collectAsState(initial = null)
 
     var prikaziBrisanje by remember { mutableStateOf(false) }
@@ -63,365 +138,41 @@ fun PostavkeAplikacijeScreen(
     var brisanjeUTijeku by remember { mutableStateOf(false) }
     var greskaBrisanja by remember { mutableStateOf<String?>(null) }
 
-    val spremljenaTema by
-    themeManager.theme.collectAsState(
-        initial = AppTheme.SYSTEM
-    )
+    // Dok se tema ne učita nijedna opcija nije odabrana, pa odabir ne treperi s pogrešne vrijednosti.
+    val spremljenaTema by themeManager.theme.collectAsState(initial = null)
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-    ) {
-
-        // Dekoracija
-        Box(
-            modifier = Modifier
-                .size(230.dp)
-                .offset(
-                    x = 190.dp,
-                    y = (-110).dp
-                )
-                .clip(CircleShape)
-                .background(
-                    MaterialTheme.colorScheme.primary.copy(alpha = 0.10f)
-                )
-        )
-
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(
-                    rememberScrollState()
-                )
-                .padding(horizontal = 22.dp)
-                .padding(
-                    top = screenTopPadding(),
-                    bottom = screenBottomPadding()
-                )
-        ) {
-
-            // HEADER
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-
-                Surface(
-                    onClick = {
-                        navController.popBackStack()
-                    },
-                    modifier = Modifier.size(46.dp),
-                    shape = CircleShape,
-                    color = MaterialTheme.colorScheme.primary.copy(
-                        alpha = 0.16f
-                    )
-                ) {
-                    Box(
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector =
-                                Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Nazad",
-                            tint = MacroGreen
-                        )
-                    }
-                }
-
-                Spacer(
-                    modifier = Modifier.width(14.dp)
-                )
-
-                Column(
-                    modifier = Modifier.weight(1f)
-                ) {
-
-                    Text(
-                        text = "Postavke aplikacije",
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis
-                    )
-
-                    Text(
-                        text = "Prilagodi MacroMenzu sebi",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        style = MaterialTheme.typography.bodyMedium,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
-            }
-
-            Spacer(
-                modifier = Modifier.height(28.dp)
-            )
-
-            // TEMA
-            AppSettingsCard(
-                title = "Tema aplikacije",
-                subtitle = "Odaberi izgled aplikacije",
-                icon = Icons.Default.Palette
-            ) {
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement =
-                        Arrangement.spacedBy(8.dp)
-                ) {
-
-                    ThemeOption(
-                        title = "Sustav",
-                        icon = Icons.Default.SettingsSuggest,
-                        selected =
-                            spremljenaTema ==
-                                    AppTheme.SYSTEM,
-                        onClick = {
-                            scope.launch {
-                                themeManager.saveTheme(
-                                    AppTheme.SYSTEM
-                                )
-                            }
-                        },
-                        modifier = Modifier.weight(1f)
-                    )
-
-                    ThemeOption(
-                        title = "Svijetla",
-                        icon = Icons.Default.LightMode,
-                        selected =
-                            spremljenaTema ==
-                                    AppTheme.LIGHT,
-                        onClick = {
-                            scope.launch {
-                                themeManager.saveTheme(
-                                    AppTheme.LIGHT
-                                )
-                            }
-                        },
-                        modifier = Modifier.weight(1f)
-                    )
-
-                    ThemeOption(
-                        title = "Tamna",
-                        icon = Icons.Default.DarkMode,
-                        selected =
-                            spremljenaTema ==
-                                    AppTheme.DARK,
-                        onClick = {
-                            scope.launch {
-                                themeManager.saveTheme(
-                                    AppTheme.DARK
-                                )
-                            }
-                        },
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-            }
-
-            Spacer(
-                modifier = Modifier.height(16.dp)
-            )
-
-            // STATUS
-            AppSettingsCard(
-                title = "Status sustava",
-                subtitle = "Servisi koje MacroMenza koristi",
-                icon = Icons.Default.CloudDone
-            ) {
-
-                StatusRow(
-                    title = "Backend",
-                    value = "Render",
-                    status = "Online"
-                )
-
-                Spacer(
-                    modifier = Modifier.height(14.dp)
-                )
-
-                HorizontalDivider(
-                    color =
-                        MaterialTheme.colorScheme.onSurfaceVariant.copy(
-                            alpha = 0.10f
-                        )
-                )
-
-                Spacer(
-                    modifier = Modifier.height(14.dp)
-                )
-
-                StatusRow(
-                    title = "Baza podataka",
-                    value = "Supabase PostgreSQL",
-                    status = "Povezano"
-                )
-
-                Spacer(
-                    modifier = Modifier.height(14.dp)
-                )
-
-                HorizontalDivider(
-                    color =
-                        MaterialTheme.colorScheme.onSurfaceVariant.copy(
-                            alpha = 0.10f
-                        )
-                )
-
-                Spacer(
-                    modifier = Modifier.height(14.dp)
-                )
-
-                StatusRow(
-                    title = "Autentifikacija",
-                    value = "Supabase Auth",
-                    status = "Aktivno"
-                )
-            }
-
-            Spacer(
-                modifier = Modifier.height(16.dp)
-            )
-
-            // MOJI PODACI
-            AppSettingsCard(
-                title = "Moji podaci",
-                subtitle = "Brisanje unesenih podataka",
-                icon = Icons.Default.DeleteForever
-            ) {
-
-                Text(
-                    text = "Briše sve tvoje obroke, mjerenja mase i izračunate ciljeve. " +
-                        "Račun i osnovni profil ostaju.",
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.bodyMedium
-                )
-
-                Spacer(
-                    modifier = Modifier.height(14.dp)
-                )
-
-                OutlinedButton(
-                    onClick = {
-                        potvrdaTekst = ""
-                        greskaBrisanja = null
-                        prikaziBrisanje = true
-                    },
-                    enabled = korisnikId != null,
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = MaterialTheme.colorScheme.error
-                    )
-                ) {
-                    Text(
-                        text = "Obriši sve moje podatke",
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-            }
-
-            Spacer(
-                modifier = Modifier.height(16.dp)
-            )
-
-            // O APLIKACIJI
-            AppSettingsCard(
-                title = "O aplikaciji",
-                subtitle = "Informacije o MacroMenzi",
-                icon = Icons.Default.Info
-            ) {
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-
-                    Surface(
-                        modifier = Modifier.size(58.dp),
-                        shape = RoundedCornerShape(18.dp),
-                        color =
-                            MaterialTheme.colorScheme.primary.copy(
-                                alpha = 0.20f
-                            )
-                    ) {
-                        Box(
-                            contentAlignment = Alignment.Center
-                        ) {
-
-                            Text(
-                                text = "M",
-                                fontSize = 26.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MacroGreen
-                            )
-                        }
-                    }
-
-                    Spacer(
-                        modifier = Modifier.width(14.dp)
-                    )
-
-                    Column(
-                        modifier = Modifier.weight(1f)
-                    ) {
-
-                        Text(
-                            text = "MacroMenza",
-                            fontSize = 19.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-
-                        Text(
-                            text = "Verzija 1.0",
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            style =
-                                MaterialTheme.typography
-                                    .bodySmall,
-                            maxLines = 1
-                        )
-                    }
-                }
-
-                Spacer(
-                    modifier = Modifier.height(18.dp)
-                )
-
-                Text(
-                    text =
-                        "Aplikacija za praćenje prehrane, kalorija i makronutrijenata u menzi.",
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    style =
-                        MaterialTheme.typography.bodyMedium
-                )
-
-                Spacer(
-                    modifier = Modifier.height(18.dp)
-                )
-
-                InfoRow(
-                    title = "Platforma",
-                    value = "Android"
-                )
-
-                Spacer(
-                    modifier = Modifier.height(10.dp)
-                )
-
-                InfoRow(
-                    title = "Aplikacija",
-                    value = "MacroMenza 1.0"
-                )
-            }
+    var backend by remember { mutableStateOf(StanjeServisa.PROVJERA) }
+    var baza by remember { mutableStateOf(StanjeServisa.PROVJERA) }
+    var auth by remember { mutableStateOf(StanjeServisa.PROVJERA) }
+    var provjera by remember { mutableIntStateOf(0) }
+    LaunchedEffect(provjera) {
+        backend = StanjeServisa.PROVJERA
+        baza = StanjeServisa.PROVJERA
+        auth = StanjeServisa.PROVJERA
+        launch {
+            val (b, d) = provjeriBackend()
+            backend = b
+            baza = d
         }
+        launch { auth = provjeriAuth() }
     }
+
+    PostavkeAplikacijeSadrzaj(
+        tema = spremljenaTema,
+        backend = backend,
+        baza = baza,
+        auth = auth,
+        adresaBackenda = android.net.Uri.parse(BuildConfig.BASE_URL).authority.orEmpty(),
+        brisanjeMoguce = korisnikId != null,
+        onNatrag = { navController.popBackStack() },
+        onTema = { tema -> scope.launch { themeManager.saveTheme(tema) } },
+        onProvjeri = { provjera++ },
+        onBrisanje = {
+            potvrdaTekst = ""
+            greskaBrisanja = null
+            prikaziBrisanje = true
+        }
+    )
 
     if (prikaziBrisanje) {
         BrisanjePodatakaDialog(
@@ -441,7 +192,7 @@ fun PostavkeAplikacijeScreen(
                         val odgovor = RetrofitInstance.api.obrisiSvePodatke(id, "OBRISI")
 
                         if (!odgovor.isSuccessful) {
-                            greskaBrisanja = "Brisanje nije uspjelo (greška ${odgovor.code()})."
+                            greskaBrisanja = context.getString(R.string.post_brisanje_greska_http, odgovor.code())
                             return@launch
                         }
 
@@ -463,7 +214,7 @@ fun PostavkeAplikacijeScreen(
                             }
                         }
                     } catch (e: Exception) {
-                        greskaBrisanja = "Brisanje nije uspjelo. Provjeri vezu s poslužiteljem."
+                        greskaBrisanja = context.getString(R.string.post_brisanje_greska_veza)
                     } finally {
                         brisanjeUTijeku = false
                     }
@@ -474,6 +225,247 @@ fun PostavkeAplikacijeScreen(
 }
 
 @Composable
+private fun PostavkeAplikacijeSadrzaj(
+    tema: AppTheme?,
+    backend: StanjeServisa,
+    baza: StanjeServisa,
+    auth: StanjeServisa,
+    adresaBackenda: String,
+    brisanjeMoguce: Boolean,
+    onNatrag: () -> Unit,
+    onTema: (AppTheme) -> Unit,
+    onProvjeri: () -> Unit,
+    onBrisanje: () -> Unit
+) {
+    val shema = MaterialTheme.colorScheme
+    val tip = MaterialTheme.typography
+
+    val teme = listOf(
+        Opcija<AppTheme?>(AppTheme.SYSTEM, stringResource(R.string.post_tema_sustav), stringResource(R.string.post_tema_sustav_opis)),
+        Opcija<AppTheme?>(AppTheme.LIGHT, stringResource(R.string.post_tema_svijetla)),
+        Opcija<AppTheme?>(AppTheme.DARK, stringResource(R.string.post_tema_tamna))
+    )
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(shema.background)
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = MacroRazmaci.rubEkrana)
+            .padding(bottom = screenBottomPadding())
+    ) {
+        ZaglavljePodekrana(naslov = stringResource(R.string.post_naslov), onNatrag = onNatrag)
+
+        NaslovSekcije(stringResource(R.string.post_tema), prva = true)
+        IzborOpcije(opcije = teme, odabrana = tema, onOdabir = { it?.let(onTema) })
+
+        NaslovSekcije(stringResource(R.string.post_status))
+        RedStatusa(stringResource(R.string.post_status_backend), adresaBackenda, backend)
+        HorizontalDivider(thickness = MacroDimenzije.linija, color = shema.outlineVariant)
+        RedStatusa(stringResource(R.string.post_status_baza), stringResource(R.string.post_status_baza_vrijednost), baza)
+        HorizontalDivider(thickness = MacroDimenzije.linija, color = shema.outlineVariant)
+        RedStatusa(stringResource(R.string.post_status_auth), stringResource(R.string.post_status_auth_vrijednost), auth)
+        val izvor = remember { MutableInteractionSource() }
+        TextButton(
+            onClick = onProvjeri,
+            enabled = listOf(backend, baza, auth).none { it == StanjeServisa.PROVJERA },
+            interactionSource = izvor,
+            modifier = Modifier
+                .heightIn(min = MacroDimenzije.dodirniCilj)
+                .skalaPritiska(izvor)
+        ) {
+            Text(stringResource(R.string.post_status_provjeri), style = tip.labelLarge, color = shema.onSurface)
+        }
+
+        NaslovSekcije(stringResource(R.string.post_podaci))
+        Text(
+            text = stringResource(R.string.post_podaci_opis),
+            style = tip.bodyMedium,
+            color = shema.onSurfaceVariant
+        )
+        val izvorBrisanja = remember { MutableInteractionSource() }
+        Button(
+            onClick = onBrisanje,
+            enabled = brisanjeMoguce,
+            interactionSource = izvorBrisanja,
+            shape = MacroOblici.gumb,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = shema.secondaryContainer,
+                contentColor = shema.error,
+                disabledContainerColor = shema.secondaryContainer,
+                disabledContentColor = shema.onSurfaceVariant
+            ),
+            modifier = Modifier
+                .padding(top = MacroRazmaci.l)
+                .fillMaxWidth()
+                .heightIn(min = MacroDimenzije.dodirniCilj)
+                .skalaPritiska(izvorBrisanja)
+        ) {
+            Icon(Icons.Rounded.DeleteForever, contentDescription = null, modifier = Modifier.size(MacroDimenzije.ikona))
+            Spacer(Modifier.width(MacroRazmaci.s))
+            Text(stringResource(R.string.post_obrisi_podatke), style = tip.labelLarge)
+        }
+
+        NaslovSekcije(stringResource(R.string.post_o_aplikaciji))
+        OAplikaciji()
+    }
+}
+
+@Composable
+private fun NaslovSekcije(tekst: String, prva: Boolean = false) {
+    Text(
+        text = tekst,
+        style = MaterialTheme.typography.headlineSmall,
+        color = MaterialTheme.colorScheme.onSurface,
+        modifier = Modifier
+            .padding(
+                top = if (prva) MacroRazmaci.xl else MacroRazmaci.iznadSekcije,
+                bottom = MacroRazmaci.ispodNaslovaSekcije
+            )
+            .semantics { heading() }
+    )
+}
+
+/** Red servisa: naziv i prigušena vrijednost lijevo, desno marker (ikona ili kostur točke) i tekst stanja. */
+@Composable
+private fun RedStatusa(naziv: String, vrijednost: String, stanje: StanjeServisa) {
+    val shema = MaterialTheme.colorScheme
+    val smanjeno = rememberSmanjeniPokret()
+    val tekstStanja = stringResource(
+        when (stanje) {
+            StanjeServisa.PROVJERA -> R.string.post_status_provjera
+            StanjeServisa.RADI -> R.string.post_status_radi
+            StanjeServisa.NEDOSTUPNO -> R.string.post_status_nedostupno
+        }
+    )
+    val opis = stringResource(R.string.post_status_opis, naziv, tekstStanja)
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = MacroDimenzije.dodirniCilj)
+            .padding(vertical = MacroRazmaci.m)
+            .clearAndSetSemantics { contentDescription = opis },
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(text = naziv, style = MaterialTheme.typography.bodyLarge, color = shema.onSurface)
+            Text(text = vrijednost, style = MaterialTheme.typography.bodySmall, color = shema.onSurfaceVariant)
+        }
+        Spacer(Modifier.width(MacroRazmaci.m))
+        Crossfade(
+            targetState = stanje,
+            animationSpec = if (smanjeno) snap() else tween(Trajanje.kratko),
+            label = "stanjeServisa"
+        ) { s ->
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                when (s) {
+                    StanjeServisa.PROVJERA -> KosturOblik(Modifier.size(MacroDimenzije.ikonaMala), CircleShape)
+                    StanjeServisa.RADI -> Icon(
+                        Icons.Rounded.Check, contentDescription = null,
+                        tint = MaterialTheme.macroBoje.lukIspuna, modifier = Modifier.size(MacroDimenzije.ikonaMala)
+                    )
+                    StanjeServisa.NEDOSTUPNO -> Icon(
+                        Icons.Rounded.CloudOff, contentDescription = null,
+                        tint = shema.error, modifier = Modifier.size(MacroDimenzije.ikonaMala)
+                    )
+                }
+                Spacer(Modifier.width(MacroRazmaci.s))
+                Text(
+                    text = tekstStanja,
+                    style = MaterialTheme.typography.labelLarge,
+                    color = when (s) {
+                        StanjeServisa.PROVJERA -> shema.onSurfaceVariant
+                        StanjeServisa.RADI -> MaterialTheme.macroBoje.lukIspuna
+                        StanjeServisa.NEDOSTUPNO -> shema.error
+                    }
+                )
+            }
+        }
+    }
+}
+
+/** „M” u Frauncesu na porculanskom krugu (kao inicijali u Profilu), pa opis i parovi oznaka–vrijednost. */
+@Composable
+private fun OAplikaciji() {
+    val shema = MaterialTheme.colorScheme
+    val tip = MaterialTheme.typography
+    val verzija = BuildConfig.VERSION_NAME
+
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Box(
+            modifier = Modifier
+                .size(MacroDimenzije.avatarProfila)
+                .background(shema.surface, CircleShape)
+                .border(MacroDimenzije.linija, shema.outlineVariant, CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "M",
+                style = tip.headlineSmall,
+                color = shema.onSurface,
+                modifier = Modifier.clearAndSetSemantics { }
+            )
+        }
+        Spacer(Modifier.width(MacroRazmaci.l))
+        Column {
+            Text(text = stringResource(R.string.post_o_ime), style = tip.titleMedium, color = shema.onSurface)
+            Text(
+                text = stringResource(R.string.post_o_verzija, verzija),
+                style = tip.bodySmall,
+                color = shema.onSurfaceVariant
+            )
+        }
+    }
+
+    Text(
+        text = stringResource(R.string.post_o_opis),
+        style = tip.bodyMedium,
+        color = shema.onSurfaceVariant,
+        modifier = Modifier.padding(top = MacroRazmaci.l)
+    )
+
+    Column(modifier = Modifier.padding(top = MacroRazmaci.s)) {
+        ParOznakaVrijednost(stringResource(R.string.post_o_platforma), stringResource(R.string.post_o_platforma_vrijednost))
+        HorizontalDivider(thickness = MacroDimenzije.linija, color = shema.outlineVariant)
+        ParOznakaVrijednost(
+            stringResource(R.string.post_o_aplikacija),
+            stringResource(R.string.post_o_aplikacija_vrijednost, verzija)
+        )
+    }
+}
+
+@Composable
+private fun ParOznakaVrijednost(oznaka: String, vrijednost: String) {
+    val shema = MaterialTheme.colorScheme
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = MacroDimenzije.dodirniCilj)
+            .padding(vertical = MacroRazmaci.m)
+            .semantics(mergeDescendants = true) { },
+        verticalAlignment = Alignment.Top
+    ) {
+        Text(
+            text = oznaka,
+            style = MaterialTheme.typography.bodyMedium,
+            color = shema.onSurfaceVariant,
+            modifier = Modifier.weight(1f)
+        )
+        Spacer(Modifier.width(MacroRazmaci.m))
+        Text(
+            text = vrijednost,
+            style = MaterialTheme.typography.bodyMedium,
+            color = shema.onSurface,
+            textAlign = TextAlign.End,
+            modifier = Modifier.weight(1f)
+        )
+    }
+}
+
+// ---------- Dijalog brisanja ----------
+
+@Composable
 private fun BrisanjePodatakaDialog(
     potvrdaTekst: String,
     onPotvrdaTekst: (String) -> Unit,
@@ -482,383 +474,235 @@ private fun BrisanjePodatakaDialog(
     onObrisi: () -> Unit,
     onOdustani: () -> Unit
 ) {
-    AlertDialog(
-        onDismissRequest = { if (!brisanjeUTijeku) onOdustani() },
-        shape = RoundedCornerShape(26.dp),
-        title = {
-            Text(
-                text = "Obrisati sve podatke?",
-                fontWeight = FontWeight.Bold
+    Dialog(onDismissRequest = { if (!brisanjeUTijeku) onOdustani() }) {
+        Surface(shape = MacroOblici.pladanj, color = MaterialTheme.colorScheme.surface) {
+            BrisanjePodatakaSadrzaj(
+                potvrdaTekst = potvrdaTekst,
+                onPotvrdaTekst = onPotvrdaTekst,
+                brisanjeUTijeku = brisanjeUTijeku,
+                greska = greska,
+                onObrisi = onObrisi,
+                onOdustani = onOdustani
             )
-        },
-        text = {
-            Column {
-                Text(
-                    text = "Briše se:",
-                    fontWeight = FontWeight.SemiBold
-                )
-                Text("• svi tvoji obroci (i primjer tjedna)\n• sva mjerenja mase\n• izračunati dnevni ciljevi")
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                Text(
-                    text = "Ostaje:",
-                    fontWeight = FontWeight.SemiBold
-                )
-                Text("• tvoj račun i prijava\n• profil (spol, visina, dob)")
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                Text(
-                    text = "Ovo se ne može poništiti. Nakon brisanja ponovno postavljaš masu i cilj.",
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall
-                )
-
-                Spacer(modifier = Modifier.height(14.dp))
-
-                OutlinedTextField(
-                    value = potvrdaTekst,
-                    onValueChange = onPotvrdaTekst,
-                    label = { Text("Upiši OBRIŠI za potvrdu") },
-                    singleLine = true,
-                    enabled = !brisanjeUTijeku,
-                    shape = RoundedCornerShape(14.dp),
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                greska?.let {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = it,
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(
-                onClick = onObrisi,
-                enabled = potvrdaTekst.trim() == "OBRIŠI" && !brisanjeUTijeku
-            ) {
-                if (brisanjeUTijeku) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(18.dp),
-                        strokeWidth = 2.dp
-                    )
-                } else {
-                    Text(
-                        text = "Obriši",
-                        color = if (potvrdaTekst.trim() == "OBRIŠI") {
-                            MaterialTheme.colorScheme.error
-                        } else {
-                            MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
-                        },
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
-        },
-        dismissButton = {
-            TextButton(
-                onClick = onOdustani,
-                enabled = !brisanjeUTijeku
-            ) {
-                Text("Odustani", color = MacroGreen)
-            }
-        }
-    )
-}
-
-@Composable
-private fun AppSettingsCard(
-    title: String,
-    subtitle: String,
-    icon: ImageVector,
-    content: @Composable ColumnScope.() -> Unit
-) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
-        color = MaterialTheme.colorScheme.surface,
-        tonalElevation = 1.dp
-    ) {
-
-        Column(
-            modifier = Modifier.padding(18.dp)
-        ) {
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-
-                Surface(
-                    modifier = Modifier.size(46.dp),
-                    shape = RoundedCornerShape(15.dp),
-                    color =
-                        MaterialTheme.colorScheme.primary.copy(
-                            alpha = 0.18f
-                        )
-                ) {
-                    Box(
-                        contentAlignment = Alignment.Center
-                    ) {
-
-                        Icon(
-                            imageVector = icon,
-                            contentDescription = null,
-                            tint = MacroGreen,
-                            modifier = Modifier.size(23.dp)
-                        )
-                    }
-                }
-
-                Spacer(
-                    modifier = Modifier.width(12.dp)
-                )
-
-                Column(
-                    modifier = Modifier.weight(1f)
-                ) {
-
-                    Text(
-                        text = title,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-
-                    Spacer(
-                        modifier = Modifier.height(2.dp)
-                    )
-
-                    Text(
-                        text = subtitle,
-                        style =
-                            MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
-            }
-
-            Spacer(
-                modifier = Modifier.height(20.dp)
-            )
-
-            content()
         }
     }
 }
 
+/** Sadržaj dijaloga bez prozora, da se može pregledati u previewu. */
 @Composable
-private fun ThemeOption(
-    title: String,
-    icon: ImageVector,
-    selected: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
+private fun BrisanjePodatakaSadrzaj(
+    potvrdaTekst: String,
+    onPotvrdaTekst: (String) -> Unit,
+    brisanjeUTijeku: Boolean,
+    greska: String?,
+    onObrisi: () -> Unit,
+    onOdustani: () -> Unit
 ) {
-    Surface(
-        onClick = onClick,
-        modifier = modifier.heightIn(
-            min = 90.dp
-        ),
-        shape = RoundedCornerShape(18.dp),
-        color =
-            if (selected) {
-                MaterialTheme.colorScheme.primary.copy(
-                    alpha = 0.22f
-                )
-            } else {
-                MaterialTheme.colorScheme.background
-            },
-        border =
-            if (selected) {
-                androidx.compose.foundation.BorderStroke(
-                    width = 1.5.dp,
-                    color = MacroGreen
-                )
-            } else {
-                androidx.compose.foundation.BorderStroke(
-                    width = 1.dp,
-                    color =
-                        MaterialTheme.colorScheme.onSurfaceVariant.copy(
-                            alpha = 0.15f
-                        )
-                )
-            }
-    ) {
+    val shema = MaterialTheme.colorScheme
+    val tip = MaterialTheme.typography
+    val potvrdeno = potvrdaTekst.trim() == POTVRDA_BRISANJA
+
+    Column(modifier = Modifier.padding(MacroRazmaci.xl)) {
+        Text(
+            text = stringResource(R.string.post_brisanje_naslov),
+            style = tip.headlineSmall,
+            color = shema.onSurface,
+            modifier = Modifier.semantics { heading() }
+        )
 
         Column(
             modifier = Modifier
+                .weight(1f, fill = false)
+                .padding(top = MacroRazmaci.l)
+                .verticalScroll(rememberScrollState())
+        ) {
+            Text(stringResource(R.string.post_brisanje_brise), style = tip.titleSmall, color = shema.onSurface)
+            Natuknica(stringResource(R.string.post_brisanje_obroci))
+            Natuknica(stringResource(R.string.post_brisanje_mjerenja))
+            Natuknica(stringResource(R.string.post_brisanje_ciljevi))
+
+            Text(
+                text = stringResource(R.string.post_brisanje_ostaje),
+                style = tip.titleSmall,
+                color = shema.onSurface,
+                modifier = Modifier.padding(top = MacroRazmaci.m)
+            )
+            Natuknica(stringResource(R.string.post_brisanje_racun))
+            Natuknica(stringResource(R.string.post_brisanje_profil))
+
+            Text(
+                text = stringResource(R.string.post_brisanje_upozorenje),
+                style = tip.bodySmall,
+                color = shema.error,
+                modifier = Modifier.padding(top = MacroRazmaci.m)
+            )
+
+            PoljeUnosa(
+                vrijednost = potvrdaTekst,
+                onPromjena = onPotvrdaTekst,
+                oznaka = stringResource(R.string.post_brisanje_polje),
+                enabled = !brisanjeUTijeku,
+                imeAction = ImeAction.Done,
+                modifier = Modifier.padding(top = MacroRazmaci.l)
+            )
+
+            greska?.let {
+                Row(
+                    modifier = Modifier.padding(top = MacroRazmaci.s),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        Icons.Rounded.ErrorOutline, contentDescription = null,
+                        tint = shema.error, modifier = Modifier.size(MacroDimenzije.ikonaMala)
+                    )
+                    Spacer(Modifier.width(MacroRazmaci.s))
+                    Text(text = it, style = tip.bodySmall, color = shema.error)
+                }
+            }
+        }
+
+        Row(
+            modifier = Modifier
                 .fillMaxWidth()
-                .padding(
-                    horizontal = 6.dp,
-                    vertical = 14.dp
-                ),
-            horizontalAlignment =
-                Alignment.CenterHorizontally,
-            verticalArrangement =
-                Arrangement.Center
+                .padding(top = MacroRazmaci.l),
+            horizontalArrangement = Arrangement.spacedBy(MacroRazmaci.s, Alignment.End),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint =
-                    if (selected) {
-                        MacroGreen
-                    } else {
-                        MaterialTheme.colorScheme.onSurfaceVariant
-                    },
-                modifier = Modifier.size(25.dp)
-            )
-
-            Spacer(
-                modifier = Modifier.height(8.dp)
-            )
-
-            Text(
-                text = title,
-                fontWeight =
-                    if (selected) {
-                        FontWeight.SemiBold
-                    } else {
-                        FontWeight.Normal
-                    },
-                color =
-                    if (selected) {
-                        MacroGreen
-                    } else {
-                        MaterialTheme.colorScheme.onSurface
-                    },
-                fontSize = 13.sp,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                textAlign = TextAlign.Center
-            )
-        }
-    }
-}
-
-@Composable
-private fun StatusRow(
-    title: String,
-    value: String,
-    status: String
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-
-        Column(
-            modifier = Modifier.weight(1f)
-        ) {
-
-            Text(
-                text = title,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontSize = 12.sp,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-
-            Spacer(
-                modifier = Modifier.height(2.dp)
-            )
-
-            Text(
-                text = value,
-                color = MaterialTheme.colorScheme.onSurface,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 15.sp,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
-            )
-        }
-
-        Spacer(
-            modifier = Modifier.width(10.dp)
-        )
-
-        Surface(
-            shape = RoundedCornerShape(50),
-            color =
-                MaterialTheme.colorScheme.primary.copy(
-                    alpha = 0.22f
-                )
-        ) {
-
-            Row(
-                modifier = Modifier.padding(
-                    horizontal = 10.dp,
-                    vertical = 6.dp
-                ),
-                verticalAlignment = Alignment.CenterVertically
+            val izvorOdustani = remember { MutableInteractionSource() }
+            TextButton(
+                onClick = onOdustani,
+                enabled = !brisanjeUTijeku,
+                interactionSource = izvorOdustani,
+                modifier = Modifier
+                    .heightIn(min = MacroDimenzije.dodirniCilj)
+                    .skalaPritiska(izvorOdustani)
             ) {
-
-                Box(
-                    modifier = Modifier
-                        .size(7.dp)
-                        .clip(CircleShape)
-                        .background(MacroGreen)
-                )
-
-                Spacer(
-                    modifier = Modifier.width(6.dp)
-                )
-
+                Text(stringResource(R.string.kom_odustani), style = tip.labelLarge, color = shema.onSurface)
+            }
+            val izvorObrisi = remember { MutableInteractionSource() }
+            Button(
+                onClick = onObrisi,
+                enabled = potvrdeno && !brisanjeUTijeku,
+                interactionSource = izvorObrisi,
+                shape = MacroOblici.gumb,
+                colors = ButtonDefaults.buttonColors(containerColor = shema.error, contentColor = shema.onError),
+                modifier = Modifier
+                    .heightIn(min = MacroDimenzije.dodirniCilj)
+                    .skalaPritiska(izvorObrisi)
+            ) {
                 Text(
-                    text = status,
-                    color = MacroGreen,
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    maxLines = 1
+                    text = stringResource(if (brisanjeUTijeku) R.string.post_brisanje_u_tijeku else R.string.post_brisanje_potvrdi),
+                    style = tip.labelLarge
                 )
             }
         }
     }
 }
 
+/** Natuknica s visećom uvlakom: tekst se prelama ispod teksta, ne ispod točke. */
 @Composable
-private fun InfoRow(
-    title: String,
-    value: String
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.Top
-    ) {
-
+private fun Natuknica(tekst: String) {
+    Row(modifier = Modifier.padding(top = MacroRazmaci.xs)) {
         Text(
-            text = title,
-            modifier = Modifier.weight(1f),
+            text = "•",
+            style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            fontSize = 13.sp,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis
+            modifier = Modifier.clearAndSetSemantics { }
         )
+        Spacer(Modifier.width(MacroRazmaci.s))
+        Text(text = tekst, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface)
+    }
+}
 
-        Spacer(
-            modifier = Modifier.width(12.dp)
-        )
+// ---------- Previewi ----------
 
-        Text(
-            text = value,
-            modifier = Modifier.weight(1f),
-            color = MaterialTheme.colorScheme.onSurface,
-            fontWeight = FontWeight.Medium,
-            fontSize = 13.sp,
-            textAlign = TextAlign.End,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis
+@Composable
+private fun PreviewOkvir(
+    tamna: Boolean,
+    tema: AppTheme? = AppTheme.SYSTEM,
+    backend: StanjeServisa = StanjeServisa.RADI,
+    baza: StanjeServisa = StanjeServisa.RADI,
+    auth: StanjeServisa = StanjeServisa.RADI
+) {
+    MacroMenzaTheme(darkTheme = tamna) {
+        PostavkeAplikacijeSadrzaj(
+            tema = tema,
+            backend = backend,
+            baza = baza,
+            auth = auth,
+            adresaBackenda = "10.0.2.2:8080",
+            brisanjeMoguce = true,
+            onNatrag = {},
+            onTema = {},
+            onProvjeri = {},
+            onBrisanje = {}
         )
     }
 }
+
+@Composable
+private fun PreviewDijalog(tamna: Boolean, tekst: String, ucitava: Boolean = false, greska: String? = null) {
+    MacroMenzaTheme(darkTheme = tamna) {
+        Box(Modifier.background(MaterialTheme.colorScheme.background).padding(MacroRazmaci.l)) {
+            Surface(shape = MacroOblici.pladanj, color = MaterialTheme.colorScheme.surface) {
+                BrisanjePodatakaSadrzaj(
+                    potvrdaTekst = tekst,
+                    onPotvrdaTekst = {},
+                    brisanjeUTijeku = ucitava,
+                    greska = greska,
+                    onObrisi = {},
+                    onOdustani = {}
+                )
+            }
+        }
+    }
+}
+
+private const val VISINA_PREVIEWA = 1500
+
+@Preview(name = "Svijetla · svi rade", widthDp = 360, heightDp = VISINA_PREVIEWA)
+@Composable
+private fun PreviewSvijetlaRadi() = PreviewOkvir(false)
+
+@Preview(name = "Tamna · svi rade", widthDp = 360, heightDp = VISINA_PREVIEWA)
+@Composable
+private fun PreviewTamnaRadi() = PreviewOkvir(true, AppTheme.DARK)
+
+@Preview(name = "Svijetla · jedan nedostupan", widthDp = 360, heightDp = VISINA_PREVIEWA)
+@Composable
+private fun PreviewSvijetlaNedostupan() = PreviewOkvir(false, AppTheme.LIGHT, auth = StanjeServisa.NEDOSTUPNO)
+
+@Preview(name = "Tamna · backend nedostupan", widthDp = 360, heightDp = VISINA_PREVIEWA)
+@Composable
+private fun PreviewTamnaNedostupan() =
+    PreviewOkvir(true, AppTheme.DARK, StanjeServisa.NEDOSTUPNO, StanjeServisa.NEDOSTUPNO, StanjeServisa.RADI)
+
+@Preview(name = "Svijetla · provjera", widthDp = 360, heightDp = VISINA_PREVIEWA)
+@Composable
+private fun PreviewSvijetlaProvjera() =
+    PreviewOkvir(false, null, StanjeServisa.PROVJERA, StanjeServisa.PROVJERA, StanjeServisa.PROVJERA)
+
+@Preview(name = "Svijetla · dijalog", widthDp = 360, heightDp = 640)
+@Composable
+private fun PreviewSvijetlaDijalog() = PreviewDijalog(false, "OBRIŠ")
+
+@Preview(name = "Tamna · dijalog potvrđen", widthDp = 360, heightDp = 640)
+@Composable
+private fun PreviewTamnaDijalog() = PreviewDijalog(true, "OBRIŠI")
+
+@Preview(name = "Svijetla · dijalog brisanje u tijeku", widthDp = 360, heightDp = 640)
+@Composable
+private fun PreviewSvijetlaDijalogBrisanje() = PreviewDijalog(false, "OBRIŠI", ucitava = true)
+
+@Preview(name = "Tamna · dijalog greška", widthDp = 360, heightDp = 700)
+@Composable
+private fun PreviewTamnaDijalogGreska() =
+    PreviewDijalog(true, "OBRIŠI", greska = "Brisanje nije uspjelo. Provjeri vezu s poslužiteljem.")
+
+@Preview(name = "Svijetla · jedan nedostupan · fontScale 1,3", widthDp = 360, heightDp = 2000, fontScale = 1.3f)
+@Composable
+private fun PreviewVelikiFontPostavke() = PreviewOkvir(false, AppTheme.LIGHT, auth = StanjeServisa.NEDOSTUPNO)
+
+@Preview(name = "Tamna · dijalog · fontScale 1,3", widthDp = 360, heightDp = 900, fontScale = 1.3f)
+@Composable
+private fun PreviewVelikiFontDijalog() = PreviewDijalog(true, "OBRIŠI")
