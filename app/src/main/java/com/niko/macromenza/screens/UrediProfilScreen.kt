@@ -1,32 +1,66 @@
 package com.niko.macromenza.screens
 
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.snap
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.niko.macromenza.R
 import com.niko.macromenza.session.UserSessionManager
+import com.niko.macromenza.ui.components.GumbSpremi
+import com.niko.macromenza.ui.components.IzborOpcije
+import com.niko.macromenza.ui.components.Opcija
+import com.niko.macromenza.ui.components.PoljeUnosa
+import com.niko.macromenza.ui.components.ZaglavljePodekrana
 import com.niko.macromenza.ui.components.screenBottomPadding
-import com.niko.macromenza.ui.components.screenTopPadding
-import com.niko.macromenza.ui.theme.MacroGreen
+import com.niko.macromenza.ui.theme.MacroMenzaTheme
+import com.niko.macromenza.ui.theme.MacroRazmaci
+import com.niko.macromenza.ui.theme.Trajanje
+import com.niko.macromenza.ui.theme.rememberSmanjeniPokret
 import com.niko.macromenza.viewmodel.ProfilViewModel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+
+/** Poruka uspjeha iz [ProfilViewModel.spremiProfil]; sve ostale poruke su greške. */
+private const val PORUKA_USPJEHA = "Profil spremljen"
 
 @Composable
 fun UrediProfilScreen(
@@ -38,23 +72,20 @@ fun UrediProfilScreen(
     val poruka by viewModel.poruka.collectAsState()
 
     val context = LocalContext.current
+    val sessionManager = remember { UserSessionManager(context) }
+    val prijavljeniKorisnikId by sessionManager.korisnikId.collectAsState(initial = null)
 
-    val sessionManager = remember {
-        UserSessionManager(context)
-    }
-
-    val prijavljeniKorisnikId by
-    sessionManager.korisnikId.collectAsState(initial = null)
-
-    var ime by remember { mutableStateOf("") }
-    var prezime by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") }
-    var spol by remember { mutableStateOf("M") }
+    var ime by rememberSaveable { mutableStateOf("") }
+    var prezime by rememberSaveable { mutableStateOf("") }
+    var email by rememberSaveable { mutableStateOf("") }
+    var spol by rememberSaveable { mutableStateOf("M") }
+    var pokusanoSpremanje by rememberSaveable { mutableStateOf(false) }
+    var cekaSpremanje by remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
+    val spremljeno = stringResource(R.string.prof_urp_spremljeno)
 
     LaunchedEffect(prijavljeniKorisnikId) {
-        prijavljeniKorisnikId?.let { id ->
-            viewModel.ucitajProfil(id)
-        }
+        prijavljeniKorisnikId?.let { id -> viewModel.ucitajProfil(id) }
     }
 
     LaunchedEffect(korisnik, profil) {
@@ -63,405 +94,243 @@ fun UrediProfilScreen(
             prezime = it.prezime
             email = it.email
         }
+        profil?.let { spol = it.spol }
+    }
 
-        profil?.let {
-            spol = it.spol
+    // Nakon uspješnog spremanja ViewModel ponovno učitava profil (ucitava true → false); poruka uspjeha
+    // se odmah briše, pa je taj ciklus jedini pouzdan znak uspjeha. Tada snackbar i povratak.
+    LaunchedEffect(cekaSpremanje) {
+        if (!cekaSpremanje) return@LaunchedEffect
+        viewModel.ucitava.first { it }
+        viewModel.ucitava.first { !it }
+        if (viewModel.poruka.value == null) {
+            launch { snackbarHostState.showSnackbar(spremljeno) }
+            delay(Trajanje.porukaPrijePovratka.toLong())
+            navController.popBackStack()
+        } else {
+            cekaSpremanje = false
         }
     }
 
-    Box(
+    val greska = poruka?.takeIf { it != PORUKA_USPJEHA }
+    LaunchedEffect(greska) {
+        if (greska != null) cekaSpremanje = false
+    }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        UrediProfilSadrzaj(
+            ime = ime,
+            prezime = prezime,
+            email = email,
+            spol = spol,
+            greskaIme = pokusanoSpremanje && ime.isBlank(),
+            greska = greska,
+            mozeSpremiti = korisnik != null && prijavljeniKorisnikId != null,
+            onIme = { ime = it },
+            onPrezime = { prezime = it },
+            onSpol = { spol = it },
+            onNatrag = { navController.popBackStack() },
+            onSpremi = {
+                pokusanoSpremanje = true
+                val id = prijavljeniKorisnikId ?: return@UrediProfilSadrzaj
+                if (ime.isBlank()) return@UrediProfilSadrzaj
+                cekaSpremanje = true
+                viewModel.spremiProfil(
+                    idKorisnik = id,
+                    ime = ime.trim(),
+                    prezime = prezime.trim(),
+                    email = email.trim(),
+                    spol = spol
+                )
+            }
+        )
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(start = MacroRazmaci.rubEkrana, end = MacroRazmaci.rubEkrana, bottom = screenBottomPadding())
+        )
+    }
+}
+
+@Composable
+private fun UrediProfilSadrzaj(
+    ime: String,
+    prezime: String,
+    email: String,
+    spol: String,
+    greskaIme: Boolean,
+    greska: String?,
+    mozeSpremiti: Boolean,
+    onIme: (String) -> Unit,
+    onPrezime: (String) -> Unit,
+    onSpol: (String) -> Unit,
+    onNatrag: () -> Unit,
+    onSpremi: () -> Unit
+) {
+    val shema = MaterialTheme.colorScheme
+    val fokus = LocalFocusManager.current
+    val smanjeno = rememberSmanjeniPokret()
+
+    Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(shema.background)
+            .imePadding()
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = MacroRazmaci.rubEkrana)
+            .padding(bottom = screenBottomPadding())
     ) {
+        ZaglavljePodekrana(naslov = stringResource(R.string.prof_urp_naslov), onNatrag = onNatrag)
 
-        Box(
-            modifier = Modifier
-                .size(230.dp)
-                .offset(
-                    x = 190.dp,
-                    y = (-110).dp
-                )
-                .clip(CircleShape)
-                .background(
-                    MaterialTheme.colorScheme.primary.copy(alpha = 0.10f)
-                )
+        NaslovSekcije(stringResource(R.string.prof_urp_osobni_podaci), prva = true)
+        PoljeUnosa(
+            vrijednost = ime,
+            onPromjena = onIme,
+            oznaka = stringResource(R.string.prof_urp_ime),
+            greska = if (greskaIme) stringResource(R.string.prof_urp_greska_ime) else null,
+            velikaSlova = KeyboardCapitalization.Words
+        )
+        Spacer(Modifier.height(MacroRazmaci.s))
+        PoljeUnosa(
+            vrijednost = prezime,
+            onPromjena = onPrezime,
+            oznaka = stringResource(R.string.prof_urp_prezime),
+            velikaSlova = KeyboardCapitalization.Words,
+            imeAction = ImeAction.Done,
+            keyboardActions = KeyboardActions(onDone = { fokus.clearFocus() })
+        )
+        Spacer(Modifier.height(MacroRazmaci.s))
+        PoljeUnosa(
+            vrijednost = email,
+            onPromjena = {},
+            oznaka = stringResource(R.string.prof_urp_email),
+            pomoc = stringResource(R.string.prof_urp_email_pomoc),
+            enabled = false,
+            tipkovnica = KeyboardType.Email
         )
 
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(
-                    rememberScrollState()
-                )
-                .padding(horizontal = 22.dp)
-                .padding(
-                    top = screenTopPadding(),
-                    bottom = screenBottomPadding()
-                )
-        ) {
-
-            // HEADER
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-
-                Surface(
-                    onClick = {
-                        navController.popBackStack()
-                    },
-                    modifier = Modifier.size(46.dp),
-                    shape = CircleShape,
-                    color = MaterialTheme.colorScheme.primary.copy(
-                        alpha = 0.16f
-                    )
-                ) {
-                    Box(
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector =
-                                Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Nazad",
-                            tint = MacroGreen
-                        )
-                    }
-                }
-
-                Spacer(
-                    modifier = Modifier.width(14.dp)
-                )
-
-                Column(
-                    modifier = Modifier.weight(1f)
-                ) {
-
-                    Text(
-                        text = "Uredi profil",
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis
-                    )
-
-                    Text(
-                        text = "Ažuriraj svoje osobne podatke",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        style = MaterialTheme.typography.bodyMedium,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
-            }
-
-            Spacer(
-                modifier = Modifier.height(28.dp)
-            )
-
-            // OSOBNI PODACI
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(24.dp),
-                color = MaterialTheme.colorScheme.surface,
-                tonalElevation = 1.dp
-            ) {
-
-                Column(
-                    modifier = Modifier.padding(18.dp)
-                ) {
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-
-                        Surface(
-                            modifier = Modifier.size(44.dp),
-                            shape = RoundedCornerShape(14.dp),
-                            color = MaterialTheme.colorScheme.primary.copy(
-                                alpha = 0.18f
-                            )
-                        ) {
-                            Box(
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Person,
-                                    contentDescription = null,
-                                    tint = MacroGreen,
-                                    modifier = Modifier.size(22.dp)
-                                )
-                            }
-                        }
-
-                        Spacer(
-                            modifier = Modifier.width(12.dp)
-                        )
-
-                        Text(
-                            text = "Osobni podaci",
-                            modifier = Modifier.weight(1f),
-                            fontSize = 19.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-
-                    Spacer(
-                        modifier = Modifier.height(20.dp)
-                    )
-
-                    OutlinedTextField(
-                        value = ime,
-                        onValueChange = {
-                            ime = it
-                        },
-                        label = {
-                            Text("Ime")
-                        },
-                        singleLine = true,
-                        shape = RoundedCornerShape(16.dp),
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = editProfileFieldColors()
-                    )
-
-                    Spacer(
-                        modifier = Modifier.height(14.dp)
-                    )
-
-                    OutlinedTextField(
-                        value = prezime,
-                        onValueChange = {
-                            prezime = it
-                        },
-                        label = {
-                            Text("Prezime")
-                        },
-                        singleLine = true,
-                        shape = RoundedCornerShape(16.dp),
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = editProfileFieldColors()
-                    )
-
-                    Spacer(
-                        modifier = Modifier.height(14.dp)
-                    )
-
-                    OutlinedTextField(
-                        value = email,
-                        onValueChange = {},
-                        readOnly = true,
-                        label = {
-                            Text("Email")
-                        },
-                        supportingText = {
-                            Text("Email adresa se ne može mijenjati.")
-                        },
-                        singleLine = true,
-                        shape = RoundedCornerShape(16.dp),
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = editProfileFieldColors()
-                    )
-                }
-            }
-
-            Spacer(
-                modifier = Modifier.height(24.dp)
-            )
-
-            // SPOL
-            Text(
-                text = "Spol",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-
-            Spacer(
-                modifier = Modifier.height(10.dp)
-            )
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement =
-                    Arrangement.spacedBy(10.dp)
-            ) {
-
-                GenderOption(
-                    title = "Muško",
-                    selected = spol == "M",
-                    onClick = {
-                        spol = "M"
-                    },
-                    modifier = Modifier.weight(1f)
-                )
-
-                GenderOption(
-                    title = "Žensko",
-                    selected = spol == "Z",
-                    onClick = {
-                        spol = "Z"
-                    },
-                    modifier = Modifier.weight(1f)
-                )
-            }
-
-            // PORUKA
-            poruka?.let {
-
-                Spacer(
-                    modifier = Modifier.height(18.dp)
-                )
-
-                val uspjesno =
-                    it.contains(
-                        "usp",
-                        ignoreCase = true
-                    )
-
-                Surface(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp),
-                    color =
-                        if (uspjesno) {
-                            MaterialTheme.colorScheme.primary.copy(
-                                alpha = 0.18f
-                            )
-                        } else {
-                            MaterialTheme.colorScheme.error
-                                .copy(alpha = 0.08f)
-                        }
-                ) {
-                    Text(
-                        text = it,
-                        modifier = Modifier.padding(14.dp),
-                        color =
-                            if (uspjesno) {
-                                MacroGreen
-                            } else {
-                                MaterialTheme.colorScheme.error
-                            },
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
-            }
-
-            Spacer(
-                modifier = Modifier.height(30.dp)
-            )
-
-            // SPREMI
-            Button(
-                onClick = {
-                    viewModel.spremiProfil(
-                        idKorisnik =
-                            prijavljeniKorisnikId
-                                ?: return@Button,
-                        ime = ime.trim(),
-                        prezime = prezime.trim(),
-                        email = email.trim(),
-                        spol = spol
-                    )
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = 56.dp),
-                shape = RoundedCornerShape(18.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MacroGreen,
-                    contentColor = Color.White
-                ),
-                contentPadding = PaddingValues(
-                    horizontal = 18.dp,
-                    vertical = 14.dp
-                )
-            ) {
-                Text(
-                    text = "Spremi promjene",
-                    fontSize = 17.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun GenderOption(
-    title: String,
-    selected: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Surface(
-        onClick = onClick,
-        modifier = modifier.heightIn(
-            min = 56.dp
-        ),
-        shape = RoundedCornerShape(17.dp),
-        color =
-            if (selected) {
-                MaterialTheme.colorScheme.primary.copy(
-                    alpha = 0.22f
-                )
-            } else {
-                MaterialTheme.colorScheme.surface
-            },
-        border =
-            if (selected) {
-                androidx.compose.foundation.BorderStroke(
-                    width = 1.5.dp,
-                    color = MacroGreen
-                )
-            } else {
-                androidx.compose.foundation.BorderStroke(
-                    width = 1.dp,
-                    color =
-                        MaterialTheme.colorScheme.onSurfaceVariant.copy(
-                            alpha = 0.20f
-                        )
-                )
-            }
-    ) {
-
-        Box(
-            modifier = Modifier.padding(
-                horizontal = 10.dp,
-                vertical = 14.dp
+        NaslovSekcije(stringResource(R.string.prof_urp_spol))
+        IzborOpcije(
+            opcije = listOf(
+                Opcija("M", stringResource(R.string.prof_urp_musko)),
+                Opcija("Z", stringResource(R.string.prof_urp_zensko))
             ),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = title,
-                fontWeight =
-                    if (selected) {
-                        FontWeight.SemiBold
-                    } else {
-                        FontWeight.Normal
-                    },
-                color =
-                    if (selected) {
-                        MacroGreen
-                    } else {
-                        MaterialTheme.colorScheme.onSurface
-                    },
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
+            odabrana = spol,
+            onOdabir = onSpol
+        )
+
+        GumbSpremi(
+            tekst = stringResource(R.string.prof_urp_spremi),
+            onClick = {
+                fokus.clearFocus()
+                onSpremi()
+            },
+            enabled = mozeSpremiti,
+            modifier = Modifier.padding(top = MacroRazmaci.iznadSekcije)
+        )
+
+        Crossfade(
+            targetState = greska,
+            animationSpec = if (smanjeno) snap() else tween(Trajanje.kratko),
+            label = "greskaProfila"
+        ) { tekst ->
+            tekst?.let {
+                Text(
+                    text = it,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = shema.error,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = MacroRazmaci.m)
+                        .semantics { liveRegion = LiveRegionMode.Polite }
+                )
+            }
         }
     }
 }
 
 @Composable
-private fun editProfileFieldColors() =
-    OutlinedTextFieldDefaults.colors(
-        focusedBorderColor = MacroGreen,
-        focusedLabelColor = MacroGreen,
-        cursorColor = MacroGreen
+private fun NaslovSekcije(tekst: String, prva: Boolean = false) {
+    Text(
+        text = tekst,
+        style = MaterialTheme.typography.headlineSmall,
+        color = MaterialTheme.colorScheme.onSurface,
+        modifier = Modifier
+            .padding(
+                top = if (prva) MacroRazmaci.xl else MacroRazmaci.iznadSekcije,
+                bottom = MacroRazmaci.ispodNaslovaSekcije
+            )
+            .semantics { heading() }
     )
+}
+
+// ---------- Previewi ----------
+
+@Composable
+private fun PreviewOkvir(
+    tamna: Boolean,
+    ime: String = "",
+    prezime: String = "",
+    email: String = "",
+    spol: String = "M",
+    greskaIme: Boolean = false,
+    greska: String? = null
+) {
+    MacroMenzaTheme(darkTheme = tamna) {
+        UrediProfilSadrzaj(
+            ime = ime,
+            prezime = prezime,
+            email = email,
+            spol = spol,
+            greskaIme = greskaIme,
+            greska = greska,
+            mozeSpremiti = true,
+            onIme = {},
+            onPrezime = {},
+            onSpol = {},
+            onNatrag = {},
+            onSpremi = {}
+        )
+    }
+}
+
+private const val VISINA_PREVIEWA = 900
+
+@Preview(name = "Svijetla · prazno", widthDp = 360, heightDp = VISINA_PREVIEWA)
+@Composable
+private fun PreviewSvijetlaPrazno() = PreviewOkvir(false)
+
+@Preview(name = "Tamna · prazno", widthDp = 360, heightDp = VISINA_PREVIEWA)
+@Composable
+private fun PreviewTamnaPrazno() = PreviewOkvir(true)
+
+@Preview(name = "Svijetla · popunjeno", widthDp = 360, heightDp = VISINA_PREVIEWA)
+@Composable
+private fun PreviewSvijetlaPopunjeno() = PreviewOkvir(false, "Ana", "Marić", "ana.maric@fesb.hr", "Z")
+
+@Preview(name = "Tamna · popunjeno", widthDp = 360, heightDp = VISINA_PREVIEWA)
+@Composable
+private fun PreviewTamnaPopunjeno() = PreviewOkvir(true, "Ivan", "Perić", "ivan.peric@fesb.hr", "M")
+
+@Preview(name = "Svijetla · greška", widthDp = 360, heightDp = VISINA_PREVIEWA)
+@Composable
+private fun PreviewSvijetlaGreska() = PreviewOkvir(false, "", "Marić", "ana.maric@fesb.hr", "Z", greskaIme = true)
+
+@Preview(name = "Tamna · greška", widthDp = 360, heightDp = VISINA_PREVIEWA)
+@Composable
+private fun PreviewTamnaGreska() =
+    PreviewOkvir(true, "Ivan", "Perić", "ivan.peric@fesb.hr", greska = "Failed to connect to /10.0.2.2:8080")
+
+@Preview(name = "Svijetla · prazno · fontScale 1,3", widthDp = 360, heightDp = 1200, fontScale = 1.3f)
+@Composable
+private fun PreviewVelikiFontPrazno() = PreviewOkvir(false)
+
+@Preview(name = "Tamna · popunjeno · fontScale 1,3", widthDp = 360, heightDp = 1200, fontScale = 1.3f)
+@Composable
+private fun PreviewVelikiFontPopunjeno() =
+    PreviewOkvir(true, "Ana-Marija", "Kovačević Radić", "ana-marija.kovacevic@fesb.hr", "Z")
+
+@Preview(name = "Svijetla · greška · fontScale 1,3", widthDp = 360, heightDp = 1200, fontScale = 1.3f)
+@Composable
+private fun PreviewVelikiFontGreska() = PreviewOkvir(false, "", "Marić", "ana.maric@fesb.hr", "Z", greskaIme = true)

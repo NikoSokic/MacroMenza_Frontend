@@ -1,132 +1,123 @@
 package com.niko.macromenza.screens
 
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
+import com.niko.macromenza.R
 import com.niko.macromenza.model.IzracunPreporuke
-import com.niko.macromenza.ui.theme.MacroGreen
+import com.niko.macromenza.ui.components.Makro
+import com.niko.macromenza.ui.components.makroKratko
+import com.niko.macromenza.ui.theme.MacroDimenzije
+import com.niko.macromenza.ui.theme.MacroRazmaci
 import com.niko.macromenza.util.formatKcalTisuce
-
 import com.niko.macromenza.util.formatMakro
 
 /**
- * Kartica "Kako smo izračunali" s korisnikovim brojevima: Mifflin-St Jeor BMR × aktivnost ± cilj,
+ * Objašnjenje "Kako smo izračunali" s korisnikovim brojevima: Mifflin-St Jeor BMR × aktivnost ± cilj,
  * zatim proteini (2 g/kg), masti (25 % kcal / 9) i ugljikohidrati (ostatak / 4).
+ * Bez kartice (pages/profil.md § Postavke ciljeva): koraci su redovi s dividerima, rezultat u onSurface.
+ * Koristi ga i onboarding.
  */
 @Composable
 fun KakoSmoIzracunaliKartica(
     izracun: IzracunPreporuke,
     masa: Double,
-    naslov: String = "Kako smo izračunali",
+    naslov: String = stringResource(R.string.kom_kako_smo_izracunali),
     modifier: Modifier = Modifier
 ) {
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(22.dp),
-        color = MaterialTheme.colorScheme.surface,
-        tonalElevation = 1.dp
-    ) {
-        Column(modifier = Modifier.padding(18.dp)) {
-            Text(
-                text = naslov,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
+    val shema = MaterialTheme.colorScheme
+    val tip = MaterialTheme.typography
+    val bmr = formatKcalTisuce(izracun.bmr)
+    val tdee = formatKcalTisuce(izracun.tdee)
+    val cilj = formatKcalTisuce(izracun.ciljKalorije.toDouble())
 
-            Spacer(modifier = Modifier.height(14.dp))
+    Column(modifier = modifier.fillMaxWidth()) {
+        Text(
+            text = naslov,
+            style = tip.titleMedium,
+            color = shema.onSurface,
+            modifier = Modifier.semantics { heading() }
+        )
 
+        Column(modifier = Modifier.padding(top = MacroRazmaci.s)) {
             Korak(
-                naziv = "1. BMR (Mifflin-St Jeor)",
-                racun = "BMR = ${izracun.bmrFormula} = ${formatKcalTisuce(izracun.bmr)} kcal"
+                naziv = stringResource(R.string.kom_izracun_bmr),
+                racun = stringResource(R.string.kom_izracun_bmr_racun, izracun.bmrFormula, bmr)
             )
-
             Korak(
-                naziv = "2. Dnevna potrošnja",
-                racun = "${formatKcalTisuce(izracun.bmr)} × ${formatKolicina3(izracun.faktorAktivnosti)} " +
-                    "= ${formatKcalTisuce(izracun.tdee)} kcal"
+                naziv = stringResource(R.string.kom_izracun_potrosnja),
+                racun = stringResource(R.string.kom_izracun_potrosnja_racun, bmr, formatKolicina3(izracun.faktorAktivnosti), tdee)
             )
-
             Korak(
-                naziv = "3. Prilagodba cilju",
+                naziv = stringResource(R.string.kom_izracun_prilagodba),
                 racun = when {
                     izracun.korekcijaCilja < 0 ->
-                        "${formatKcalTisuce(izracun.tdee)} − ${formatKcalTisuce(-izracun.korekcijaCilja)} " +
-                            "= ${formatKcalTisuce(izracun.ciljKalorije.toDouble())} kcal"
+                        stringResource(R.string.kom_izracun_minus, tdee, formatKcalTisuce(-izracun.korekcijaCilja), cilj)
                     izracun.korekcijaCilja > 0 ->
-                        "${formatKcalTisuce(izracun.tdee)} + ${formatKcalTisuce(izracun.korekcijaCilja)} " +
-                            "= ${formatKcalTisuce(izracun.ciljKalorije.toDouble())} kcal"
-                    else -> "Održavanje, bez korekcije = ${formatKcalTisuce(izracun.ciljKalorije.toDouble())} kcal"
+                        stringResource(R.string.kom_izracun_plus, tdee, formatKcalTisuce(izracun.korekcijaCilja), cilj)
+                    else -> stringResource(R.string.kom_izracun_bez_korekcije, cilj)
                 }
             )
-
             Korak(
-                naziv = "4. Proteini (2 g po kg)",
-                racun = "2 × ${formatMakro(masa)} kg = ${izracun.proteini} g"
+                naziv = stringResource(R.string.kom_izracun_proteini),
+                racun = stringResource(R.string.kom_izracun_proteini_racun, formatMakro(masa), izracun.proteini)
             )
-
             Korak(
-                naziv = "5. Masti (25 % kalorija)",
-                racun = "${formatKcalTisuce(izracun.ciljKalorije.toDouble())} × 0,25 ÷ 9 = ${izracun.masti} g"
+                naziv = stringResource(R.string.kom_izracun_masti),
+                racun = stringResource(R.string.kom_izracun_masti_racun, cilj, izracun.masti)
             )
-
             Korak(
-                naziv = "6. Ugljikohidrati (ostatak)",
-                racun = "(${formatKcalTisuce(izracun.ciljKalorije.toDouble())} − ${izracun.proteini} × 4 − " +
-                    "${izracun.masti} × 9) ÷ 4 = ${izracun.ugljikohidrati} g",
+                naziv = stringResource(R.string.kom_izracun_uh),
+                racun = stringResource(R.string.kom_izracun_uh_racun, cilj, izracun.proteini, izracun.masti, izracun.ugljikohidrati),
                 zadnji = true
             )
-
-            Spacer(modifier = Modifier.height(14.dp))
-
-            Text(
-                text = "Cilj: ${formatKcalTisuce(izracun.ciljKalorije.toDouble())} kcal · " +
-                    "P ${izracun.proteini} g · UH ${izracun.ugljikohidrati} g · M ${izracun.masti} g",
-                color = MacroGreen,
-                fontWeight = FontWeight.Bold,
-                fontSize = 15.sp
-            )
-
-            Spacer(modifier = Modifier.height(6.dp))
-
-            Text(
-                text = "Brojevi su zaokruženi, pa se račun može razlikovati za 1–2 jedinice.",
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontSize = 11.sp
-            )
         }
+
+        Text(
+            text = stringResource(R.string.kom_izracun_cilj, cilj),
+            style = tip.titleMedium,
+            color = shema.onSurface,
+            modifier = Modifier.padding(top = MacroRazmaci.l)
+        )
+        Text(
+            text = makroKratko(
+                Makro(
+                    kcal = izracun.ciljKalorije.toDouble(),
+                    proteini = izracun.proteini.toDouble(),
+                    masti = izracun.masti.toDouble(),
+                    ugljikohidrati = izracun.ugljikohidrati.toDouble()
+                )
+            ),
+            style = tip.bodyMedium,
+            color = shema.onSurface
+        )
+        Text(
+            text = stringResource(R.string.kom_izracun_zaokruzeno),
+            style = tip.bodySmall,
+            color = shema.onSurfaceVariant,
+            modifier = Modifier.padding(top = MacroRazmaci.xs)
+        )
     }
 }
 
+/** Korak računa: naziv u bodyMedium, račun u bodySmall (Hanken, tablične znamenke). */
 @Composable
 private fun Korak(naziv: String, racun: String, zadnji: Boolean = false) {
-    Text(
-        text = naziv,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        fontSize = 12.sp
-    )
-
-    Spacer(modifier = Modifier.height(2.dp))
-
-    Text(
-        text = racun,
-        color = MaterialTheme.colorScheme.onSurface,
-        fontWeight = FontWeight.Medium,
-        fontSize = 14.sp
-    )
-
+    val shema = MaterialTheme.colorScheme
+    Column(modifier = Modifier.padding(vertical = MacroRazmaci.s)) {
+        Text(text = naziv, style = MaterialTheme.typography.bodyMedium, color = shema.onSurface)
+        Text(text = racun, style = MaterialTheme.typography.bodySmall, color = shema.onSurfaceVariant)
+    }
     if (!zadnji) {
-        Spacer(modifier = Modifier.height(8.dp))
-        HorizontalDivider(color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.09f))
-        Spacer(modifier = Modifier.height(8.dp))
+        HorizontalDivider(thickness = MacroDimenzije.linija, color = shema.outlineVariant)
     }
 }
 

@@ -73,6 +73,11 @@ object MacroDimenzije {
     // Profil: krug s inicijalima u zaglavlju korisnika
     val avatarProfila = 64.dp
 
+    // Forme: radio oznaka u IzborOpcije (prsten i točka odabira)
+    val radioOznaka = 20.dp
+    val radioObrub = 2.dp
+    val radioTocka = 10.dp
+
     // Redovi obroka i glif porcije
     val ikonaObroka = 40.dp
     val glifPorcije = 22.dp
@@ -108,6 +113,9 @@ object MacroOmjeri {
     /** Širine traka u kosturu reda jela (dio širine teksta). */
     /** Neprozirnost oznake pogotka pretrage (boja teksta preko pozadine). */
     const val oznakaPogotka = 0.14f
+
+    /** Neprozirnost označenog teksta u polju unosa (onSurface preko pozadine, ne paprika). */
+    const val oznakaTeksta = 0.24f
 
     const val kosturNaziv = 0.6f
     const val kosturMakro = 0.4f

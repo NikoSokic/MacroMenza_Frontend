@@ -329,4 +329,68 @@
     <string name="prof_odjava_naslov">Odjava</string>
     <string name="prof_odjava_tekst">Želiš li se odjaviti iz MacroMenze?</string>
     <string name="prof_odustani">Odustani</string>
+
+    <!-- Forme (ui/components: ZaglavljePodekrana, PoljeUnosa, IzborOpcije, GumbSpremi) i objašnjenje izračuna -->
+    <string name="kom_natrag">Natrag</string>
+    <string name="kom_spremam">Spremam…</string>
+    <string name="kom_kako_smo_izracunali">Kako smo izračunali</string>
+    <string name="kom_izracun_bmr">1. BMR (Mifflin-St Jeor)</string>
+    <string name="kom_izracun_bmr_racun">BMR = %1$s = %2$s kcal</string>
+    <string name="kom_izracun_potrosnja">2. Dnevna potrošnja</string>
+    <string name="kom_izracun_potrosnja_racun">%1$s × %2$s = %3$s kcal</string>
+    <string name="kom_izracun_prilagodba">3. Prilagodba cilju</string>
+    <string name="kom_izracun_minus">%1$s − %2$s = %3$s kcal</string>
+    <string name="kom_izracun_plus">%1$s + %2$s = %3$s kcal</string>
+    <string name="kom_izracun_bez_korekcije">Održavanje, bez korekcije = %1$s kcal</string>
+    <string name="kom_izracun_proteini">4. Proteini (2 g po kg)</string>
+    <string name="kom_izracun_proteini_racun">2 × %1$s kg = %2$d g</string>
+    <string name="kom_izracun_masti" formatted="false">5. Masti (25 % kalorija)</string>
+    <string name="kom_izracun_masti_racun">%1$s × 0,25 ÷ 9 = %2$d g</string>
+    <string name="kom_izracun_uh">6. Ugljikohidrati (ostatak)</string>
+    <string name="kom_izracun_uh_racun">(%1$s − %2$d × 4 − %3$d × 9) ÷ 4 = %4$d g</string>
+    <string name="kom_izracun_cilj">Cilj: %1$s kcal</string>
+    <string name="kom_izracun_zaokruzeno">Brojevi su zaokruženi, pa se račun može razlikovati za 1–2 jedinice.</string>
+
+    <!-- Profil: Postavke ciljeva -->
+    <string name="prof_cilj_naslov">Postavke ciljeva</string>
+    <string name="prof_cilj_podaci">Podaci za preporuku</string>
+    <string name="prof_cilj_visina">Visina (cm)</string>
+    <string name="prof_cilj_visina_pomoc">Između 100 i 250 cm</string>
+    <string name="prof_cilj_dob">Dob</string>
+    <string name="prof_cilj_dob_pomoc">Između 15 i 100 godina</string>
+    <string name="prof_cilj_masa">Masa (kg)</string>
+    <string name="prof_cilj_masa_pomoc">Između 30 i 300 kg, jedna decimala (npr. 78,4)</string>
+    <string name="prof_cilj_greska_korisnik">Korisnik nije prijavljen.</string>
+    <string name="prof_cilj_greska_visina">Provjeri visinu. Vrijednost treba biti između 100 i 250 cm.</string>
+    <string name="prof_cilj_greska_dob">Provjeri dob. Vrijednost treba biti između 15 i 100 godina.</string>
+    <string name="prof_cilj_greska_masa">Provjeri masu. Vrijednost treba biti između 30 i 300 kg.</string>
+    <string name="prof_cilj_mrsavljenje_opis">−500 kcal od dnevne potrošnje</string>
+    <string name="prof_cilj_odrzavanje_opis">0 kcal · jedeš koliko trošiš</string>
+    <string name="prof_cilj_dobivanje_mase_opis">+300 kcal na dnevnu potrošnju</string>
+    <string name="prof_cilj_aktivnost">Razina aktivnosti</string>
+    <string name="prof_akt_sjedilacka">Sjedilačka</string>
+    <string name="prof_akt_sjedilacka_opis">×1,2 · uglavnom sjediš, bez treninga</string>
+    <string name="prof_akt_lagana">Lagana</string>
+    <string name="prof_akt_lagana_opis">×1,375 · 1–3 treninga tjedno</string>
+    <string name="prof_akt_umjerena">Umjerena</string>
+    <string name="prof_akt_umjerena_opis">×1,55 · 3–5 treninga tjedno</string>
+    <string name="prof_akt_visoka">Visoka</string>
+    <string name="prof_akt_visoka_opis">×1,725 · 6–7 treninga tjedno</string>
+    <string name="prof_cilj_spremi">Spremi cilj</string>
+    <string name="prof_cilj_okvirno">Vrijednosti su okvirne: izračun je procjena, a kalorije jela dolaze iz USDA/EU tablica namirnica.</string>
+    <string name="prof_cilj_kako_je_izracunato">Kako je izračunato</string>
+
+    <!-- Profil: Uredi profil -->
+    <string name="prof_urp_naslov">Uredi profil</string>
+    <string name="prof_urp_osobni_podaci">Osobni podaci</string>
+    <string name="prof_urp_ime">Ime</string>
+    <string name="prof_urp_prezime">Prezime</string>
+    <string name="prof_urp_email">Email</string>
+    <string name="prof_urp_email_pomoc">Email adresa se ne može mijenjati.</string>
+    <string name="prof_urp_greska_ime">Upiši ime</string>
+    <string name="prof_urp_spol">Spol</string>
+    <string name="prof_urp_musko">Muško</string>
+    <string name="prof_urp_zensko">Žensko</string>
+    <string name="prof_urp_spremi">Spremi promjene</string>
+    <string name="prof_urp_spremljeno">Profil spremljen</string>
 </resources>

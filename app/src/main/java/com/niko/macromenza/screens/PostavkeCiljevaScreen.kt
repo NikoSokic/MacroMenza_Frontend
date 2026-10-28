@@ -1,38 +1,75 @@
 package com.niko.macromenza.screens
 
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.snap
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.FitnessCenter
-import androidx.compose.material.icons.filled.Straighten
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.niko.macromenza.R
+import com.niko.macromenza.model.IzracunPreporuke
 import com.niko.macromenza.session.UserSessionManager
+import com.niko.macromenza.ui.components.GumbSpremi
+import com.niko.macromenza.ui.components.IzborOpcije
+import com.niko.macromenza.ui.components.Opcija
+import com.niko.macromenza.ui.components.PoljeUnosa
+import com.niko.macromenza.ui.components.ZaglavljePodekrana
 import com.niko.macromenza.ui.components.screenBottomPadding
-import com.niko.macromenza.ui.components.screenTopPadding
-import com.niko.macromenza.ui.theme.MacroGreen
-import com.niko.macromenza.ui.theme.MacroLightGreen
+import com.niko.macromenza.ui.theme.MacroMenzaTheme
+import com.niko.macromenza.ui.theme.MacroRazmaci
+import com.niko.macromenza.ui.theme.Trajanje
+import com.niko.macromenza.ui.theme.rememberSmanjeniPokret
 import com.niko.macromenza.util.filtrirajUnosMase
 import com.niko.macromenza.util.parsirajMasu
 import com.niko.macromenza.viewmodel.CiljeviViewModel
+
+/** Poruka uspjeha iz [CiljeviViewModel.spremiCilj]; sve ostale poruke su greške. */
+private const val PORUKA_USPJEHA = "Cilj i preporuka spremljeni"
+
+/** Unos forme; vrijednosti tipa cilja i aktivnosti su ključevi koje očekuje backend. */
+@Immutable
+data class CiljForma(
+    val visina: String = "",
+    val dob: String = "",
+    val masa: String = "",
+    val tipCilja: String = "odrzavanje",
+    val aktivnost: String = "umjerena"
+)
+
+/** Validacija staje na prvoj grešci (redom: korisnik, visina, dob, masa), kao i prije. */
+enum class GreskaCilja { KORISNIK, VISINA, DOB, MASA }
 
 @Composable
 fun PostavkeCiljevaScreen(
@@ -40,765 +77,291 @@ fun PostavkeCiljevaScreen(
     viewModel: CiljeviViewModel = viewModel()
 ) {
     val poruka by viewModel.poruka.collectAsState()
+    val objasnjenje by viewModel.objasnjenje.collectAsState()
 
     val context = LocalContext.current
-
-    val sessionManager = remember {
-        UserSessionManager(context)
-    }
-
-    val prijavljeniKorisnikId by
-    sessionManager.korisnikId.collectAsState(initial = null)
-
-    val objasnjenje by viewModel.objasnjenje.collectAsState()
+    val sessionManager = remember { UserSessionManager(context) }
+    val prijavljeniKorisnikId by sessionManager.korisnikId.collectAsState(initial = null)
 
     LaunchedEffect(prijavljeniKorisnikId) {
         prijavljeniKorisnikId?.let { viewModel.ucitajObjasnjenje(it) }
     }
 
-    var visina by remember { mutableStateOf("") }
-    var dob by remember { mutableStateOf("") }
-    var masa by remember { mutableStateOf("") }
+    var forma by rememberSaveable(stateSaver = CiljFormaSaver) { mutableStateOf(CiljForma()) }
+    var greska by remember { mutableStateOf<GreskaCilja?>(null) }
 
-    var tipCilja by remember {
-        mutableStateOf("odrzavanje")
-    }
+    PostavkeCiljevaSadrzaj(
+        forma = forma,
+        greska = greska,
+        poruka = poruka,
+        objasnjenje = objasnjenje,
+        onForma = { nova ->
+            // Greška polja nestaje čim se to polje promijeni.
+            greska = when {
+                greska == GreskaCilja.VISINA && nova.visina != forma.visina -> null
+                greska == GreskaCilja.DOB && nova.dob != forma.dob -> null
+                greska == GreskaCilja.MASA && nova.masa != forma.masa -> null
+                else -> greska
+            }
+            forma = nova
+        },
+        onNatrag = { navController.popBackStack() },
+        onSpremi = {
+            val visinaBroj = forma.visina.toIntOrNull()
+            val dobBroj = forma.dob.toIntOrNull()
+            val masaBroj = parsirajMasu(forma.masa)
+            val id = prijavljeniKorisnikId
 
-    var aktivnost by remember {
-        mutableStateOf("umjerena")
-    }
+            greska = when {
+                id == null -> GreskaCilja.KORISNIK
+                visinaBroj == null || visinaBroj !in 100..250 -> GreskaCilja.VISINA
+                dobBroj == null || dobBroj !in 15..100 -> GreskaCilja.DOB
+                masaBroj == null || masaBroj !in 30.0..300.0 -> GreskaCilja.MASA
+                else -> null
+            }
 
-    var greska by remember {
-        mutableStateOf<String?>(null)
-    }
+            if (greska == null && id != null && visinaBroj != null && dobBroj != null && masaBroj != null) {
+                viewModel.spremiCilj(
+                    idKorisnik = id,
+                    visina = visinaBroj,
+                    dob = dobBroj,
+                    masa = masaBroj,
+                    razinaAktivnosti = forma.aktivnost,
+                    tipCilja = forma.tipCilja
+                )
+            }
+        }
+    )
+}
 
-    Box(
+@Composable
+private fun PostavkeCiljevaSadrzaj(
+    forma: CiljForma,
+    greska: GreskaCilja?,
+    poruka: String?,
+    objasnjenje: CiljeviViewModel.Objasnjenje?,
+    onForma: (CiljForma) -> Unit,
+    onNatrag: () -> Unit,
+    onSpremi: () -> Unit
+) {
+    val shema = MaterialTheme.colorScheme
+    val tip = MaterialTheme.typography
+    val fokus = LocalFocusManager.current
+    val smanjeno = rememberSmanjeniPokret()
+
+    val ciljevi = listOf(
+        Opcija("mrsavljenje", stringResource(R.string.prof_cilj_mrsavljenje), stringResource(R.string.prof_cilj_mrsavljenje_opis)),
+        Opcija("odrzavanje", stringResource(R.string.prof_cilj_odrzavanje), stringResource(R.string.prof_cilj_odrzavanje_opis)),
+        Opcija("dobivanje_mase", stringResource(R.string.prof_cilj_dobivanje_mase), stringResource(R.string.prof_cilj_dobivanje_mase_opis))
+    )
+    val aktivnosti = listOf(
+        Opcija("sjedilacka", stringResource(R.string.prof_akt_sjedilacka), stringResource(R.string.prof_akt_sjedilacka_opis)),
+        Opcija("lagana", stringResource(R.string.prof_akt_lagana), stringResource(R.string.prof_akt_lagana_opis)),
+        Opcija("umjerena", stringResource(R.string.prof_akt_umjerena), stringResource(R.string.prof_akt_umjerena_opis)),
+        Opcija("visoka", stringResource(R.string.prof_akt_visoka), stringResource(R.string.prof_akt_visoka_opis))
+    )
+
+    Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(shema.background)
+            .imePadding()
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = MacroRazmaci.rubEkrana)
+            .padding(bottom = screenBottomPadding())
     ) {
+        ZaglavljePodekrana(naslov = stringResource(R.string.prof_cilj_naslov), onNatrag = onNatrag)
 
-        Box(
-            modifier = Modifier
-                .size(230.dp)
-                .offset(
-                    x = 190.dp,
-                    y = (-110).dp
-                )
-                .clip(CircleShape)
-                .background(
-                    MaterialTheme.colorScheme.primary.copy(alpha = 0.10f)
-                )
+        NaslovSekcijeForme(stringResource(R.string.prof_cilj_podaci), prva = true)
+        PoljeUnosa(
+            vrijednost = forma.visina,
+            onPromjena = { unos -> if (unos.all { it.isDigit() }) onForma(forma.copy(visina = unos)) },
+            oznaka = stringResource(R.string.prof_cilj_visina),
+            pomoc = stringResource(R.string.prof_cilj_visina_pomoc),
+            greska = if (greska == GreskaCilja.VISINA) stringResource(R.string.prof_cilj_greska_visina) else null,
+            tipkovnica = KeyboardType.Number
+        )
+        Spacer(Modifier.height(MacroRazmaci.s))
+        PoljeUnosa(
+            vrijednost = forma.dob,
+            onPromjena = { unos -> if (unos.all { it.isDigit() }) onForma(forma.copy(dob = unos)) },
+            oznaka = stringResource(R.string.prof_cilj_dob),
+            pomoc = stringResource(R.string.prof_cilj_dob_pomoc),
+            greska = if (greska == GreskaCilja.DOB) stringResource(R.string.prof_cilj_greska_dob) else null,
+            tipkovnica = KeyboardType.Number
+        )
+        Spacer(Modifier.height(MacroRazmaci.s))
+        PoljeUnosa(
+            vrijednost = forma.masa,
+            onPromjena = { unos -> filtrirajUnosMase(unos)?.let { onForma(forma.copy(masa = it)) } },
+            oznaka = stringResource(R.string.prof_cilj_masa),
+            pomoc = stringResource(R.string.prof_cilj_masa_pomoc),
+            greska = if (greska == GreskaCilja.MASA) stringResource(R.string.prof_cilj_greska_masa) else null,
+            tipkovnica = KeyboardType.Decimal,
+            imeAction = ImeAction.Done,
+            keyboardActions = KeyboardActions(onDone = { fokus.clearFocus() })
         )
 
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(
-                    rememberScrollState()
-                )
-                .padding(horizontal = 22.dp)
-                .padding(
-                    top = screenTopPadding(),
-                    bottom = screenBottomPadding()
-                )
-        ) {
+        NaslovSekcijeForme(stringResource(R.string.prof_tvoj_cilj))
+        IzborOpcije(
+            opcije = ciljevi,
+            odabrana = forma.tipCilja,
+            onOdabir = { onForma(forma.copy(tipCilja = it)) }
+        )
 
-            // HEADER
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+        NaslovSekcijeForme(stringResource(R.string.prof_cilj_aktivnost))
+        IzborOpcije(
+            opcije = aktivnosti,
+            odabrana = forma.aktivnost,
+            onOdabir = { onForma(forma.copy(aktivnost = it)) }
+        )
 
-                Surface(
-                    onClick = {
-                        navController.popBackStack()
-                    },
-                    modifier = Modifier.size(46.dp),
-                    shape = CircleShape,
-                    color = MaterialTheme.colorScheme.primary.copy(
-                        alpha = 0.16f
-                    )
-                ) {
-                    Box(
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector =
-                                Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Nazad",
-                            tint = MacroGreen
-                        )
-                    }
-                }
+        GumbSpremi(
+            tekst = stringResource(R.string.prof_cilj_spremi),
+            onClick = {
+                fokus.clearFocus()
+                onSpremi()
+            },
+            modifier = Modifier.padding(top = MacroRazmaci.iznadSekcije)
+        )
 
-                Spacer(
-                    modifier = Modifier.width(14.dp)
-                )
-
-                Column(
-                    modifier = Modifier.weight(1f)
-                ) {
-
-                    Text(
-                        text = "Postavke ciljeva",
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis
-                    )
-
-                    Text(
-                        text = "Prilagodi dnevnu preporuku",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        style = MaterialTheme.typography.bodyMedium,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
-            }
-
-            Spacer(
-                modifier = Modifier.height(28.dp)
-            )
-
-            // PODACI ZA PREPORUKU
-            SettingsSectionCard(
-                title = "Podaci za preporuku",
-                icon = Icons.Default.Straighten
-            ) {
-
-                OutlinedTextField(
-                    value = visina,
-                    onValueChange = { noviUnos ->
-                        if (noviUnos.all { it.isDigit() }) {
-                            visina = noviUnos
-                        }
-                    },
-                    label = {
-                        Text("Visina (cm)")
-                    },
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Number
-                    ),
-                    singleLine = true,
-                    shape = RoundedCornerShape(16.dp),
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = goalFieldColors()
-                )
-
-                Spacer(
-                    modifier = Modifier.height(14.dp)
-                )
-
-                OutlinedTextField(
-                    value = dob,
-                    onValueChange = { noviUnos ->
-                        if (noviUnos.all { it.isDigit() }) {
-                            dob = noviUnos
-                        }
-                    },
-                    label = {
-                        Text("Dob")
-                    },
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Number
-                    ),
-                    singleLine = true,
-                    shape = RoundedCornerShape(16.dp),
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = goalFieldColors()
-                )
-
-                Spacer(
-                    modifier = Modifier.height(14.dp)
-                )
-
-                OutlinedTextField(
-                    value = masa,
-                    onValueChange = { noviUnos ->
-                        filtrirajUnosMase(noviUnos)?.let { masa = it }
-                    },
-                    label = {
-                        Text("Masa (kg)")
-                    },
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Decimal
-                    ),
-                    singleLine = true,
-                    shape = RoundedCornerShape(16.dp),
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = goalFieldColors()
-                )
-            }
-
-            Spacer(
-                modifier = Modifier.height(22.dp)
-            )
-
-            // CILJ
-            Text(
-                text = "Tvoj cilj",
-                fontSize = 22.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-
-            Spacer(
-                modifier = Modifier.height(4.dp)
-            )
-
-            Text(
-                text = "Odaberi što želiš postići.",
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                style = MaterialTheme.typography.bodySmall,
-                maxLines = 2
-            )
-
-            Spacer(
-                modifier = Modifier.height(12.dp)
-            )
-
-            GoalChoiceCard(
-                title = "Mršavljenje",
-                subtitle = "Postupno smanjenje tjelesne mase",
-                selected = tipCilja == "mrsavljenje",
-                onClick = {
-                    tipCilja = "mrsavljenje"
-                }
-            )
-
-            Spacer(
-                modifier = Modifier.height(10.dp)
-            )
-
-            GoalChoiceCard(
-                title = "Održavanje težine",
-                subtitle = "Zadrži trenutnu tjelesnu masu",
-                selected = tipCilja == "odrzavanje",
-                onClick = {
-                    tipCilja = "odrzavanje"
-                }
-            )
-
-            Spacer(
-                modifier = Modifier.height(10.dp)
-            )
-
-            GoalChoiceCard(
-                title = "Dobivanje mase",
-                subtitle = "Postupno povećanje tjelesne mase",
-                selected = tipCilja == "dobivanje_mase",
-                onClick = {
-                    tipCilja = "dobivanje_mase"
-                }
-            )
-
-            Spacer(
-                modifier = Modifier.height(26.dp)
-            )
-
-            // AKTIVNOST
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-
-                Box(
+        // Greška bez polja (korisnik) i poruka spremanja ispod gumba; izblijede pri promjeni.
+        val obavijest = when {
+            greska == GreskaCilja.KORISNIK -> stringResource(R.string.prof_cilj_greska_korisnik) to true
+            poruka != null -> poruka to (poruka != PORUKA_USPJEHA)
+            else -> null
+        }
+        Crossfade(
+            targetState = obavijest,
+            animationSpec = if (smanjeno) snap() else tween(Trajanje.kratko),
+            label = "porukaCilja"
+        ) { stanje ->
+            stanje?.let { (tekst, jeGreska) ->
+                Text(
+                    text = tekst,
+                    style = tip.bodyMedium,
+                    color = if (jeGreska) shema.error else shema.onSurface,
                     modifier = Modifier
-                        .size(40.dp)
-                        .clip(
-                            RoundedCornerShape(13.dp)
-                        )
-                        .background(
-                            MaterialTheme.colorScheme.primary.copy(
-                                alpha = 0.18f
-                            )
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.FitnessCenter,
-                        contentDescription = null,
-                        tint = MacroGreen,
-                        modifier = Modifier.size(21.dp)
-                    )
-                }
-
-                Spacer(
-                    modifier = Modifier.width(10.dp)
-                )
-
-                Column(
-                    modifier = Modifier.weight(1f)
-                ) {
-
-                    Text(
-                        text = "Razina aktivnosti",
-                        fontSize = 21.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-
-                    Text(
-                        text = "Koliko si aktivan tijekom tjedna?",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
-            }
-
-            Spacer(
-                modifier = Modifier.height(14.dp)
-            )
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement =
-                    Arrangement.spacedBy(10.dp)
-            ) {
-
-                ActivityChoice(
-                    title = "Sjedilačka",
-                    selected =
-                        aktivnost == "sjedilacka",
-                    onClick = {
-                        aktivnost = "sjedilacka"
-                    },
-                    modifier = Modifier.weight(1f)
-                )
-
-                ActivityChoice(
-                    title = "Lagana",
-                    selected =
-                        aktivnost == "lagana",
-                    onClick = {
-                        aktivnost = "lagana"
-                    },
-                    modifier = Modifier.weight(1f)
-                )
-            }
-
-            Spacer(
-                modifier = Modifier.height(10.dp)
-            )
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement =
-                    Arrangement.spacedBy(10.dp)
-            ) {
-
-                ActivityChoice(
-                    title = "Umjerena",
-                    selected =
-                        aktivnost == "umjerena",
-                    onClick = {
-                        aktivnost = "umjerena"
-                    },
-                    modifier = Modifier.weight(1f)
-                )
-
-                ActivityChoice(
-                    title = "Visoka",
-                    selected =
-                        aktivnost == "visoka",
-                    onClick = {
-                        aktivnost = "visoka"
-                    },
-                    modifier = Modifier.weight(1f)
-                )
-            }
-
-            greska?.let {
-
-                Spacer(
-                    modifier = Modifier.height(18.dp)
-                )
-
-                Surface(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp),
-                    color =
-                        MaterialTheme.colorScheme.error
-                            .copy(alpha = 0.08f)
-                ) {
-
-                    Text(
-                        text = it,
-                        color =
-                            MaterialTheme.colorScheme.error,
-                        modifier = Modifier.padding(14.dp),
-                        style =
-                            MaterialTheme.typography.bodyMedium
-                    )
-                }
-            }
-
-            poruka?.let {
-
-                Spacer(
-                    modifier = Modifier.height(18.dp)
-                )
-
-                Surface(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp),
-                    color =
-                        MaterialTheme.colorScheme.primary.copy(
-                            alpha = 0.18f
-                        )
-                ) {
-
-                    Text(
-                        text = it,
-                        color = MacroGreen,
-                        modifier = Modifier.padding(14.dp),
-                        style =
-                            MaterialTheme.typography.bodyMedium
-                    )
-                }
-            }
-
-            Spacer(
-                modifier = Modifier.height(28.dp)
-            )
-
-            Button(
-                onClick = {
-
-                    val visinaBroj =
-                        visina.toIntOrNull()
-
-                    val dobBroj =
-                        dob.toIntOrNull()
-
-                    val masaBroj =
-                        parsirajMasu(masa)
-
-                    if (
-                        prijavljeniKorisnikId == null
-                    ) {
-                        greska =
-                            "Korisnik nije prijavljen."
-                        return@Button
-                    }
-
-                    if (
-                        visinaBroj == null ||
-                        visinaBroj !in 100..250
-                    ) {
-                        greska =
-                            "Provjeri visinu. Vrijednost treba biti između 100 i 250 cm."
-                        return@Button
-                    }
-
-                    if (
-                        dobBroj == null ||
-                        dobBroj !in 15..100
-                    ) {
-                        greska =
-                            "Provjeri dob. Vrijednost treba biti između 15 i 100 godina."
-                        return@Button
-                    }
-
-                    if (
-                        masaBroj == null ||
-                        masaBroj !in 30.0..300.0
-                    ) {
-                        greska =
-                            "Provjeri masu. Vrijednost treba biti između 30 i 300 kg."
-                        return@Button
-                    }
-
-                    greska = null
-
-                    viewModel.spremiCilj(
-                        idKorisnik =
-                            prijavljeniKorisnikId!!,
-                        visina = visinaBroj,
-                        dob = dobBroj,
-                        masa = masaBroj,
-                        razinaAktivnosti =
-                            aktivnost,
-                        tipCilja =
-                            tipCilja
-                    )
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = 58.dp),
-                shape = RoundedCornerShape(18.dp),
-                colors =
-                    ButtonDefaults.buttonColors(
-                        containerColor = MacroGreen,
-                        contentColor = Color.White
-                    ),
-                contentPadding = PaddingValues(
-                    horizontal = 16.dp,
-                    vertical = 14.dp
-                )
-            ) {
-
-                Text(
-                    text =
-                        "Izračunaj novu preporuku",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-
-            objasnjenje?.let {
-
-                Spacer(
-                    modifier = Modifier.height(24.dp)
-                )
-
-                KakoSmoIzracunaliKartica(
-                    izracun = it.izracun,
-                    masa = it.masa,
-                    naslov = "Kako je izračunato"
+                        .fillMaxWidth()
+                        .padding(top = MacroRazmaci.m)
+                        .semantics { liveRegion = LiveRegionMode.Polite }
                 )
             }
         }
-    }
-}
 
-@Composable
-private fun SettingsSectionCard(
-    title: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    content: @Composable ColumnScope.() -> Unit
-) {
+        Text(
+            text = stringResource(R.string.prof_cilj_okvirno),
+            style = tip.bodySmall,
+            color = shema.onSurfaceVariant,
+            modifier = Modifier.padding(top = MacroRazmaci.m)
+        )
 
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
-        color = MaterialTheme.colorScheme.surface,
-        tonalElevation = 1.dp
-    ) {
-
-        Column(
-            modifier = Modifier.padding(18.dp)
-        ) {
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-
-                Box(
-                    modifier = Modifier
-                        .size(44.dp)
-                        .clip(
-                            RoundedCornerShape(14.dp)
-                        )
-                        .background(
-                            MaterialTheme.colorScheme.primary.copy(
-                                alpha = 0.18f
-                            )
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = null,
-                        tint = MacroGreen,
-                        modifier = Modifier.size(22.dp)
-                    )
-                }
-
-                Spacer(
-                    modifier = Modifier.width(12.dp)
-                )
-
-                Text(
-                    text = title,
-                    modifier = Modifier.weight(1f),
-                    fontSize = 19.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-
-            Spacer(
-                modifier = Modifier.height(18.dp)
-            )
-
-            content()
-        }
-    }
-}
-
-@Composable
-private fun GoalChoiceCard(
-    title: String,
-    subtitle: String,
-    selected: Boolean,
-    onClick: () -> Unit
-) {
-
-    Surface(
-        onClick = onClick,
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        color =
-            if (selected) {
-                MaterialTheme.colorScheme.primary.copy(
-                    alpha = 0.18f
-                )
-            } else {
-                MaterialTheme.colorScheme.surface
-            },
-        border =
-            if (selected) {
-                androidx.compose.foundation.BorderStroke(
-                    width = 1.5.dp,
-                    color = MacroGreen
-                )
-            } else {
-                null
-            },
-        tonalElevation =
-            if (selected) {
-                0.dp
-            } else {
-                1.dp
-            }
-    ) {
-
-        Row(
-            modifier = Modifier.padding(
-                horizontal = 14.dp,
-                vertical = 14.dp
-            ),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-
-            RadioButton(
-                selected = selected,
-                onClick = onClick,
-                colors =
-                    RadioButtonDefaults.colors(
-                        selectedColor = MacroGreen
-                    )
-            )
-
-            Spacer(
-                modifier = Modifier.width(8.dp)
-            )
-
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
-
-                Text(
-                    text = title,
-                    fontWeight = FontWeight.SemiBold,
-                    color =
-                        if (selected) {
-                            MacroGreen
-                        } else {
-                            MaterialTheme.colorScheme.onSurface
-                        },
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-
-                Spacer(
-                    modifier = Modifier.height(2.dp)
-                )
-
-                Text(
-                    text = subtitle,
-                    style =
-                        MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun ActivityChoice(
-    title: String,
-    selected: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-
-    Surface(
-        onClick = onClick,
-        modifier = modifier.heightIn(
-            min = 58.dp
-        ),
-        shape = RoundedCornerShape(17.dp),
-        color =
-            if (selected) {
-                MaterialTheme.colorScheme.primary.copy(
-                    alpha = 0.22f
-                )
-            } else {
-                MaterialTheme.colorScheme.surface
-            },
-        border =
-            if (selected) {
-                androidx.compose.foundation.BorderStroke(
-                    width = 1.5.dp,
-                    color = MacroGreen
-                )
-            } else {
-                null
-            },
-        tonalElevation =
-            if (selected) {
-                0.dp
-            } else {
-                1.dp
-            }
-    ) {
-
-        Box(
-            modifier = Modifier.padding(
-                horizontal = 10.dp,
-                vertical = 14.dp
-            ),
-            contentAlignment = Alignment.Center
-        ) {
-
-            Text(
-                text = title,
-                fontWeight = FontWeight.SemiBold,
-                color =
-                    if (selected) {
-                        MacroGreen
-                    } else {
-                        MaterialTheme.colorScheme.onSurface
-                    },
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+        objasnjenje?.let {
+            KakoSmoIzracunaliKartica(
+                izracun = it.izracun,
+                masa = it.masa,
+                naslov = stringResource(R.string.prof_cilj_kako_je_izracunato),
+                modifier = Modifier.padding(top = MacroRazmaci.iznadSekcije)
             )
         }
     }
 }
 
+/** Naslov sekcije forme (headlineSmall); prva sekcija stoji bliže zaglavlju. */
 @Composable
-private fun goalFieldColors() =
-    OutlinedTextFieldDefaults.colors(
-        focusedBorderColor = MacroGreen,
-        focusedLabelColor = MacroGreen,
-        cursorColor = MacroGreen
+private fun NaslovSekcijeForme(tekst: String, prva: Boolean = false) {
+    Text(
+        text = tekst,
+        style = MaterialTheme.typography.headlineSmall,
+        color = MaterialTheme.colorScheme.onSurface,
+        modifier = Modifier
+            .padding(
+                top = if (prva) MacroRazmaci.xl else MacroRazmaci.iznadSekcije,
+                bottom = MacroRazmaci.ispodNaslovaSekcije
+            )
+            .semantics { heading() }
     )
+}
+
+private val CiljFormaSaver = androidx.compose.runtime.saveable.listSaver<CiljForma, String>(
+    save = { listOf(it.visina, it.dob, it.masa, it.tipCilja, it.aktivnost) },
+    restore = { CiljForma(it[0], it[1], it[2], it[3], it[4]) }
+)
+
+// ---------- Previewi ----------
+
+private val PRIMJER_FORMA = CiljForma(visina = "182", dob = "22", masa = "78,4", tipCilja = "mrsavljenje", aktivnost = "lagana")
+
+private val PRIMJER_OBJASNJENJE = CiljeviViewModel.Objasnjenje(
+    izracun = IzracunPreporuke(
+        bmr = 1833.0,
+        bmrFormula = "10 × 78,4 + 6,25 × 182 − 5 × 22 + 5",
+        faktorAktivnosti = 1.375,
+        tdee = 2520.0,
+        korekcijaCilja = -500.0,
+        ciljKalorije = 2020,
+        proteini = 157,
+        masti = 56,
+        ugljikohidrati = 222
+    ),
+    masa = 78.4
+)
+
+@Composable
+private fun PreviewOkvir(
+    tamna: Boolean,
+    forma: CiljForma = CiljForma(),
+    greska: GreskaCilja? = null,
+    poruka: String? = null,
+    objasnjenje: CiljeviViewModel.Objasnjenje? = null
+) {
+    MacroMenzaTheme(darkTheme = tamna) {
+        PostavkeCiljevaSadrzaj(
+            forma = forma,
+            greska = greska,
+            poruka = poruka,
+            objasnjenje = objasnjenje,
+            onForma = {},
+            onNatrag = {},
+            onSpremi = {}
+        )
+    }
+}
+
+private const val VISINA_PREVIEWA = 1800
+
+@Preview(name = "Svijetla · prazno", widthDp = 360, heightDp = VISINA_PREVIEWA)
+@Composable
+private fun PreviewSvijetlaPrazno() = PreviewOkvir(false)
+
+@Preview(name = "Tamna · prazno", widthDp = 360, heightDp = VISINA_PREVIEWA)
+@Composable
+private fun PreviewTamnaPrazno() = PreviewOkvir(true)
+
+@Preview(name = "Svijetla · popunjeno", widthDp = 360, heightDp = VISINA_PREVIEWA)
+@Composable
+private fun PreviewSvijetlaPopunjeno() = PreviewOkvir(false, PRIMJER_FORMA, poruka = PORUKA_USPJEHA, objasnjenje = PRIMJER_OBJASNJENJE)
+
+@Preview(name = "Tamna · popunjeno", widthDp = 360, heightDp = VISINA_PREVIEWA)
+@Composable
+private fun PreviewTamnaPopunjeno() = PreviewOkvir(true, PRIMJER_FORMA, poruka = PORUKA_USPJEHA, objasnjenje = PRIMJER_OBJASNJENJE)
+
+@Preview(name = "Svijetla · greška", widthDp = 360, heightDp = VISINA_PREVIEWA)
+@Composable
+private fun PreviewSvijetlaGreska() = PreviewOkvir(false, PRIMJER_FORMA.copy(masa = "18"), GreskaCilja.MASA)
+
+@Preview(name = "Tamna · greška", widthDp = 360, heightDp = VISINA_PREVIEWA)
+@Composable
+private fun PreviewTamnaGreska() = PreviewOkvir(true, PRIMJER_FORMA.copy(visina = "82"), GreskaCilja.VISINA)
+
+@Preview(name = "Svijetla · prazno · fontScale 1,3", widthDp = 360, heightDp = 2200, fontScale = 1.3f)
+@Composable
+private fun PreviewVelikiFontPrazno() = PreviewOkvir(false)
+
+@Preview(name = "Tamna · popunjeno · fontScale 1,3", widthDp = 360, heightDp = 2200, fontScale = 1.3f)
+@Composable
+private fun PreviewVelikiFontPopunjeno() = PreviewOkvir(true, PRIMJER_FORMA, objasnjenje = PRIMJER_OBJASNJENJE)
+
+@Preview(name = "Svijetla · greška · fontScale 1,3", widthDp = 360, heightDp = 2200, fontScale = 1.3f)
+@Composable
+private fun PreviewVelikiFontGreska() = PreviewOkvir(false, PRIMJER_FORMA.copy(dob = "9"), GreskaCilja.DOB)

@@ -62,6 +62,9 @@ object Trajanje {
     /** Globalni fade-through između ekrana: odlazni 90 ms, dolazni 160 ms nakon njega (ukupno 250 ms). */
     const val prijelazIzlaz = 90
     const val prijelazUlaz = 160
+
+    /** Forma nakon uspješnog spremanja: snackbar je vidljiv ovoliko prije povratka na prethodni ekran. */
+    const val porukaPrijePovratka = 1200
 }
 
 object Kasnjenje {
