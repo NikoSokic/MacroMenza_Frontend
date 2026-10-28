@@ -7,12 +7,13 @@ import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.niko.macromenza.ui.theme.MacroDimenzije
 
 object ScreenSpacing {
     val TopExtra = 16.dp
 
     // prostor koji sadržaj treba ostaviti za floating bottom nav
-    val FloatingBottomBar = 92.dp
+    val FloatingBottomBar = MacroDimenzije.trakaNavVisina + MacroDimenzije.trakaNavOdmak * 2
 }
 
 @Composable

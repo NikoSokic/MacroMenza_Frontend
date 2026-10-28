@@ -27,6 +27,10 @@
     <string name="dp_luk_opis_preko">Preko cilja %1$s kcal. Uneseno %2$s od %3$s kcal.</string>
     <string name="dp_luk_opis_bez_cilja">Uneseno %1$s kcal. Cilj nije postavljen.</string>
 
+    <string name="nav_pocetna">Početna</string>
+    <string name="nav_unos">Unos</string>
+    <string name="nav_povijest">Povijest</string>
+    <string name="nav_profil">Profil</string>
     <string name="kom_proteini">Proteini</string>
     <string name="kom_masti">Masti</string>
     <string name="kom_ugljikohidrati">Ugljikohidrati</string>

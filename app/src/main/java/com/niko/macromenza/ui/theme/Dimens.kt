@@ -90,6 +90,10 @@ object MacroDimenzije {
     val glifPorcije = 22.dp
     val pragBrisanja = 96.dp
 
+    // Plutajuća donja navigacija: traka 72 (stavke 56 + 2 × razmak s), odmak od ruba 10; zajedno 92 za screenBottomPadding
+    val trakaNavVisina = 72.dp
+    val trakaNavOdmak = 10.dp
+
     // Primarna akcija
     val fabVisina = 56.dp
     val prostorZaFab = 96.dp

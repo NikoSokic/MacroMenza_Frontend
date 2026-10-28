@@ -39,7 +39,7 @@ Stupci: **Pladanj** = boje, tipografija, oblici i razmaci iz `ui/theme/`; **spec
 | Postavke aplikacije (`PostavkeAplikacijeScreen.kt`) | da | `profil.md` | ok | ok | ok | — |
 | Odakle su kalorije (`OdakleSuKalorijeScreen.kt`) | da | `profil.md` | ok | ok | ok | — |
 | Slika ili opis (`SlikaIliOpisScreen.kt`, `screens/slikailiopis/`) | da | `slika-ili-opis.md` | sva | ok | ok | — |
-| Plutajuća navigacija (`navigation/MacroBottomBar.kt`) | djelomično | nema (MASTER ne opisuje) | — | sjena 8 dp (`:42`) | ikona i tekst čitaju isti naslov dvaput (`:106`, `:121`) | boje su iz sheme, sve ostalo nije |
+| Plutajuća navigacija (`navigation/MacroBottomBar.kt`) | da (korak 5) | MASTER §8 „Donja navigacija" | — | traka bez sjene, rub `outlineVariant` | `Role.Tab`, `selectableGroup`, ikona bez `contentDescription` (tekst je vidljiv) | previewi svijetli/tamni × 4 taba, 320 dp i fontScale 1,3 |
 
 **Previewi:** svi prebačeni ekrani imaju svijetle i tamne previewe s više stanja, većinom i fontScale 1,3 (npr. `screens/povijest/PovijestSadrzaj.kt` 25, `screens/slikailiopis/SlikaIliOpisSadrzaj.kt` 21, `screens/profil/ProfilSadrzaj.kt` 13). Kartica Unos ima samo dva tamna (`KonzumacijaScreen.kt:405-421`). Osam starih datoteka i `MacroBottomBar` nemaju nijedan preview.
 
