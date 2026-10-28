@@ -19,8 +19,8 @@ Stupci: **Pladanj** = boje, tipografija, oblici i razmaci iz `ui/theme/`; **spec
 
 | Ekran | Pladanj | Page spec | Stanja | Tamna tema | Pristupačnost | Napomena |
 |---|---|---|---|---|---|---|
-| Splash (`screens/SplashScreen.kt`) | ne | nema | spinner (`:110`) | zelena ploha s `onPrimary` (`:70`, `:80`) | slogan u 65 % prigušene boje (`:123`), vjerojatno < 4,5:1 | prikazuje se dok se čita sesija (`navigation/NavGraph.kt:88`) |
-| Welcome (`WelcomeScreen.kt`) | ne | nema | — | krugovi i zelena kao u svijetloj | `fontSize` u kodu, ne skalira se po stilu | vlastiti „logo" s „M" (`:83-98`) |
+| Splash (`screens/SplashScreen.kt`) | da (korak 8) | `prijava.md` § Splash | spinner (`:110`) | zelena ploha s `onPrimary` (`:70`, `:80`) | slogan u 65 % prigušene boje (`:123`), vjerojatno < 4,5:1 | prikazuje se dok se čita sesija (`navigation/NavGraph.kt:88`) |
+| Welcome (`WelcomeScreen.kt`) | da (korak 8) | `prijava.md` § Welcome | — | krugovi i zelena kao u svijetloj | `fontSize` u kodu, ne skalira se po stilu | vlastiti „logo" s „M" (`:83-98`) |
 | Login (`LoginScreen.kt`) | da (korak 7) | `prijava.md` | spinner u gumbu (`:255`) | `Color.White` na zelenoj (`:247`, `:258`) | lozinka ima `contentDescription` (`:195-200`) | — |
 | Register (`RegisterScreen.kt`) | da (korak 7) | `prijava.md` | spinner u gumbu (`:324`) | isto kao Login | — | uspjeh u zelenoj (`:278-289`) |
 | Onboarding (`OnboardingScreen.kt`) | ne | nema | spinneri (`:443`, `:541`) | `tonalElevation` kartice (`:568`) | `RadioButton` u retku, ali red nije `selectable` (`:632-665`) | jedino `KakoSmoIzracunaliKartica` (`:390`) je na Pladnju |
@@ -43,7 +43,7 @@ Stupci: **Pladanj** = boje, tipografija, oblici i razmaci iz `ui/theme/`; **spec
 
 **Previewi:** svi prebačeni ekrani imaju svijetle i tamne previewe s više stanja, većinom i fontScale 1,3 (npr. `screens/povijest/PovijestSadrzaj.kt` 25, `screens/slikailiopis/SlikaIliOpisSadrzaj.kt` 21, `screens/profil/ProfilSadrzaj.kt` 13). Kartica Unos ima samo dva tamna (`KonzumacijaScreen.kt:405-421`). Osam starih datoteka i `MacroBottomBar` nemaju nijedan preview.
 
-**Ukupno:** 11 ekrana „da", 2 „djelomično" (unos obroka, plutajuća navigacija), 8 „ne".
+**Ukupno:** 13 ekrana „da", 2 „djelomično" (unos obroka, plutajuća navigacija), 6 „ne" (stanje nakon koraka 8).
 
 ---
 

@@ -557,4 +557,20 @@
     <string name="auth_registracija_u_tijeku">Registriram…</string>
     <string name="auth_imas_racun">Već imaš račun?</string>
     <string name="auth_prijavi_link">Prijavi se</string>
+
+    <!-- Welcome (pages/prijava.md § Welcome) -->
+    <string name="auth_welcome_naslov">MacroMenza</string>
+    <string name="auth_welcome_podnaslov">Kalorije i makronutrijenti tvojih obroka iz studentske menze, izračunati iz službenih receptura.</string>
+    <string name="auth_znacajka_menza_naslov">Jela iz tvoje menze</string>
+    <string name="auth_znacajka_menza_opis">Odaberi jelo ili cijeli meni i odmah vidi što je na tanjuru.</string>
+    <string name="auth_znacajka_slika_naslov">Slika ili opis obroka</string>
+    <string name="auth_znacajka_slika_opis">Slikaj račun ili opiši što si jeo, a aplikacija predloži jela.</string>
+    <string name="auth_znacajka_cilj_naslov">Dnevni cilj i povijest</string>
+    <string name="auth_znacajka_cilj_opis">Preporuka prema tvojim mjerama i pregled po tjednima.</string>
+    <string name="auth_pladanj_opis">Primjer pladnja s doručkom, ručkom od oko 1040 kcal i večerom.</string>
+
+    <!-- Splash (pages/prijava.md § Splash) -->
+    <string name="spl_naslov">MacroMenza</string>
+    <string name="spl_slogan">Pametnije prati svoju prehranu</string>
+    <string name="spl_ucitavam">Učitavam aplikaciju</string>
 </resources>

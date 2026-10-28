@@ -1,284 +1,274 @@
 package com.niko.macromenza.screens
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.filled.BarChart
-import androidx.compose.material.icons.filled.Restaurant
-import androidx.compose.material.icons.filled.TrackChanges
-import androidx.compose.material3.*
+import androidx.compose.material.icons.rounded.CameraAlt
+import androidx.compose.material.icons.rounded.Restaurant
+import androidx.compose.material.icons.rounded.TrackChanges
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavController
-import com.niko.macromenza.ui.theme.MacroGreen
+import com.niko.macromenza.R
+import com.niko.macromenza.ui.components.GumbSpremi
+import com.niko.macromenza.ui.components.Makro
+import com.niko.macromenza.ui.components.Pladanj
+import com.niko.macromenza.ui.components.TanjurUi
+import com.niko.macromenza.ui.components.screenBottomPadding
+import com.niko.macromenza.ui.components.screenTopPadding
+import com.niko.macromenza.ui.components.skalaPritiska
+import com.niko.macromenza.ui.theme.MacroDimenzije
+import com.niko.macromenza.ui.theme.MacroMenzaTheme
+import com.niko.macromenza.ui.theme.MacroOblici
+import com.niko.macromenza.ui.theme.MacroRazmaci
+import com.niko.macromenza.ui.theme.UlazUSesiji
+import com.niko.macromenza.ui.theme.rememberSmanjeniPokret
+
+/** Primjer dana na pladnju: doručak, ručak (~1040 kcal) i večera iz menze. Samo ilustracija, ne dira podatke. */
+private val PRIMJER_PLADNJA = listOf(
+    TanjurUi("DORUCAK", Makro(kcal = 406.0, proteini = 18.0, masti = 14.0, ugljikohidrati = 52.0), "08:10"),
+    TanjurUi("RUCAK", Makro(kcal = 1030.0, proteini = 52.0, masti = 38.0, ugljikohidrati = 120.0), "12:40"),
+    TanjurUi("VECERA", Makro(kcal = 540.0, proteini = 30.0, masti = 20.0, ugljikohidrati = 60.0), "19:00")
+)
 
 @Composable
 fun WelcomeScreen(
     navController: NavController
 ) {
-    BoxWithConstraints(
+    val smanjeno = rememberSmanjeniPokret()
+    val prviUlaz = rememberPrviUlaz(UlazUSesiji.WELCOME)
+
+    WelcomeSadrzaj(
+        animirajUlaz = prviUlaz,
+        smanjeno = smanjeno,
+        onRegistracija = { navController.navigate("register") },
+        onPrijava = { navController.navigate("login") }
+    )
+}
+
+/** Izgled Welcomea bez navigacije (pages/prijava.md § Welcome); koristi ga ekran i previewi. */
+@Composable
+internal fun WelcomeSadrzaj(
+    animirajUlaz: Boolean,
+    smanjeno: Boolean,
+    onRegistracija: () -> Unit,
+    onPrijava: () -> Unit
+) {
+    val shema = MaterialTheme.colorScheme
+    val tip = MaterialTheme.typography
+
+    Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(shema.background)
     ) {
-
-        // Na nižim ekranima automatski koristimo manje razmake
-        val compactScreen = maxHeight < 750.dp
-
-        val topSpace = if (compactScreen) 28.dp else 60.dp
-        val sectionSpace = if (compactScreen) 18.dp else 28.dp
-        val logoSize = if (compactScreen) 72.dp else 86.dp
-        val titleSize = if (compactScreen) 36.sp else 42.sp
-
-        // Dekoracija gore lijevo
-        Box(
+        // Sadržaj se lista; gumbi ispod njega stalno ostaju na ekranu.
+        Column(
             modifier = Modifier
-                .size(220.dp)
-                .offset(x = (-100).dp, y = (-90).dp)
-                .clip(CircleShape)
-                .background(
-                    MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
-                )
-        )
+                .weight(1f)
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = MacroRazmaci.rubEkrana)
+                .padding(top = screenTopPadding() + MacroRazmaci.xl)
+        ) {
+            IzlogPladnja(animirajUlaz = animirajUlaz, smanjeno = smanjeno)
 
-        // Dekoracija dolje desno
-        Box(
-            modifier = Modifier
-                .size(260.dp)
-                .align(Alignment.BottomEnd)
-                .offset(x = 120.dp, y = 110.dp)
-                .clip(CircleShape)
-                .background(
-                    MacroGreen.copy(alpha = 0.08f)
+            Text(
+                text = stringResource(R.string.auth_welcome_naslov),
+                style = tip.headlineMedium,
+                color = shema.onBackground,
+                modifier = Modifier
+                    .padding(top = MacroRazmaci.xl)
+                    .semantics { heading() }
+                    .ulazAuth(1, animirajUlaz)
+            )
+            Text(
+                text = stringResource(R.string.auth_welcome_podnaslov),
+                style = tip.bodyLarge,
+                color = shema.onSurfaceVariant,
+                modifier = Modifier
+                    .padding(top = MacroRazmaci.xs)
+                    .ulazAuth(2, animirajUlaz)
+            )
+
+            Column(
+                modifier = Modifier.padding(top = MacroRazmaci.xl),
+                verticalArrangement = Arrangement.spacedBy(MacroRazmaci.l)
+            ) {
+                ZnacajkaRed(
+                    ikona = Icons.Rounded.Restaurant,
+                    naslov = stringResource(R.string.auth_znacajka_menza_naslov),
+                    opis = stringResource(R.string.auth_znacajka_menza_opis),
+                    modifier = Modifier.ulazAuth(3, animirajUlaz)
                 )
-        )
+                ZnacajkaRed(
+                    ikona = Icons.Rounded.CameraAlt,
+                    naslov = stringResource(R.string.auth_znacajka_slika_naslov),
+                    opis = stringResource(R.string.auth_znacajka_slika_opis),
+                    modifier = Modifier.ulazAuth(4, animirajUlaz)
+                )
+                ZnacajkaRed(
+                    ikona = Icons.Rounded.TrackChanges,
+                    naslov = stringResource(R.string.auth_znacajka_cilj_naslov),
+                    opis = stringResource(R.string.auth_znacajka_cilj_opis),
+                    modifier = Modifier.ulazAuth(5, animirajUlaz)
+                )
+            }
+
+            Spacer(Modifier.height(MacroRazmaci.xl))
+        }
 
         Column(
             modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .windowInsetsPadding(WindowInsets.safeDrawing)
-                .padding(horizontal = 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .padding(horizontal = MacroRazmaci.rubEkrana)
+                .padding(top = MacroRazmaci.m, bottom = screenBottomPadding(hasBottomNavigation = false))
         ) {
-
-            Spacer(modifier = Modifier.height(topSpace))
-
-            // Privremeni logo
-            Box(
-                modifier = Modifier
-                    .size(logoSize)
-                    .clip(RoundedCornerShape(24.dp))
-                    .background(
-                        MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "M",
-                    fontSize = if (compactScreen) 36.sp else 42.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MacroGreen
-                )
-            }
-
-            Spacer(
-                modifier = Modifier.height(
-                    if (compactScreen) 18.dp else 28.dp
-                )
+            GumbSpremi(
+                tekst = stringResource(R.string.auth_registracija_gumb),
+                onClick = onRegistracija,
+                modifier = Modifier.ulazAuth(6, animirajUlaz)
             )
 
-            Text(
-                text = "Dobrodošao u",
-                fontSize = if (compactScreen) 26.sp else 30.sp,
-                color = MaterialTheme.colorScheme.onSurface,
-                textAlign = TextAlign.Center
-            )
-
-            Spacer(modifier = Modifier.height(2.dp))
-
-            Text(
-                text = buildAnnotatedString {
-                    withStyle(
-                        SpanStyle(
-                            color = MaterialTheme.colorScheme.onSurface,
-                            fontWeight = FontWeight.Bold
-                        )
-                    ) {
-                        append("Macro")
-                    }
-
-                    withStyle(
-                        SpanStyle(
-                            color = MacroGreen,
-                            fontWeight = FontWeight.Bold
-                        )
-                    ) {
-                        append("Menza")
-                    }
-                },
-                fontSize = titleSize,
-                textAlign = TextAlign.Center
-            )
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            Box(
-                modifier = Modifier
-                    .width(70.dp)
-                    .height(4.dp)
-                    .clip(RoundedCornerShape(50))
-                    .background(MacroGreen)
-            )
-
-            Spacer(modifier = Modifier.height(sectionSpace))
-
-            Text(
-                text = "Prati prehranu i makronutrijente u menzi na jednostavan način.",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center
-            )
-
-            Spacer(modifier = Modifier.height(sectionSpace))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                FeatureItem(
-                    icon = Icons.Default.BarChart,
-                    title = "Prati unos\ni napredak"
-                )
-
-                FeatureItem(
-                    icon = Icons.Default.TrackChanges,
-                    title = "Ostvari svoje\nciljeve"
-                )
-
-                FeatureItem(
-                    icon = Icons.Default.Restaurant,
-                    title = "Pametan odabir\nu menzi"
-                )
-            }
-
-            Spacer(
-                modifier = Modifier.height(
-                    if (compactScreen) 30.dp else 50.dp
-                )
-            )
-
-            Button(
-                onClick = {
-                    navController.navigate("register")
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(58.dp),
-                shape = RoundedCornerShape(18.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MacroGreen,
-                    contentColor = Color.White
-                )
-            ) {
-                Box(
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        text = "Registriraj se",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.align(Alignment.Center)
-                    )
-
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                        contentDescription = null,
-                        modifier = Modifier
-                            .align(Alignment.CenterEnd)
-                            .size(24.dp)
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
+            val izvor = remember { MutableInteractionSource() }
             OutlinedButton(
-                onClick = {
-                    navController.navigate("login")
-                },
+                onClick = onPrijava,
+                interactionSource = izvor,
+                shape = MacroOblici.gumb,
+                border = BorderStroke(MacroDimenzije.linija, shema.onSurface),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = shema.onSurface),
                 modifier = Modifier
+                    .padding(top = MacroRazmaci.s)
                     .fillMaxWidth()
-                    .height(58.dp),
-                shape = RoundedCornerShape(18.dp),
-                border = androidx.compose.foundation.BorderStroke(
-                    width = 1.5.dp,
-                    color = MacroGreen
-                )
+                    .heightIn(min = MacroDimenzije.fabVisina)
+                    .ulazAuth(7, animirajUlaz)
+                    .skalaPritiska(izvor)
             ) {
                 Text(
-                    text = "Prijavi se",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MacroGreen
+                    text = stringResource(R.string.auth_prijava_gumb),
+                    style = tip.labelLarge,
+                    textAlign = TextAlign.Center
                 )
             }
-
-            // Da zadnji gumb nikad ne završi ispod navigation bara
-            Spacer(modifier = Modifier.height(24.dp))
         }
     }
 }
 
+/**
+ * Pladanj iz pregleda dana, ovdje samo kao slika: tanjuri slijeću (Opruge.slijeganje), ali se ne dodiruju
+ * i čitaču zaslona je jedna rečenica umjesto triju gumba.
+ */
 @Composable
-private fun FeatureItem(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    title: String
-) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.width(100.dp)
-    ) {
-
+private fun IzlogPladnja(animirajUlaz: Boolean, smanjeno: Boolean) {
+    val opis = stringResource(R.string.auth_pladanj_opis)
+    Box(modifier = Modifier.clearAndSetSemantics { contentDescription = opis }) {
+        Pladanj(
+            tanjuri = PRIMJER_PLADNJA,
+            danJePrazan = false,
+            animirajUlaz = animirajUlaz,
+            smanjeno = smanjeno,
+            proslava = false,
+            onProslavaGotova = {},
+            onTanjur = {}
+        )
+        // Prozirni sloj guta dodire da tanjuri ne izgledaju kao gumbi.
         Box(
             modifier = Modifier
-                .size(58.dp)
-                .clip(RoundedCornerShape(18.dp))
-                .background(
-                    MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)
-                ),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = MacroGreen,
-                modifier = Modifier.size(30.dp)
-            )
-        }
-
-        Spacer(modifier = Modifier.height(10.dp))
-
-        Text(
-            text = title,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center
+                .matchParentSize()
+                .pointerInput(Unit) {
+                    awaitPointerEventScope {
+                        while (true) {
+                            awaitPointerEvent(PointerEventPass.Initial).changes.forEach { it.consume() }
+                        }
+                    }
+                }
         )
     }
 }
+
+/** Jedna značajka: ikona u onSurfaceVariant bez podloge, naslov i prigušeni opis. */
+@Composable
+private fun ZnacajkaRed(ikona: ImageVector, naslov: String, opis: String, modifier: Modifier = Modifier) {
+    val shema = MaterialTheme.colorScheme
+    val tip = MaterialTheme.typography
+    Row(modifier = modifier.fillMaxWidth().semantics(mergeDescendants = true) { }) {
+        Icon(
+            imageVector = ikona,
+            contentDescription = null,
+            tint = shema.onSurfaceVariant,
+            modifier = Modifier.size(MacroDimenzije.ikona)
+        )
+        Spacer(Modifier.width(MacroRazmaci.m))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(text = naslov, style = tip.titleSmall, color = shema.onSurface)
+            Text(
+                text = opis,
+                style = tip.bodyMedium,
+                color = shema.onSurfaceVariant,
+                modifier = Modifier.padding(top = MacroRazmaci.xxs)
+            )
+        }
+    }
+}
+
+// ---------- Previewi ----------
+
+@Composable
+private fun PreviewWelcome(tamna: Boolean) {
+    MacroMenzaTheme(darkTheme = tamna) {
+        WelcomeSadrzaj(animirajUlaz = false, smanjeno = true, onRegistracija = {}, onPrijava = {})
+    }
+}
+
+@Preview(name = "Svijetla", widthDp = 360, heightDp = 760)
+@Composable
+private fun PreviewSvijetla() = PreviewWelcome(false)
+
+@Preview(name = "Tamna", widthDp = 360, heightDp = 760)
+@Composable
+private fun PreviewTamna() = PreviewWelcome(true)
+
+@Preview(name = "Svijetla · fontScale 1,3", widthDp = 360, heightDp = 760, fontScale = 1.3f)
+@Composable
+private fun PreviewSvijetlaVelika() = PreviewWelcome(false)
+
+@Preview(name = "Tamna · fontScale 1,3", widthDp = 360, heightDp = 760, fontScale = 1.3f)
+@Composable
+private fun PreviewTamnaVelika() = PreviewWelcome(true)
+
+@Preview(name = "Svijetla · mali ekran", widthDp = 320, heightDp = 568)
+@Composable
+private fun PreviewSvijetlaMala() = PreviewWelcome(false)
+
+@Preview(name = "Tamna · mali ekran · fontScale 1,3", widthDp = 320, heightDp = 568, fontScale = 1.3f)
+@Composable
+private fun PreviewTamnaMalaVelika() = PreviewWelcome(true)
