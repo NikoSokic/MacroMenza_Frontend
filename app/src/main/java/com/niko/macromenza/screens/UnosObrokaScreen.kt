@@ -237,7 +237,7 @@ fun UnosObrokaScreen(
     LaunchedEffect(spremljeniObrok) {
         val obrok = spremljeniObrok ?: return@LaunchedEffect
         viewModel.ocistiRezultatSpremanja()
-        navController.navigate("obrok_spremljen/${obrok.tipObroka}")
+        navController.navigate(rutaObrokSpremljen(obrok))
     }
 
     // Promjene spremljene: natrag na prikaz dana, koji se pri povratku sam ponovno učita.

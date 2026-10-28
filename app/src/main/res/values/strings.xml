@@ -186,6 +186,14 @@
     <string name="uo_sazetak_otvoren">stavke prikazane</string>
     <string name="uo_sazetak_zatvoren">stavke skrivene</string>
     <string name="uo_ukloni_stavku">Ukloni %1$s iz obroka</string>
+
+    <!-- Obrok spremljen -->
+    <string name="os_naslov">Obrok spremljen</string>
+    <string name="os_danas">%1$s · %2$s · danas</string>
+    <string name="os_datum">%1$s · %2$s · %3$s</string>
+    <string name="os_datum_godina">%1$s, %2$d. %3$d. %4$d.</string>
+    <string name="os_natrag_na_pocetnu">Natrag na početnu</string>
+    <string name="os_dodaj_jos">Dodaj još</string>
     <!-- Detalj jela (paket 2) -->
     <string name="jd_po_porciji">po porciji</string>
     <string name="jd_za_kolicinu">za %1$s</string>

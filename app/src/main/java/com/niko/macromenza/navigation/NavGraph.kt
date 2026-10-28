@@ -9,6 +9,8 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.*
 import androidx.navigation.navArgument
 import com.niko.macromenza.screens.*
+import com.niko.macromenza.ui.components.Makro
+import java.time.LocalDate
 import com.niko.macromenza.ui.theme.UlazUSesiji
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -240,14 +242,39 @@ fun AppNavigation(
                 )
             }
 
-            composable("obrok_spremljen/{tipObroka}") { backStackEntry ->
+            // Datum, vrijeme i zbroj spremljenog obroka su neobavezni; bez njih ekran pokazuje samo vrstu.
+            composable(
+                route = RUTA_OBROK_SPREMLJEN,
+                arguments = listOf(
+                    navArgument("datum") { type = NavType.StringType; nullable = true; defaultValue = null },
+                    navArgument("vrijeme") { type = NavType.StringType; nullable = true; defaultValue = null },
+                    navArgument("kcal") { type = NavType.FloatType; defaultValue = -1f },
+                    navArgument("p") { type = NavType.FloatType; defaultValue = -1f },
+                    navArgument("m") { type = NavType.FloatType; defaultValue = -1f },
+                    navArgument("u") { type = NavType.FloatType; defaultValue = -1f }
+                )
+            ) { backStackEntry ->
+                val argumenti = backStackEntry.arguments
                 val tipObroka =
-                    backStackEntry.arguments?.getString("tipObroka")
+                    argumenti?.getString("tipObroka")
                         ?: "RUCAK"
+
+                val datum = argumenti?.getString("datum")
+                    ?.let { runCatching { LocalDate.parse(it) }.getOrNull() }
+                val kcal = argumenti?.getFloat("kcal", -1f) ?: -1f
+                val makro = if (kcal < 0f) null else Makro(
+                    kcal = kcal.toDouble(),
+                    proteini = (argumenti?.getFloat("p", 0f) ?: 0f).coerceAtLeast(0f).toDouble(),
+                    masti = (argumenti?.getFloat("m", 0f) ?: 0f).coerceAtLeast(0f).toDouble(),
+                    ugljikohidrati = (argumenti?.getFloat("u", 0f) ?: 0f).coerceAtLeast(0f).toDouble()
+                )
 
                 ObrokSpremljenScreen(
                     tipObroka = tipObroka,
-                    navController = navController
+                    navController = navController,
+                    datum = datum,
+                    vrijeme = argumenti?.getString("vrijeme"),
+                    makro = makro
                 )
             }
 
