@@ -80,6 +80,8 @@ import androidx.compose.ui.unit.dp
 import com.niko.macromenza.R
 import com.niko.macromenza.model.Savjet
 import com.niko.macromenza.ui.components.MakroTrake
+import com.niko.macromenza.ui.components.ObrokRed
+import com.niko.macromenza.ui.components.ObrokUi
 import com.niko.macromenza.ui.components.Pladanj
 import com.niko.macromenza.ui.components.TanjurUi
 import com.niko.macromenza.ui.components.screenBottomPadding

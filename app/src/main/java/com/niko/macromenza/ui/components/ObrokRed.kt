@@ -1,4 +1,4 @@
-package com.niko.macromenza.screens.dnevnipregled
+package com.niko.macromenza.ui.components
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
@@ -40,6 +40,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -61,11 +62,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextOverflow
 import com.niko.macromenza.R
-import com.niko.macromenza.ui.components.PorcijaGlif
-import com.niko.macromenza.ui.components.makroKratko
-import com.niko.macromenza.ui.components.nazivTipa
-import com.niko.macromenza.ui.components.skalaPritiska
-import com.niko.macromenza.ui.components.tekstPorcije
+import com.niko.macromenza.model.Obrok
 import com.niko.macromenza.ui.theme.MacroDimenzije
 import com.niko.macromenza.ui.theme.MacroOblici
 import com.niko.macromenza.ui.theme.MacroRazmaci
@@ -76,6 +73,36 @@ import com.niko.macromenza.ui.theme.opruga
 import com.niko.macromenza.util.formatKcal
 import kotlin.math.abs
 import kotlinx.coroutines.launch
+
+@Immutable
+data class JeloUi(
+    val naziv: String,
+    val kolicina: Double,
+    val makro: Makro
+)
+
+/**
+ * Jedan spremljeni obrok. [vrijeme] je "HH:mm" ili null (lažni podaci bez vremena).
+ * [izvor] je izvorni objekt s backenda (za brisanje, poništavanje i uređivanje); u previewima je null.
+ */
+@Immutable
+data class ObrokUi(
+    val id: Long,
+    val tip: String,
+    val vrijeme: String?,
+    val makro: Makro,
+    val jela: List<JeloUi>,
+    val izvor: Obrok?
+)
+
+fun Obrok.uUi() = ObrokUi(
+    id = id,
+    tip = tipObroka.uppercase(),
+    vrijeme = vrijeme.take(5),
+    makro = Makro(ukupnoKalorije, ukupnoProteini, ukupnoMasti, ukupnoUgljikohidrati),
+    jela = stavke.map { JeloUi(it.naziv, it.kolicina, Makro(it.kalorije, it.proteini, it.masti, it.ugljikohidrati)) },
+    izvor = this
+)
 
 fun ikonaTipa(tip: String): ImageVector = when (tip) {
     "DORUCAK" -> Icons.Rounded.BreakfastDining
@@ -99,7 +126,9 @@ fun ObrokRed(
     onProsiri: () -> Unit,
     onUredi: () -> Unit,
     onObrisi: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    /** True (Detalj dana): povlačenje ne odvodi red s ekrana nego ga vraća i traži potvrdu kroz [onObrisi]. */
+    brisanjeSPotvrdom: Boolean = false
 ) {
     val shema = MaterialTheme.colorScheme
     val tip = MaterialTheme.typography
@@ -113,13 +142,18 @@ fun ObrokRed(
     val naziv = nazivTipa(obrok.tip)
     val kcalTekst = stringResource(R.string.kom_kcal_vrijednost, formatKcal(obrok.makro.kcal))
     val makroTekst = makroKratko(obrok.makro)
-    val tekstObrisi = stringResource(R.string.dp_obrisi_obrok)
-    val tekstUredi = stringResource(R.string.dp_uredi)
-    val stanjeTekst = stringResource(if (prosiren) R.string.dp_sazmi else R.string.dp_prosiri)
-    val opis = stringResource(R.string.dp_red_opis, naziv, obrok.vrijeme.orEmpty(), formatKcal(obrok.makro.kcal), makroTekst)
+    val tekstObrisi = stringResource(R.string.kom_obrisi_obrok)
+    val tekstUredi = stringResource(R.string.kom_uredi)
+    val stanjeTekst = stringResource(if (prosiren) R.string.kom_sazmi else R.string.kom_prosiri)
+    val opis = stringResource(R.string.kom_red_opis, naziv, obrok.vrijeme.orEmpty(), formatKcal(obrok.makro.kcal), makroTekst)
 
     fun obrisiAnimirano() {
         scope.launch {
+            if (brisanjeSPotvrdom) {
+                onObrisi()
+                pomak.animateTo(0f, opruga(Opruge.slijeganje(), smanjeno))
+                return@launch
+            }
             pomak.animateTo(-sirina[0], if (smanjeno) opruga(Opruge.brza(), true) else tween(Trajanje.kratko, easing = Ublazavanje.ubrzavanje))
             onObrisi()
         }
@@ -205,7 +239,7 @@ fun ObrokRed(
                     Row(verticalAlignment = Alignment.Bottom) {
                         Text(naziv, style = tip.titleMedium, color = shema.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
                         obrok.vrijeme?.let {
-                            Text(stringResource(R.string.dp_red_vrijeme, it), style = tip.bodySmall, color = shema.onSurfaceVariant, maxLines = 1)
+                            Text(stringResource(R.string.kom_red_vrijeme, it), style = tip.bodySmall, color = shema.onSurfaceVariant, maxLines = 1)
                         }
                     }
                     Text(makroTekst, style = tip.bodySmall, color = shema.onSurfaceVariant, maxLines = 1)
@@ -233,7 +267,7 @@ fun ObrokRed(
                     HorizontalDivider(color = shema.outlineVariant)
                     Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
                         AkcijaGumb(tekstUredi, Icons.Rounded.Edit, shema.onSurface, onUredi)
-                        AkcijaGumb(stringResource(R.string.dp_obrisi), Icons.Rounded.DeleteOutline, shema.error) { obrisiAnimirano() }
+                        AkcijaGumb(stringResource(R.string.kom_obrisi), Icons.Rounded.DeleteOutline, shema.error) { obrisiAnimirano() }
                     }
                 }
             }
@@ -258,7 +292,7 @@ private fun JeloRed(jelo: JeloUi, smanjeno: Boolean) {
         Column(modifier = Modifier.weight(1f)) {
             Text(jelo.naziv, style = tip.bodyMedium, color = shema.onSurface, maxLines = 2, overflow = TextOverflow.Ellipsis)
             Text(
-                text = stringResource(R.string.dp_jelo_detalj, tekstPorcije(jelo.kolicina), makroKratko(jelo.makro)),
+                text = stringResource(R.string.kom_jelo_detalj, tekstPorcije(jelo.kolicina), makroKratko(jelo.makro)),
                 style = tip.bodySmall,
                 color = shema.onSurfaceVariant,
                 modifier = Modifier.clearAndSetSemantics { },

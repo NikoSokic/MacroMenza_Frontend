@@ -353,7 +353,9 @@ fun Tanjur(
     smanjeno: Boolean,
     modifier: Modifier = Modifier,
     /** True: rub se pri prvom prikazu puni od nule (Opruge.blaga); zadano je odmah pun. */
-    punjenjeRuba: Boolean = false
+    punjenjeRuba: Boolean = false,
+    /** False: bez broja kcal u sredini (premali tanjur, npr. red tjedna u Povijesti; broj je ispod tanjura). */
+    prikaziKcal: Boolean = true
 ) {
     val boje = MaterialTheme.macroBoje
     val gustoca = LocalDensity.current
@@ -409,7 +411,7 @@ fun Tanjur(
                     kut += raspon
                 }
         }
-        if (makro != null) {
+        if (makro != null && prikaziKcal) {
             val velicina = with(gustoca) { (promjer * MacroOmjeri.kcalTanjura).toSp() }
             Text(
                 text = formatKcal(makro.kcal),

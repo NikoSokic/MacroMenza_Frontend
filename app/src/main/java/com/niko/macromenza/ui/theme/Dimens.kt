@@ -1,5 +1,6 @@
 package com.niko.macromenza.ui.theme
 
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 
 /** Ritam razmaka 4/8 dp. */
@@ -60,8 +61,12 @@ object MacroDimenzije {
     val zrnoNjihanje = 6.dp
     val crtica = 5.dp
 
-    // Povijest: tanjur dana u redu tjedna (7 stupaca od ≥ 48 dp)
-    val tanjurTjedanMax = 40.dp
+    // Povijest: tanjur dana u redu tjedna (7 stupaca od ≥ 48 dp; s prstenom preko cilja okvir je max + 2 × 5 dp)
+    val tanjurTjedanMax = 36.dp
+    val tanjurTjedanMin = 18.dp
+    val tanjurTjedanPrazan = 22.dp
+    /** Crtica ispod slova današnjeg dana. */
+    val oznakaDanas = DpSize(12.dp, 2.dp)
     /** Vodoravno povlačenje dulje od ovoga mijenja tjedan. */
     val pragListanja = 80.dp
 

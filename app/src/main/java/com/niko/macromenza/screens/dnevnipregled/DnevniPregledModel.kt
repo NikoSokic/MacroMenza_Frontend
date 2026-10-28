@@ -6,6 +6,8 @@ import com.niko.macromenza.model.NutritivneVrijednosti
 import com.niko.macromenza.model.Obrok
 import com.niko.macromenza.model.Savjet
 import com.niko.macromenza.ui.components.Makro
+import com.niko.macromenza.ui.components.ObrokUi
+import com.niko.macromenza.ui.components.uUi
 import com.niko.macromenza.ui.components.TanjurUi
 import com.niko.macromenza.ui.components.uMakro
 import java.time.LocalDate
@@ -17,27 +19,6 @@ val TIPOVI_UTORA = listOf("DORUCAK", "RUCAK", "VECERA")
 const val TIP_UZINA = "UZINA"
 
 private val REDOSLIJED_TIPOVA = listOf("DORUCAK", "RUCAK", "UZINA", "VECERA")
-
-@Immutable
-data class JeloUi(
-    val naziv: String,
-    val kolicina: Double,
-    val makro: Makro
-)
-
-/**
- * Jedan spremljeni obrok. [vrijeme] je "HH:mm" ili null (lažni podaci bez vremena).
- * [izvor] je izvorni objekt s backenda (za brisanje, poništavanje i uređivanje); u previewima je null.
- */
-@Immutable
-data class ObrokUi(
-    val id: Long,
-    val tip: String,
-    val vrijeme: String?,
-    val makro: Makro,
-    val jela: List<JeloUi>,
-    val izvor: Obrok?
-)
 
 @Immutable
 data class DnevniPregledUi(
@@ -71,15 +52,6 @@ sealed interface DnevniPregledStanje {
     @Immutable
     data class Sadrzaj(val pregled: DnevniPregledUi) : DnevniPregledStanje
 }
-
-fun Obrok.uUi() = ObrokUi(
-    id = id,
-    tip = tipObroka.uppercase(),
-    vrijeme = vrijeme.take(5),
-    makro = Makro(ukupnoKalorije, ukupnoProteini, ukupnoMasti, ukupnoUgljikohidrati),
-    jela = stavke.map { JeloUi(it.naziv, it.kolicina, Makro(it.kalorije, it.proteini, it.masti, it.ugljikohidrati)) },
-    izvor = this
-)
 
 /**
  * Spaja dan-pregled (cilj, savjet) s obrocima dana (vrijeme, stavke, id za brisanje).

@@ -54,17 +54,17 @@
 
     <string name="dp_danas_jedes">Danas jedeš</string>
     <string name="kom_kcal_vrijednost">%1$s kcal</string>
-    <string name="dp_red_vrijeme"> · %1$s</string>
-    <string name="dp_red_opis">%1$s u %2$s, %3$s kcal, %4$s</string>
+    <string name="kom_red_vrijeme"> · %1$s</string>
+    <string name="kom_red_opis">%1$s u %2$s, %3$s kcal, %4$s</string>
     <string name="kom_porcija_jedna">%1$s porcija</string>
     <string name="kom_porcija_dvije">%1$s porcije</string>
     <string name="kom_porcija_vise">%1$s porcija</string>
-    <string name="dp_jelo_detalj">%1$s · %2$s</string>
-    <string name="dp_uredi">Uredi</string>
-    <string name="dp_obrisi">Obriši</string>
-    <string name="dp_obrisi_obrok">Obriši obrok</string>
-    <string name="dp_prosiri">Prikaži jela</string>
-    <string name="dp_sazmi">Sakrij jela</string>
+    <string name="kom_jelo_detalj">%1$s · %2$s</string>
+    <string name="kom_uredi">Uredi</string>
+    <string name="kom_obrisi">Obriši</string>
+    <string name="kom_obrisi_obrok">Obriši obrok</string>
+    <string name="kom_prosiri">Prikaži jela</string>
+    <string name="kom_sazmi">Sakrij jela</string>
 
     <string name="dp_prazno_naslov">Što si danas jeo u menzi?</string>
     <string name="dp_prazno_tekst">Dodirni prazan utor na pladnju ili „Dodaj obrok”.</string>
@@ -236,41 +236,64 @@
         <item>S</item>
         <item>N</item>
     </string-array>
-    <string-array name="pov_kratki_dani">
-        <item>Pon</item>
-        <item>Uto</item>
-        <item>Sri</item>
-        <item>Čet</item>
-        <item>Pet</item>
-        <item>Sub</item>
-        <item>Ned</item>
-    </string-array>
-    <string name="pov_kalorije_po_danima">Kalorije po danima</string>
-    <string name="pov_dodirni_stupac">Dodirni stupac za kalorije, ponovno za obroke tog dana.</string>
-    <string name="pov_dan_datum">%1$s, %2$d. %3$d.</string>
-    <string name="pov_dan_kcal">%1$s kcal%2$s</string>
-    <string name="pov_dan_nema_unosa">Nema unosa%1$s</string>
-    <string name="pov_dan_cilj"> · cilj %1$s</string>
-    <string name="pov_otvori_dan">Otvori dan</string>
-    <string name="pov_legenda_u_cilju">U cilju</string>
-    <string name="pov_legenda_izvan_cilja">Izvan cilja</string>
-    <string name="pov_legenda_bez_unosa">Bez unosa</string>
-    <string name="pov_legenda_cilj">Cilj</string>
-    <string name="pov_u_cilju">U cilju</string>
-    <string name="pov_u_cilju_vrijednost">%1$d / %2$d dana</string>
-    <string name="pov_prosjecno_dnevno">Prosječno dnevno</string>
     <string name="pov_kcal">%1$s kcal</string>
-    <string name="pov_cilj_kcal">cilj %1$s kcal</string>
-    <string name="pov_bez_cilja">bez cilja</string>
-    <string name="pov_napomena_cilja" formatted="false">±10 % od cilja, samo dani s unosom</string>
+    <string name="pov_napomena_cilja" formatted="false">U cilju znači ±10 % od cilja. Računaju se samo dani s unosom.</string>
     <string name="pov_nema_cilja">Za dane s unosom nema postavljenog cilja.</string>
-    <string name="pov_makro_vrijednost">%1$s / %2$s g</string>
-    <string name="pov_makro_bez_cilja">%1$s g</string>
-    <string name="pov_odaberi_datum">Odaberi datum</string>
-    <string name="pov_dnevni_pregled">Dnevni pregled</string>
     <string name="pov_prethodni_dan">Prethodni dan</string>
     <string name="pov_sljedeci_dan">Sljedeći dan</string>
-    <string name="pov_ukupni_dnevni_unos">Ukupni dnevni unos</string>
     <string name="pov_dan_prazno_naslov">Nema unosa za ovaj dan</string>
     <string name="pov_dan_prazno_tekst">Za odabrani datum nije evidentiran nijedan obrok.</string>
+    <string name="pov_tjedan_opis">Tjedan %1$s: u cilju %2$d od %3$d dana s unosom</string>
+    <string name="pov_dan_ispod">%1$s: %2$s od %3$s kcal, ispod cilja</string>
+    <string name="pov_dan_u_cilju">%1$s: %2$s od %3$s kcal, u cilju</string>
+    <string name="pov_dan_preko">%1$s: %2$s od %3$s kcal, preko cilja %4$s kcal</string>
+    <string name="pov_dan_bez_cilja">%1$s: %2$s kcal</string>
+    <string name="pov_dan_bez_unosa">%1$s: nema unosa</string>
+    <string name="pov_dan_buducnost">%1$s: još nije prošao</string>
+    <string name="pov_dan_danas">%1$s, danas</string>
+    <string name="pov_bez_vrijednosti">–</string>
+    <string name="pov_legenda_cilj">Cilj</string>
+    <string name="pov_legenda_u_cilju">U cilju</string>
+    <string name="pov_legenda_preko">Preko cilja</string>
+    <string name="pov_odabir_savjet">Dodirni dan za detalje, ponovno za obroke</string>
+    <string name="pov_odabrani_kcal">%1$s / %2$s kcal</string>
+    <string name="pov_status_ispod">Ispod cilja</string>
+    <string name="pov_status_u_cilju">U cilju</string>
+    <string name="pov_status_preko">Preko cilja</string>
+    <string name="pov_status_bez_unosa">Nema unosa</string>
+    <string name="pov_status_razmak"> · </string>
+    <string name="pov_otvori_dan">Otvori dan</string>
+    <string name="pov_sazetak_naslov">Ovaj tjedan u prosjeku</string>
+    <plurals name="pov_dana_u_cilju">
+        <item quantity="one">dan u cilju</item>
+        <item quantity="few">dana u cilju</item>
+        <item quantity="other">dana u cilju</item>
+    </plurals>
+    <string name="pov_kcal_dnevno">kcal dnevno</string>
+    <string name="pov_kcal_dnevno_cilj">kcal dnevno · cilj %1$s</string>
+    <string name="pov_kcal_dnevno_preko">kcal dnevno · preko cilja</string>
+    <string name="pov_sazetak_dani_opis">%1$d od %2$d dana u cilju</string>
+    <string name="pov_sazetak_kcal_opis">Prosječno %1$s kcal dnevno, cilj %2$s kcal</string>
+    <string name="pov_sazetak_kcal_opis_preko">Prosječno %1$s kcal dnevno, preko cilja %2$s kcal</string>
+    <string name="pov_sazetak_kcal_opis_bez_cilja">Prosječno %1$s kcal dnevno</string>
+    <!-- Dijeljeno: potvrda brisanja obroka -->
+    <string name="kom_brisanje_naslov">Obrisati %1$s u %2$s?</string>
+    <string name="kom_brisanje_tekst">%1$s, %2$s kcal. Ovo briše cijeli obrok.</string>
+    <plurals name="kom_stavki">
+        <item quantity="one">%d stavka</item>
+        <item quantity="few">%d stavke</item>
+        <item quantity="other">%d stavki</item>
+    </plurals>
+    <string name="kom_odustani">Odustani</string>
+    <!-- Povijest: kartica Dan i Detalj dana -->
+    <string name="pov_datum_godina">%1$s, %2$d. %3$d. %4$d.</string>
+    <string name="pov_obroci">Obroci</string>
+    <string name="pov_dan_od_cilja">od %1$s kcal</string>
+    <string name="pov_dan_preko_cilja">Preko cilja %1$s kcal</string>
+    <string name="pov_dan_zbroj_opis">Ukupno %1$s od %2$s kcal</string>
+    <string name="pov_dan_zbroj_opis_preko">Ukupno %1$s od %2$s kcal, preko cilja %3$s kcal</string>
+    <string name="pov_dan_zbroj_opis_bez_cilja">Ukupno %1$s kcal</string>
+    <string name="pov_dan_ucitavanje">Učitavanje dana</string>
+    <string name="pov_natrag">Natrag</string>
+    <string name="pov_detalj_dana">Detalj dana</string>
 </resources>
