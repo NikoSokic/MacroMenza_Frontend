@@ -155,6 +155,7 @@ object UlazUSesiji {
     const val SLIKA_ILI_OPIS = "slika_ili_opis"
     const val POVIJEST = "povijest"
     const val PROFIL = "profil"
+    const val MOJE_MJERE = "moje_mjere"
 
     private val vidjeni = mutableSetOf<String>()
 

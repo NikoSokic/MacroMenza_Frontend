@@ -393,4 +393,43 @@
     <string name="prof_urp_zensko">Žensko</string>
     <string name="prof_urp_spremi">Spremi promjene</string>
     <string name="prof_urp_spremljeno">Profil spremljen</string>
+
+    <!-- Moje mjere (pages/profil.md § Moje mjere) -->
+    <string name="mj_naslov">Moje mjere</string>
+    <string name="mj_kg">kg</string>
+    <string name="mj_zadnja_masa_opis">Zadnja masa %1$s kg</string>
+    <string name="mj_izmjereno">Izmjereno %1$s</string>
+    <string name="mj_aktivnost_cilj">%1$s aktivnost · %2$s</string>
+    <string name="mj_od_prethodnog">%1$s od %2$s</string>
+    <string name="mj_prazno_naslov">Još nema mjerenja</string>
+    <string name="mj_prazno_tekst">Masa se upisuje u Postavkama ciljeva, zajedno s ciljem i razinom aktivnosti. Nakon prvog mjerenja ovdje dobiješ brzo mjerenje i graf.</string>
+    <string name="mj_greska">Mjerenja nisu učitana. Provjeri vezu s poslužiteljem.</string>
+    <string name="mj_pokusaj_ponovno">Pokušaj ponovno</string>
+    <string name="mj_brzo_mjerenje">Brzo mjerenje</string>
+    <string name="mj_smanji">Smanji za 0,1 kg</string>
+    <string name="mj_povecaj">Povećaj za 0,1 kg</string>
+    <string name="mj_vrijednost_opis">Današnja masa %1$s kg</string>
+    <string name="mj_upisi_rucno">Upiši masu ručno</string>
+    <string name="mj_spremi">Spremi</string>
+    <string name="mj_danas_upisano">Danas već upisano: %1$s</string>
+    <string name="mj_rucno_naslov">Današnja masa</string>
+    <string name="mj_rucno_oznaka">Masa (kg)</string>
+    <string name="mj_rucno_pomoc">Između 20 i 400 kg, najviše jedna decimala.</string>
+    <string name="mj_u_redu">U redu</string>
+    <string name="mj_odustani">Odustani</string>
+    <string name="mj_graf_naslov">Masa kroz vrijeme</string>
+    <string name="mj_razdoblje_30">30 dana</string>
+    <string name="mj_razdoblje_90">90 dana</string>
+    <string name="mj_razdoblje_godina">Godina</string>
+    <string name="mj_razdoblje_sve">Sve</string>
+    <string name="mj_u_30_dana">u 30 dana</string>
+    <string name="mj_u_90_dana">u 90 dana</string>
+    <string name="mj_u_godinu">u godinu dana</string>
+    <string name="mj_u_n_dana">u %1$d dana</string>
+    <string name="mj_promjena_razdoblja">%1$s %2$s</string>
+    <string name="mj_graf_opis">Graf mase: %1$s, od %2$s do %3$s kg</string>
+    <string name="mj_premalo_tocaka">Za graf trebaju barem dva mjerenja u odabranom razdoblju.</string>
+    <string name="mj_promjena_cilja">Cilj: %1$s kcal (prije %2$s kcal)</string>
+    <string name="mj_povijest">Povijest mjerenja</string>
+    <string name="mj_red">%1$s · %2$s</string>
 </resources>

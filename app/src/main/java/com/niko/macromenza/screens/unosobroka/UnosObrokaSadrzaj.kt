@@ -81,6 +81,7 @@ import com.niko.macromenza.screens.dnevnipregled.naslovDatuma
 import com.niko.macromenza.model.CestoJedenoJelo
 import com.niko.macromenza.model.Jelo
 import com.niko.macromenza.model.MeniDTO
+import com.niko.macromenza.ui.components.MacroCip
 import com.niko.macromenza.ui.components.nazivTipa
 import com.niko.macromenza.ui.components.skalaPritiska
 import com.niko.macromenza.ui.theme.Kasnjenje

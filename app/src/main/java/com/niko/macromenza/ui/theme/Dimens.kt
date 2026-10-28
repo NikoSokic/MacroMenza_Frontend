@@ -78,6 +78,13 @@ object MacroDimenzije {
     val radioObrub = 2.dp
     val radioTocka = 10.dp
 
+    // Moje mjere: graf mase (linija i točke u lukIspuna)
+    val grafMaseVisina = 190.dp
+    val grafLinija = 2.dp
+    val grafTocka = 4.dp
+    val grafTockaOdabrana = 6.dp
+    val grafTockaRub = 2.dp
+
     // Redovi obroka i glif porcije
     val ikonaObroka = 40.dp
     val glifPorcije = 22.dp

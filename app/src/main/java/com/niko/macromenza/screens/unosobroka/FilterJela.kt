@@ -56,6 +56,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.IntOffset
 import com.niko.macromenza.R
 import com.niko.macromenza.model.KategorijaJela
+import com.niko.macromenza.ui.components.MacroCip
 import com.niko.macromenza.ui.theme.MacroDimenzije
 import com.niko.macromenza.ui.theme.MacroOblici
 import com.niko.macromenza.ui.theme.MacroRazmaci
@@ -71,76 +72,6 @@ import com.niko.macromenza.viewmodel.MakroFilter
 private const val BRZI_MAX_KCAL = 500.0
 private const val BRZI_MIN_PROTEINI = 25.0
 private const val BRZI_MAX_MASTI = 15.0
-
-/**
- * Čip filtera: odabir animira boju spremnika, teksta i ruba (Trajanje.kratko) i uvodi kvačicu koja se
- * povećava od nule. Čipovi s vlastitom ikonom ([ikona]) nemaju kvačicu, samo promjenu boje.
- * Kvačica proširuje čip pa se susjedi pomaknu odmah (bez animiranja širine); sama kvačica skalira graphicsLayerom.
- */
-@Composable
-fun MacroCip(
-    oznaka: String,
-    odabran: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    ikona: (@Composable () -> Unit)? = null
-) {
-    val shema = MaterialTheme.colorScheme
-    val smanjeno = rememberSmanjeniPokret()
-    val prijelaz = if (smanjeno) snap<Color>() else tween(Trajanje.kratko, easing = Ublazavanje.usporavanje)
-
-    val spremnik by animateColorAsState(if (odabran) shema.secondaryContainer else shema.surface, prijelaz, label = "cipSpremnik")
-    val tekst by animateColorAsState(if (odabran) shema.onSecondaryContainer else shema.onSurface, prijelaz, label = "cipTekst")
-    val rub by animateColorAsState(if (odabran) shema.secondaryContainer else shema.outlineVariant, prijelaz, label = "cipRub")
-
-    FilterChip(
-        selected = odabran,
-        onClick = onClick,
-        modifier = modifier,
-        label = { Text(oznaka, style = MaterialTheme.typography.labelLarge, maxLines = 1) },
-        leadingIcon = ikona ?: if (odabran) {
-            { Kvacica(tekst) }
-        } else null,
-        shape = MacroOblici.cip,
-        colors = FilterChipDefaults.filterChipColors(
-            containerColor = spremnik,
-            labelColor = tekst,
-            iconColor = tekst,
-            selectedContainerColor = spremnik,
-            selectedLabelColor = tekst,
-            selectedLeadingIconColor = tekst
-        ),
-        border = FilterChipDefaults.filterChipBorder(
-            enabled = true,
-            selected = odabran,
-            borderColor = rub,
-            selectedBorderColor = rub,
-            borderWidth = MacroDimenzije.linija
-        )
-        // FilterChip sam proširuje dodirni cilj na 48 dp (minimumInteractiveComponentSize).
-    )
-}
-
-/** Kvačica odabranog čipa: raste od nule pri prvom prikazu (Trajanje.kratko); previewi i smanjeni pokret je odmah pokazuju. */
-@Composable
-private fun Kvacica(boja: Color) {
-    val bezPokreta = rememberSmanjeniPokret() || LocalInspectionMode.current
-    val skala = remember { Animatable(if (bezPokreta) 1f else 0f) }
-    LaunchedEffect(Unit) {
-        if (skala.value < 1f) skala.animateTo(1f, tween(Trajanje.kratko, easing = Ublazavanje.usporavanje))
-    }
-    Icon(
-        imageVector = Icons.Rounded.Check,
-        contentDescription = null,
-        tint = boja,
-        modifier = Modifier
-            .size(MacroDimenzije.ikonaSitna)
-            .graphicsLayer {
-                scaleX = skala.value
-                scaleY = skala.value
-            }
-    )
-}
 
 /** Čipovi koji se pojave ili nestanu ("Poništi filtere") guraju susjede uz Opruge.slijeganje umjesto skoka. */
 @OptIn(ExperimentalFoundationApi::class)
