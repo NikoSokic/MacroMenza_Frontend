@@ -9,6 +9,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.*
 import androidx.navigation.navArgument
 import com.niko.macromenza.screens.*
+import com.niko.macromenza.ui.theme.UlazUSesiji
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.niko.macromenza.session.UserSessionManager
@@ -99,7 +100,12 @@ fun AppNavigation(
             } else {
                 "welcome"
             },
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxSize(),
+            // Zadani prijelazi cijele aplikacije; ekrani s vlastitim prijelazima (Unos ↔ unos obroka) ih nadjačavaju.
+            enterTransition = { globalniUlaz() },
+            exitTransition = { globalniIzlaz() },
+            popEnterTransition = { globalniUlaz() },
+            popExitTransition = { globalniIzlaz() }
         ) {
 
             composable("welcome") {
@@ -141,8 +147,11 @@ fun AppNavigation(
             // Fade-through prema unosu obroka i natrag; za sve ostalo vrijede zadani prijelazi.
             composable(
                 route = BottomNavItem.Konzumacija.route,
-                exitTransition = { if (jeRutaUnosa(targetState.destination.route)) prijelazIzlaz() else null },
-                popEnterTransition = { if (jeRutaUnosa(initialState.destination.route)) prijelazUlaz() else null }
+                exitTransition = {
+                    if (jeRutaUnosa(targetState.destination.route)) prijelazIzlaz(UlazUSesiji.jePrvi(UlazUSesiji.UNOS_OBROKA)) else null
+                },
+                // Povratak je uvijek ponovni ulaz: kratko izblijeđivanje.
+                popEnterTransition = { if (jeRutaUnosa(initialState.destination.route)) prijelazUlaz(puni = false) else null }
             ) {
                 KonzumacijaScreen(navController)
             }
@@ -178,17 +187,24 @@ fun AppNavigation(
                 PostavkeAplikacijeScreen(navController)
             }
 
-            // Bez idObrok je novi unos; s njim se uređuje spremljeni obrok.
+            // Bez idObrok je novi unos; s njim se uređuje spremljeni obrok. dodajJelo: jelo iz prečaca
+            // "Često jedeš" na kartici Unos, koje se odmah dodaje u obrok.
             composable(
-                route = "unos_obroka/{tipObroka}?idObrok={idObrok}",
+                route = "unos_obroka/{tipObroka}?idObrok={idObrok}&dodajJelo={dodajJelo}",
                 arguments = listOf(
                     navArgument("idObrok") {
                         type = NavType.LongType
                         defaultValue = -1L
+                    },
+                    navArgument("dodajJelo") {
+                        type = NavType.LongType
+                        defaultValue = -1L
                     }
                 ),
-                enterTransition = { if (jeRutaKarticeUnos(initialState.destination.route)) prijelazUlaz() else null },
-                popExitTransition = { if (jeRutaKarticeUnos(targetState.destination.route)) prijelazIzlaz() else null }
+                enterTransition = {
+                    if (jeRutaKarticeUnos(initialState.destination.route)) prijelazUlaz(UlazUSesiji.jePrvi(UlazUSesiji.UNOS_OBROKA)) else null
+                },
+                popExitTransition = { if (jeRutaKarticeUnos(targetState.destination.route)) prijelazIzlaz(puni = false) else null }
             ) { backStackEntry ->
                 val tipObroka =
                     backStackEntry.arguments?.getString("tipObroka")
@@ -198,10 +214,15 @@ fun AppNavigation(
                     ?.getLong("idObrok", -1L)
                     ?.takeIf { it > 0 }
 
+                val dodajJelo = backStackEntry.arguments
+                    ?.getLong("dodajJelo", -1L)
+                    ?.takeIf { it >= 0 }
+
                 UnosObrokaScreen(
                     tipObroka = tipObroka,
                     navController = navController,
-                    idObrok = idObrok
+                    idObrok = idObrok,
+                    dodajJeloId = dodajJelo
                 )
             }
 

@@ -59,6 +59,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.lerp
+import androidx.compose.ui.unit.TextUnit
 import com.niko.macromenza.R
 import com.niko.macromenza.ui.theme.Kasnjenje
 import com.niko.macromenza.ui.theme.MacroDimenzije
@@ -104,7 +105,11 @@ fun Pladanj(
     proslava: Boolean,
     onProslavaGotova: () -> Unit,
     onTanjur: (TanjurUi) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    /** Vrsta obroka predložena za ovo doba dana: ispod utora dobiva oznaku "Predloženo" (kartica Unos). */
+    predlozeniTip: String? = null,
+    /** True: rub tanjura se pri prvom prikazu puni od nule (kartica Unos, prvi ulaz u sesiji). */
+    punjenjeRuba: Boolean = false
 ) {
     val boje = MaterialTheme.macroBoje
 
@@ -198,6 +203,8 @@ fun Pladanj(
                     disanje = disanje,
                     skok = { skok.value },
                     onClick = { onTanjur(tanjur) },
+                    predlozen = tanjur.tip == predlozeniTip,
+                    punjenjeRuba = punjenjeRuba,
                     modifier = Modifier.weight(if (tanjur.jeUzina) 0.75f else 1f)
                 )
             }
@@ -218,6 +225,8 @@ private fun Utor(
     disanje: State<Float>?,
     skok: () -> Float,
     onClick: () -> Unit,
+    predlozen: Boolean,
+    punjenjeRuba: Boolean,
     modifier: Modifier = Modifier
 ) {
     val boje = MaterialTheme.macroBoje
@@ -240,8 +249,9 @@ private fun Utor(
     }
 
     val naziv = nazivTipa(tanjur.tip)
-    val opisKlika = if (pun) stringResource(R.string.kom_utor_pun, naziv, formatKcal(tanjur.makro!!.kcal))
+    val osnovniOpis = if (pun) stringResource(R.string.kom_utor_pun, naziv, formatKcal(tanjur.makro!!.kcal))
     else stringResource(R.string.kom_dodaj_u, naziv)
+    val opisKlika = if (predlozen) stringResource(R.string.kom_predlozeno_opis, osnovniOpis) else osnovniOpis
     val izvor = remember { MutableInteractionSource() }
 
     Column(
@@ -288,6 +298,7 @@ private fun Utor(
                 promjer = promjer,
                 okvir = maxPromjer,
                 smanjeno = smanjeno,
+                punjenjeRuba = punjenjeRuba,
                 modifier = Modifier.graphicsLayer {
                     val s = sletanje.value
                     val skokSada = skok()
@@ -313,6 +324,18 @@ private fun Utor(
             color = boje.naOrahuPrigusen,
             maxLines = 1
         )
+        // Prijedlog je tekst, a ne istaknuta pozadina: utor ostaje isti kao ostali.
+        if (predlozen) {
+            // Običan (ne verzalni) tekst bez razmaka među slovima: "PREDLOŽENO" se u uskom utoru skraćivalo.
+            Text(
+                text = stringResource(R.string.kom_predlozeno),
+                style = MaterialTheme.typography.labelSmall.copy(letterSpacing = TextUnit.Unspecified),
+                color = boje.naOrahu,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(top = MacroRazmaci.xxs)
+            )
+        }
     }
 }
 

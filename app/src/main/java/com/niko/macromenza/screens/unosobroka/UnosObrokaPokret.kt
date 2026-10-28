@@ -88,7 +88,8 @@ fun Modifier.ulazZaglavlja(indeks: Int, smanjeno: Boolean): Modifier = composed 
 @OptIn(ExperimentalFoundationApi::class)
 fun LazyItemScope.pomakReda(pokret: PokretUnosa, naslov: Boolean = false): Modifier =
     if (pokret.smanjeno) Modifier else Modifier.animateItem(
-        fadeInSpec = if (pokret.aktivan) null else tween(Trajanje.srednje, easing = Ublazavanje.usporavanje),
+        // Izvan ulaza (pretraga, filteri, kasni podaci) novi redovi izblijede kratko, kao ponovni ulaz (≤ 300 ms).
+        fadeInSpec = if (pokret.aktivan) null else tween(Trajanje.ponovniUlaz, easing = Ublazavanje.usporavanje),
         placementSpec = if (naslov) null else Opruge.slijeganje<IntOffset>(),
         fadeOutSpec = tween(Trajanje.kratko, easing = Ublazavanje.ubrzavanje)
     )

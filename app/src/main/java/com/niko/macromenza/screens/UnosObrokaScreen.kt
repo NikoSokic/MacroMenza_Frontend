@@ -21,6 +21,7 @@ import androidx.compose.material3.TimePickerDefaults
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -43,6 +44,7 @@ import com.niko.macromenza.screens.unosobroka.UnosObrokaUi
 import com.niko.macromenza.session.UserSessionManager
 import com.niko.macromenza.ui.components.screenBottomPadding
 import com.niko.macromenza.ui.theme.MacroRazmaci
+import com.niko.macromenza.ui.theme.UlazUSesiji
 import com.niko.macromenza.util.PrijedlogObrokaStore
 import com.niko.macromenza.viewmodel.JelaViewModel
 import kotlinx.coroutines.delay
@@ -61,16 +63,40 @@ private val FORMAT_VREMENA = DateTimeFormatter.ofPattern("HH:mm")
 /** Ako prva jela ne stignu u ovom roku (bez greške), kostur se zamjenjuje praznim stanjem. */
 private const val ROK_ZA_JELA_MS = 8_000L
 
+/** Hrvatski naziv vrste obroka izvan kompozicije (snackbar). */
+private fun nazivTipa(context: Context, tip: String): String = when (tip) {
+    "DORUCAK" -> context.getString(R.string.kom_tip_dorucak)
+    "RUCAK" -> context.getString(R.string.kom_tip_rucak)
+    "UZINA" -> context.getString(R.string.kom_tip_uzina)
+    "VECERA" -> context.getString(R.string.kom_tip_vecera)
+    else -> tip
+}
+
 /** "Ručak 12" za snackbar (izvan kompozicije). */
 private fun nazivMenija(context: Context, meni: MeniDTO): String {
-    val tip = when (meni.tip) {
-        "DORUCAK" -> context.getString(R.string.kom_tip_dorucak)
-        "RUCAK" -> context.getString(R.string.kom_tip_rucak)
-        "UZINA" -> context.getString(R.string.kom_tip_uzina)
-        "VECERA" -> context.getString(R.string.kom_tip_vecera)
-        else -> meni.tip
-    }
+    val tip = nazivTipa(context, meni.tip)
     return meni.redniBroj?.let { context.getString(R.string.uo_meni_naziv, tip, it.toString()) } ?: tip
+}
+
+/** Tipično vrijeme obroka u menzi, za unos vrste koja nije trenutna (npr. ručak upisan navečer). */
+private fun tipicnoVrijeme(tip: String): LocalTime? = when (tip) {
+    "DORUCAK" -> LocalTime.of(8, 0)
+    "RUCAK" -> LocalTime.of(12, 30)
+    "UZINA" -> LocalTime.of(16, 0)
+    "VECERA" -> LocalTime.of(18, 30)
+    else -> null
+}
+
+/**
+ * Početno vrijeme novog obroka (datum je danas): "sada" ako vrsta odgovara trenutnom dobu dana, inače tipično
+ * vrijeme te vrste, ali nikad u budućnosti: ako je tipično vrijeme kasnije od sada, uzima se "sada".
+ * Datum se ne mijenja automatski.
+ */
+private fun pocetnoVrijeme(tip: String): LocalTime {
+    val sada = LocalTime.now(ZAGREB).truncatedTo(ChronoUnit.MINUTES)
+    if (zadaniTipZaVrijeme(sada) == tip) return sada
+    val tipicno = tipicnoVrijeme(tip) ?: return sada
+    return if (tipicno.isAfter(sada)) sada else tipicno
 }
 
 /**
@@ -84,6 +110,8 @@ fun UnosObrokaScreen(
     navController: NavController,
     // Zadan kod uređivanja spremljenog obroka; null je novi unos.
     idObrok: Long? = null,
+    // Jelo iz prečaca "Često jedeš" na kartici Unos: dodaje se u obrok čim je poznato (jedna porcija).
+    dodajJeloId: Long? = null,
     viewModel: JelaViewModel = viewModel()
 ) {
     val uredivanje = idObrok != null
@@ -113,8 +141,12 @@ fun UnosObrokaScreen(
 
     val danas = remember { LocalDate.now(ZAGREB) }
     var visinaBara by remember { mutableStateOf(0.dp) }
+    // Kod uređivanja vrijeme dolazi iz obroka (vidi LaunchedEffect(uredivaniObrok)).
     var vrijeme by remember {
-        mutableStateOf(LocalTime.now(ZAGREB).truncatedTo(ChronoUnit.MINUTES))
+        mutableStateOf(
+            if (uredivanje) LocalTime.now(ZAGREB).truncatedTo(ChronoUnit.MINUTES)
+            else pocetnoVrijeme(tipObroka.uppercase())
+        )
     }
     var tip by remember { mutableStateOf(tipObroka.uppercase()) }
     var tipRucno by remember { mutableStateOf(false) }
@@ -158,6 +190,22 @@ fun UnosObrokaScreen(
         // Meniji su sada sekcija na vrhu liste (prije zasebna kartica), pa se učitavaju odmah.
         viewModel.ucitajMenije()
     }
+
+    // Prečac s kartice Unos: jelo se traži među "Često jedeš", a ako tamo nije, među svim jelima.
+    var precacDodan by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(cestoJedeno, jela) {
+        val id = dodajJeloId ?: return@LaunchedEffect
+        if (precacDodan || uredivanje) return@LaunchedEffect
+        val jelo = cestoJedeno.firstOrNull { it.jelo.id == id }?.jelo
+            ?: jela.firstOrNull { it.id == id }
+            ?: return@LaunchedEffect
+        viewModel.povecaj(jelo)
+        precacDodan = true
+    }
+
+    // Puni ulazni slijed samo pri prvom otvaranju unosa u ovoj sesiji; poslije kratko izblijeđivanje u prijelazu.
+    val puniUlaz = remember { UlazUSesiji.jePrvi(UlazUSesiji.UNOS_OBROKA) }
+    SideEffect { UlazUSesiji.oznaci(UlazUSesiji.UNOS_OBROKA) }
 
     LaunchedEffect(prijavljeniKorisnikId) {
         prijavljeniKorisnikId?.let {
@@ -282,7 +330,7 @@ fun UnosObrokaScreen(
         onUpit = { viewModel.postaviUpit(it) },
         onKategorija = { viewModel.postaviKategoriju(it) },
         onMakroFilter = { viewModel.primijeniMakroFilter(it) },
-        onRaspon = { showFilterSheet = true },
+        onFilteri = { showFilterSheet = true },
         onDodaj = { viewModel.povecaj(it) },
         onDetalj = { detaljJelo = it },
         onDodajMeni = { dodajMeni(it) },
@@ -299,7 +347,8 @@ fun UnosObrokaScreen(
         ui = ui,
         akcije = akcije,
         // Prostor za plutajuću navigaciju i sažetak obroka da zadnje jelo ostane vidljivo.
-        donjiRazmak = screenBottomPadding() + visinaBara + MacroRazmaci.m
+        donjiRazmak = screenBottomPadding() + visinaBara + MacroRazmaci.m,
+        puniUlaz = puniUlaz
     ) {
         SazetakObrokaBar(
             sazetak = sazetak,
@@ -446,7 +495,17 @@ fun UnosObrokaScreen(
                     onClick = {
                         vrijeme = LocalTime.of(timePickerState.hour, timePickerState.minute)
                         if (!tipRucno) {
-                            tip = zadaniTipZaVrijeme(vrijeme)
+                            val noviTip = zadaniTipZaVrijeme(vrijeme)
+                            // Vrsta se mijenja s vremenom dok je nisi sam odabrao; reci to, da ne promakne.
+                            if (noviTip != tip) {
+                                tip = noviTip
+                                scope.launch {
+                                    snackbarHostState.currentSnackbarData?.dismiss()
+                                    snackbarHostState.showSnackbar(
+                                        context.getString(R.string.uo_vrsta_promijenjena, nazivTipa(context, noviTip))
+                                    )
+                                }
+                            }
                         }
                         showTimePicker = false
                     }

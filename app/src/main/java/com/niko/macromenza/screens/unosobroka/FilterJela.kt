@@ -7,6 +7,8 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -17,11 +19,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Check
-import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -64,38 +67,10 @@ import com.niko.macromenza.util.formatKcal
 import com.niko.macromenza.util.formatKolicina
 import com.niko.macromenza.viewmodel.MakroFilter
 
-// Brzi filteri: najčešći rasponi po porciji. Proizvoljni raspon i dalje ide kroz "Raspon".
+// Predlošci u sheetu filtera: najčešći rasponi po porciji (prije zasebni čipovi u traci).
 private const val BRZI_MAX_KCAL = 500.0
 private const val BRZI_MIN_PROTEINI = 25.0
 private const val BRZI_MAX_MASTI = 15.0
-
-private class BrziFilter(
-    val oznaka: @Composable () -> String,
-    val aktivan: (MakroFilter) -> Boolean,
-    val prebaci: (MakroFilter, Boolean) -> MakroFilter
-)
-
-private val BRZI_FILTERI = listOf(
-    BrziFilter(
-        oznaka = { stringResource(R.string.uo_do_kcal, formatKcal(BRZI_MAX_KCAL)) },
-        aktivan = { it.maxKalorije == BRZI_MAX_KCAL },
-        prebaci = { f, ukljuci -> f.copy(maxKalorije = if (ukljuci) BRZI_MAX_KCAL else null) }
-    ),
-    BrziFilter(
-        oznaka = { stringResource(R.string.uo_proteini_od, formatKolicina(BRZI_MIN_PROTEINI)) },
-        aktivan = { it.minProteini == BRZI_MIN_PROTEINI },
-        prebaci = { f, ukljuci -> f.copy(minProteini = if (ukljuci) BRZI_MIN_PROTEINI else null) }
-    ),
-    BrziFilter(
-        oznaka = { stringResource(R.string.uo_masti_do, formatKolicina(BRZI_MAX_MASTI)) },
-        aktivan = { it.maxMasti == BRZI_MAX_MASTI },
-        prebaci = { f, ukljuci -> f.copy(maxMasti = if (ukljuci) BRZI_MAX_MASTI else null) }
-    )
-)
-
-/** Je li u filteru nešto osim brzih filtera (tada je "Raspon" označen). */
-private fun imaVlastitiRaspon(f: MakroFilter): Boolean =
-    BRZI_FILTERI.fold(f) { a, b -> if (b.aktivan(a)) b.prebaci(a, false) else a }.aktivan
 
 /**
  * Čip filtera: odabir animira boju spremnika, teksta i ruba (Trajanje.kratko) i uvodi kvačicu koja se
@@ -177,75 +152,57 @@ private fun LazyItemScope.pomakCipa(smanjeno: Boolean): Modifier =
     )
 
 /**
- * Traka filtera ispod pretrage: brzi rasponi, "Raspon" (sheet s min/max za kcal, P, U, M) i kategorije.
- * Odabrani čip ima kvačicu; ponovnim dodirom se odabir uklanja.
+ * Traka ispod pretrage: kategorije (vodoravno listanje), a na kraju prikvačen jedan čip "Filteri" s brojem
+ * aktivnih filtera, koji otvara sheet s rasponima i predlošcima. Odabrana kategorija ima kvačicu;
+ * ponovnim dodirom se odabir uklanja.
  */
 @Composable
 fun FilterTraka(
     filter: MakroFilter,
     kategorije: List<KategorijaJela>,
     kategorija: String?,
-    onFilter: (MakroFilter) -> Unit,
-    onRaspon: () -> Unit,
+    onFilteri: () -> Unit,
     onKategorija: (String?) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val smanjeno = rememberSmanjeniPokret()
-    LazyRow(
+    val aktivnih = brojAktivnihFiltera(filter)
+
+    Row(
         modifier = modifier.fillMaxWidth(),
-        contentPadding = PaddingValues(horizontal = MacroRazmaci.rubEkrana),
-        horizontalArrangement = Arrangement.spacedBy(MacroRazmaci.s),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        item(key = "raspon") {
-            MacroCip(
-                modifier = pomakCipa(smanjeno),
-                oznaka = stringResource(R.string.uo_raspon),
-                odabran = imaVlastitiRaspon(filter),
-                onClick = onRaspon,
-                ikona = { Icon(Icons.Rounded.Tune, contentDescription = null, modifier = Modifier.size(MacroDimenzije.ikonaSitna)) }
-            )
-        }
-        items(BRZI_FILTERI.size, key = { "brzi$it" }) { i ->
-            val brzi = BRZI_FILTERI[i]
-            val aktivan = brzi.aktivan(filter)
-            MacroCip(
-                modifier = pomakCipa(smanjeno),
-                oznaka = brzi.oznaka(),
-                odabran = aktivan,
-                onClick = { onFilter(brzi.prebaci(filter, !aktivan)) }
-            )
-        }
-        // Iza brzih filtera (ne na početku), da se pojavi uz čip koji je upravo dodirnut.
-        if (filter.aktivan) {
-            item(key = "ponisti") {
+        LazyRow(
+            modifier = Modifier.weight(1f),
+            contentPadding = PaddingValues(start = MacroRazmaci.rubEkrana, end = MacroRazmaci.s),
+            horizontalArrangement = Arrangement.spacedBy(MacroRazmaci.s),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            items(kategorije, key = { "k-${it.naziv}" }) { k ->
+                val odabrana = kategorija == k.naziv
                 MacroCip(
                     modifier = pomakCipa(smanjeno),
-                    oznaka = stringResource(R.string.uo_ponisti_filtere),
-                    odabran = false,
-                    onClick = { onFilter(MakroFilter()) },
-                    ikona = { Icon(Icons.Rounded.Close, contentDescription = null, modifier = Modifier.size(MacroDimenzije.ikonaSitna)) }
+                    oznaka = k.naziv,
+                    odabran = odabrana,
+                    onClick = { onKategorija(if (odabrana) null else k.naziv) }
                 )
             }
         }
         if (kategorije.isNotEmpty()) {
-            item(key = "razdjelnik") {
-                VerticalDivider(
-                    modifier = Modifier.height(MacroDimenzije.ikona),
-                    thickness = MacroDimenzije.linija,
-                    color = MaterialTheme.colorScheme.outlineVariant
-                )
-            }
-        }
-        items(kategorije, key = { "k-${it.naziv}" }) { k ->
-            val odabrana = kategorija == k.naziv
-            MacroCip(
-                modifier = pomakCipa(smanjeno),
-                oznaka = k.naziv,
-                odabran = odabrana,
-                onClick = { onKategorija(if (odabrana) null else k.naziv) }
+            VerticalDivider(
+                modifier = Modifier.height(MacroDimenzije.ikona),
+                thickness = MacroDimenzije.linija,
+                color = MaterialTheme.colorScheme.outlineVariant
             )
         }
+        val oznaka = if (aktivnih > 0) stringResource(R.string.uo_filteri_broj, aktivnih) else stringResource(R.string.uo_filteri)
+        MacroCip(
+            modifier = Modifier.padding(start = MacroRazmaci.s, end = MacroRazmaci.rubEkrana),
+            oznaka = oznaka,
+            odabran = aktivnih > 0,
+            onClick = onFilteri,
+            ikona = { Icon(Icons.Rounded.Tune, contentDescription = null, modifier = Modifier.size(MacroDimenzije.ikonaSitna)) }
+        )
     }
 }
 
@@ -261,7 +218,7 @@ private fun jeDecimalniUnos(unos: String): Boolean =
  * Proizvoljan raspon (min/max po porciji) za kalorije i proteine, a pod "Još filtera" i za ugljikohidrate i masti.
  * Polja kreću od trenutnog filtera, pa brzi filteri i raspon uvijek pokazuju isto.
  */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun FilterRasponaSheet(
     filter: MakroFilter,
@@ -291,6 +248,7 @@ fun FilterRasponaSheet(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
                 .padding(horizontal = MacroRazmaci.rubEkrana)
                 .padding(bottom = MacroRazmaci.xxl)
         ) {
@@ -305,6 +263,41 @@ fun FilterRasponaSheet(
                 style = MaterialTheme.typography.bodyMedium,
                 color = shema.onSurfaceVariant
             )
+
+            // Predlošci samo popunjavaju polja; primjenjuju se gumbom "Primijeni filtere", kao i ručni unos.
+            Text(
+                text = stringResource(R.string.uo_brzi_odabir),
+                style = MaterialTheme.typography.titleSmall,
+                color = shema.onSurface,
+                modifier = Modifier.padding(top = MacroRazmaci.l, bottom = MacroRazmaci.s)
+            )
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(MacroRazmaci.s),
+                verticalArrangement = Arrangement.spacedBy(MacroRazmaci.xs)
+            ) {
+                val doKcal = uBroj(maxKalorije) == BRZI_MAX_KCAL
+                MacroCip(
+                    oznaka = stringResource(R.string.uo_do_kcal, formatKcal(BRZI_MAX_KCAL)),
+                    odabran = doKcal,
+                    onClick = { maxKalorije = if (doKcal) "" else uTekst(BRZI_MAX_KCAL) }
+                )
+                val proteini = uBroj(minProteini) == BRZI_MIN_PROTEINI
+                MacroCip(
+                    oznaka = stringResource(R.string.uo_proteini_od, formatKolicina(BRZI_MIN_PROTEINI)),
+                    odabran = proteini,
+                    onClick = { minProteini = if (proteini) "" else uTekst(BRZI_MIN_PROTEINI) }
+                )
+                val masti = uBroj(maxMasti) == BRZI_MAX_MASTI
+                MacroCip(
+                    oznaka = stringResource(R.string.uo_masti_do, formatKolicina(BRZI_MAX_MASTI)),
+                    odabran = masti,
+                    onClick = {
+                        maxMasti = if (masti) "" else uTekst(BRZI_MAX_MASTI)
+                        // Polje za masti je pod "Još filtera": otvori ga da se vidi što je predložak upisao.
+                        if (!masti) prikaziOstalo = true
+                    }
+                )
+            }
 
             RasponPolja(stringResource(R.string.uo_kalorije), minKalorije, maxKalorije, { minKalorije = it }, { maxKalorije = it })
             RasponPolja(stringResource(R.string.kom_proteini), minProteini, maxProteini, { minProteini = it }, { maxProteini = it })

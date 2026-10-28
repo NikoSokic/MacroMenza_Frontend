@@ -1,13 +1,7 @@
 package com.niko.macromenza.screens
 
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
@@ -26,7 +20,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
-import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.PhotoCamera
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -36,56 +29,46 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.Immutable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.PathEffect
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import kotlinx.coroutines.delay
 import com.niko.macromenza.R
+import com.niko.macromenza.model.CestoJedenoJelo
+import com.niko.macromenza.model.Jelo
 import com.niko.macromenza.model.Obrok
+import com.niko.macromenza.navigation.BottomNavItem
 import com.niko.macromenza.screens.dnevnipregled.naslovDatuma
+import com.niko.macromenza.screens.unosobroka.JeloRed
+import com.niko.macromenza.screens.unosobroka.NaslovSekcije
+import com.niko.macromenza.screens.unosobroka.uMakro
 import com.niko.macromenza.session.UserSessionManager
 import com.niko.macromenza.ui.components.Makro
-import com.niko.macromenza.ui.components.Tanjur
-import com.niko.macromenza.ui.components.nazivTipa
+import com.niko.macromenza.ui.components.Pladanj
+import com.niko.macromenza.ui.components.TanjurUi
 import com.niko.macromenza.ui.components.screenBottomPadding
 import com.niko.macromenza.ui.components.screenTopPadding
 import com.niko.macromenza.ui.components.skalaPritiska
-import com.niko.macromenza.ui.theme.Kasnjenje
 import com.niko.macromenza.ui.theme.MacroDimenzije
 import com.niko.macromenza.ui.theme.MacroMenzaTheme
 import com.niko.macromenza.ui.theme.MacroOblici
 import com.niko.macromenza.ui.theme.MacroRazmaci
-import com.niko.macromenza.ui.theme.Opruge
-import com.niko.macromenza.ui.theme.POMAK_TANJURA_DP
-import com.niko.macromenza.ui.theme.SKALA_PULSA
-import com.niko.macromenza.ui.theme.SKALA_TANJURA
-import com.niko.macromenza.ui.theme.Trajanje
-import com.niko.macromenza.ui.theme.Ublazavanje
-import com.niko.macromenza.ui.theme.macroBoje
-import com.niko.macromenza.ui.theme.opruga
+import com.niko.macromenza.ui.theme.UlazUSesiji
 import com.niko.macromenza.ui.theme.rememberSmanjeniPokret
-import com.niko.macromenza.util.formatKcal
+import com.niko.macromenza.viewmodel.JelaViewModel
 import com.niko.macromenza.viewmodel.PovijestViewModel
 import java.time.LocalDate
 import java.time.LocalTime
@@ -93,43 +76,51 @@ import java.time.ZoneId
 
 private val ZAGREB_UNOS = ZoneId.of("Europe/Zagreb")
 
-/** Redoslijed utora na pladnju ovog ekrana. */
-private val TIPOVI_PLADNJA = listOf("DORUCAK", "RUCAK", "VECERA", "UZINA")
+/** Redoslijed utora isti kao na dnevnom pregledu: užina stoji između ručka i večere. */
+private val TIPOVI_PLADNJA = listOf("DORUCAK", "RUCAK", "UZINA", "VECERA")
 
-/**
- * Jedan utor: [makro] je zbroj obroka tog tipa danas (null = prazan utor).
- * [obrok] je jedini obrok tog tipa (za izravno uređivanje); kad ih ima više, "Uredi" otvara detalj dana.
- */
-@Immutable
-data class UtorUnosa(
-    val tip: String,
-    val makro: Makro?,
-    val brojObroka: Int,
-    val obrok: Obrok?
-)
+/** Prečaci "Često jedeš" ispod pladnja. */
+private const val BROJ_PRECACA = 3
 
-private fun utoriDana(obroci: List<Obrok>): List<UtorUnosa> = TIPOVI_PLADNJA.map { tip ->
+/** Tanjuri za pladanj iz obroka dana (zbroj po vrsti, vrijeme prvog obroka te vrste). */
+private fun tanjuriDana(obroci: List<Obrok>): List<TanjurUi> = TIPOVI_PLADNJA.map { tip ->
     val tipa = obroci.filter { it.tipObroka.uppercase() == tip }
-    UtorUnosa(
+    TanjurUi(
         tip = tip,
         makro = tipa.takeIf { it.isNotEmpty() }?.fold(Makro.NULA) { a, o ->
             a + Makro(o.ukupnoKalorije, o.ukupnoProteini, o.ukupnoMasti, o.ukupnoUgljikohidrati)
         },
-        brojObroka = tipa.size,
-        obrok = tipa.singleOrNull()
+        vrijeme = tipa.firstOrNull()?.vrijeme?.take(5),
+        jeUzina = tip == "UZINA"
     )
 }
 
 /**
- * Kartica "Unos" (smjer A "Pladanj"). Obroci dana dolaze iz postojećeg PovijestViewModela (isto kao na Home),
- * pa popunjeni utor pokazuje tanjur s kcal i vodi na uređivanje.
+ * Obroci dana dijele se s Home ekranom (isti PovijestViewModel, bez izmjena): Home ih je već učitao, pa pladanj
+ * pri ponovnom ulazu odmah pokazuje završno stanje, a animira se samo kad podaci stignu nakon prvog prikaza.
+ * Ako Home nije na stogu, kartica koristi vlastiti ViewModel.
+ */
+@Composable
+private fun obrociViewModelIzPocetne(navController: NavController): PovijestViewModel {
+    val pocetna = remember(navController) {
+        runCatching { navController.getBackStackEntry(BottomNavItem.Home.route) }.getOrNull()
+    }
+    return if (pocetna != null) viewModel(viewModelStoreOwner = pocetna) else viewModel()
+}
+
+/**
+ * Kartica "Unos" (smjer A "Pladanj"): isti pladanj kao na dnevnom pregledu (orah, utori, veličine tanjura, legenda),
+ * s oznakom "Predloženo" ispod vrste koja odgovara dobu dana, i prečacima "Često jedeš" ispod.
+ * Obroci dana dolaze iz PovijestViewModela (kao na Home), a "Često jedeš" iz JelaViewModela (isti poziv kao u unosu).
  */
 @Composable
 fun KonzumacijaScreen(
     navController: NavController,
-    obrociViewModel: PovijestViewModel = viewModel()
+    obrociViewModel: PovijestViewModel = obrociViewModelIzPocetne(navController),
+    jelaViewModel: JelaViewModel = viewModel()
 ) {
     val obroci by obrociViewModel.obrociDana.collectAsState()
+    val cesto by jelaViewModel.cestoJedeno.collectAsState()
 
     val context = LocalContext.current
     val sessionManager = remember { UserSessionManager(context) }
@@ -137,10 +128,18 @@ fun KonzumacijaScreen(
     val danas = remember { LocalDate.now(ZAGREB_UNOS) }
     val predlozeniTip = remember { zadaniTipZaVrijeme(LocalTime.now(ZAGREB_UNOS)) }
     val snackbarHostState = remember { SnackbarHostState() }
+    var detaljJelo by remember { mutableStateOf<Jelo?>(null) }
+
+    // Puni ulaz (tanjuri slijeću, rub se puni) samo pri prvom otvaranju kartice u ovoj sesiji.
+    val puniUlaz = remember { UlazUSesiji.jePrvi(UlazUSesiji.KARTICA_UNOS) }
+    SideEffect { UlazUSesiji.oznaci(UlazUSesiji.KARTICA_UNOS) }
 
     // Osvježava se pri svakom povratku (nakon spremanja, uređivanja ili brisanja obroka).
     LifecycleResumeEffect(prijavljeniKorisnikId) {
-        prijavljeniKorisnikId?.let { obrociViewModel.ucitajDan(it, danas.toString()) }
+        prijavljeniKorisnikId?.let {
+            obrociViewModel.ucitajDan(it, danas.toString())
+            jelaViewModel.ucitajCestoJedeno(it)
+        }
         onPauseOrDispose { }
     }
 
@@ -154,17 +153,22 @@ fun KonzumacijaScreen(
 
     KonzumacijaSadrzaj(
         datum = danas,
-        utori = utoriDana(obroci),
+        tanjuri = tanjuriDana(obroci),
         predlozeniTip = predlozeniTip,
-        onUtor = { utor ->
-            val jedini = utor.obrok
+        cesto = cesto.take(BROJ_PRECACA),
+        puniUlaz = puniUlaz,
+        onTanjur = { tanjur ->
+            val tipa = obroci.filter { it.tipObroka.uppercase() == tanjur.tip }
             when {
-                utor.makro == null -> navController.navigate("unos_obroka/${utor.tip}")
-                jedini != null -> navController.navigate(rutaUredivanjaObroka(jedini))
+                tipa.isEmpty() -> navController.navigate("unos_obroka/${tanjur.tip}")
+                tipa.size == 1 -> navController.navigate(rutaUredivanjaObroka(tipa.single()))
+                // Više obroka iste vrste: Detalj dana, gdje se bira koji se uređuje.
                 else -> navController.navigate("detalj_dana/$danas")
             }
         },
         onJosObrok = { navController.navigate("unos_obroka/$predlozeniTip") },
+        onDodajCesto = { jelo -> navController.navigate("unos_obroka/$predlozeniTip?dodajJelo=${jelo.id}") },
+        onDetaljCesto = { detaljJelo = it },
         onSlikaIliOpis = { navController.navigate(RUTA_SLIKA_ILI_OPIS) },
         snackbarHost = {
             SnackbarHost(
@@ -179,20 +183,39 @@ fun KonzumacijaScreen(
             )
         }
     )
+
+    // Detalj jela iz prečaca: samo pregled (dodaje se gumbom "+" u retku).
+    detaljJelo?.let { jelo ->
+        JeloDetaljSheet(
+            idJelo = jelo.id,
+            onOdakleSuKalorije = {
+                detaljJelo = null
+                navController.navigate("odakle_su_kalorije")
+            },
+            onDismiss = { detaljJelo = null }
+        )
+    }
 }
 
 @Composable
 fun KonzumacijaSadrzaj(
     datum: LocalDate,
-    utori: List<UtorUnosa>,
+    tanjuri: List<TanjurUi>,
     predlozeniTip: String,
-    onUtor: (UtorUnosa) -> Unit,
+    cesto: List<CestoJedenoJelo>,
+    puniUlaz: Boolean,
+    onTanjur: (TanjurUi) -> Unit,
     onJosObrok: () -> Unit,
+    onDodajCesto: (Jelo) -> Unit,
+    onDetaljCesto: (Jelo) -> Unit,
     onSlikaIliOpis: () -> Unit,
     modifier: Modifier = Modifier,
     snackbarHost: @Composable BoxScope.() -> Unit = {}
 ) {
     val shema = MaterialTheme.colorScheme
+    val smanjeno = rememberSmanjeniPokret()
+    // Previewi (statični kadar) prikazuju završno stanje.
+    val animiraj = puniUlaz && !smanjeno && !LocalInspectionMode.current
 
     Box(
         modifier = modifier
@@ -203,217 +226,90 @@ fun KonzumacijaSadrzaj(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = MacroRazmaci.rubEkrana)
                 .padding(top = screenTopPadding(), bottom = screenBottomPadding())
         ) {
-            Text(
-                text = stringResource(R.string.ko_naslov),
-                style = MaterialTheme.typography.headlineMedium,
-                color = shema.onBackground,
-                modifier = Modifier.semantics { heading() }
-            )
-            Text(
-                text = naslovDatuma(datum),
-                style = MaterialTheme.typography.bodyLarge,
-                color = shema.onSurfaceVariant
-            )
+            Column(modifier = Modifier.padding(horizontal = MacroRazmaci.rubEkrana)) {
+                Text(
+                    text = stringResource(R.string.ko_naslov),
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = shema.onBackground,
+                    modifier = Modifier.semantics { heading() }
+                )
+                Text(
+                    text = naslovDatuma(datum),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = shema.onSurfaceVariant
+                )
 
-            Spacer(Modifier.height(MacroRazmaci.xl))
+                Spacer(Modifier.height(MacroRazmaci.xl))
 
-            PladanjUnosa(utori = utori, predlozeniTip = predlozeniTip, onUtor = onUtor)
+                // Isti pladanj kao na dnevnom pregledu; ovdje bez disanja praznih utora i bez proslave.
+                Pladanj(
+                    tanjuri = tanjuri,
+                    danJePrazan = false,
+                    animirajUlaz = animiraj,
+                    smanjeno = smanjeno,
+                    proslava = false,
+                    onProslavaGotova = {},
+                    onTanjur = onTanjur,
+                    predlozeniTip = predlozeniTip,
+                    punjenjeRuba = animiraj
+                )
 
-            if (utori.any { it.makro != null }) {
-                val izvor = remember { MutableInteractionSource() }
-                TextButton(
-                    onClick = onJosObrok,
-                    interactionSource = izvor,
-                    contentPadding = PaddingValues(horizontal = MacroRazmaci.xs),
-                    modifier = Modifier
-                        .padding(top = MacroRazmaci.xs)
-                        .heightIn(min = MacroDimenzije.dodirniCilj)
-                        .skalaPritiska(izvor)
-                ) {
-                    Text(
-                        text = stringResource(R.string.ko_jos_obrok),
-                        style = MaterialTheme.typography.labelLarge,
-                        color = shema.primary
+                if (tanjuri.any { it.makro != null }) {
+                    val izvor = remember { MutableInteractionSource() }
+                    TextButton(
+                        onClick = onJosObrok,
+                        interactionSource = izvor,
+                        contentPadding = PaddingValues(horizontal = MacroRazmaci.xs),
+                        modifier = Modifier
+                            .padding(top = MacroRazmaci.xs)
+                            .heightIn(min = MacroDimenzije.dodirniCilj)
+                            .skalaPritiska(izvor)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.ko_jos_obrok),
+                            style = MaterialTheme.typography.labelLarge,
+                            color = shema.primary
+                        )
+                    }
+                }
+            }
+
+            // Prečaci: "+" otvara unos predložene vrste s već dodanim jelom; dodir na red otvara detalj jela.
+            if (cesto.isNotEmpty()) {
+                NaslovSekcije(
+                    tekst = stringResource(R.string.uo_cesto),
+                    podnaslov = stringResource(R.string.ko_cesto_tekst)
+                )
+                cesto.forEachIndexed { i, c ->
+                    JeloRed(
+                        naziv = c.jelo.naziv,
+                        makro = c.jelo.uMakro(),
+                        kolicina = 0.0,
+                        onDodaj = { onDodajCesto(c.jelo) },
+                        onDetalj = { onDetaljCesto(c.jelo) },
+                        dodatak = stringResource(R.string.uo_cesto_puta, c.brojPuta),
+                        crta = i > 0
                     )
                 }
             }
 
             Spacer(Modifier.height(MacroRazmaci.xxl))
 
-            SlikaIliOpisKartica(onClick = onSlikaIliOpis)
+            SlikaIliOpisKartica(
+                onClick = onSlikaIliOpis,
+                modifier = Modifier.padding(horizontal = MacroRazmaci.rubEkrana)
+            )
         }
 
         snackbarHost()
     }
 }
 
-/** Pladanj s četiri utora (doručak, ručak, večera, užina); predloženi tip je blago istaknut. */
-@Composable
-private fun PladanjUnosa(
-    utori: List<UtorUnosa>,
-    predlozeniTip: String,
-    onUtor: (UtorUnosa) -> Unit
-) {
-    val boje = MaterialTheme.macroBoje
-    val smanjeno = rememberSmanjeniPokret()
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(boje.orah, MacroOblici.pladanj)
-            .border(MacroDimenzije.linija, boje.pladanjRub, MacroOblici.pladanj)
-            .padding(MacroDimenzije.pladanjOkvir),
-        horizontalArrangement = Arrangement.spacedBy(MacroRazmaci.xs)
-    ) {
-        utori.forEachIndexed { indeks, utor ->
-            UtorPladnja(
-                utor = utor,
-                indeks = indeks,
-                predlozen = utor.tip == predlozeniTip,
-                smanjeno = smanjeno,
-                onClick = { onUtor(utor) },
-                modifier = Modifier.weight(1f)
-            )
-        }
-    }
-}
-
-@Composable
-private fun UtorPladnja(
-    utor: UtorUnosa,
-    indeks: Int,
-    predlozen: Boolean,
-    smanjeno: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val boje = MaterialTheme.macroBoje
-    val naziv = nazivTipa(utor.tip)
-    val makro = utor.makro
-    val pun = makro != null
-    val osnovniOpis = if (makro != null) stringResource(R.string.ko_utor_pun, naziv, formatKcal(makro.kcal))
-    else stringResource(R.string.ko_utor_prazan, naziv)
-    val opis = if (predlozen) stringResource(R.string.ko_predlozeno, osnovniOpis) else osnovniOpis
-    val izvor = remember { MutableInteractionSource() }
-
-    // Previewi i smanjeni pokret odmah prikazuju završno stanje.
-    val bezPokreta = smanjeno || LocalInspectionMode.current
-
-    // Utor sjeda na pladanj (stupnjevano), kao tanjuri na Home.
-    val ulaz = remember { Animatable(if (bezPokreta) 1f else 0f) }
-    LaunchedEffect(Unit) {
-        if (ulaz.value < 1f) {
-            delay((indeks * Kasnjenje.tanjuri).toLong())
-            ulaz.animateTo(1f, Opruge.slijeganje())
-        }
-    }
-
-    // Tanjur sjeda i rub mu se puni kad obrok stigne (ili odmah pri prvom prikazu); prazan utor ostaje isprekidan.
-    val sletanje = remember { Animatable(if (pun && bezPokreta) 1f else 0f) }
-    LaunchedEffect(pun) {
-        if (pun) sletanje.animateTo(1f, opruga(Opruge.slijeganje(), smanjeno)) else sletanje.snapTo(0f)
-    }
-
-    // Predloženi utor: jedan blagi puls nakon ulaza, nikad u petlji.
-    val puls = remember { Animatable(1f) }
-    LaunchedEffect(predlozen) {
-        if (predlozen && !bezPokreta) {
-            delay(Kasnjenje.pulsa.toLong())
-            puls.animateTo(SKALA_PULSA, tween(Trajanje.kratko, easing = Ublazavanje.usporavanje))
-            puls.animateTo(1f, tween(Trajanje.kratko, easing = Ublazavanje.usporavanje))
-        }
-    }
-
-    Column(
-        modifier = modifier
-            .graphicsLayer {
-                scaleX = puls.value
-                scaleY = puls.value
-            }
-            .clip(MacroOblici.utor)
-            .background(if (predlozen) boje.utorIstaknut else boje.orah)
-            .clickable(interactionSource = izvor, indication = null, role = Role.Button, onClick = onClick)
-            .semantics(mergeDescendants = true) { contentDescription = opis }
-            .skalaPritiska(izvor)
-            .padding(vertical = MacroRazmaci.s),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(MacroDimenzije.tanjurMax)
-                .graphicsLayer {
-                    val s = ulaz.value
-                    alpha = s.coerceIn(0f, 1f)
-                    translationY = (1f - s) * -POMAK_TANJURA_DP.dp.toPx()
-                    val skala = SKALA_TANJURA + (1f - SKALA_TANJURA) * s
-                    scaleX = skala
-                    scaleY = skala
-                },
-            contentAlignment = Alignment.Center
-        ) {
-            // Prazan utor: isprekidani obris s "+" (nestaje dok tanjur slijeće, kao na Home)
-            Canvas(modifier = Modifier.size(MacroDimenzije.tanjurPrazan)) {
-                val alfa = (1f - sletanje.value).coerceIn(0f, 1f)
-                if (alfa > 0f) {
-                    val obrub = MacroDimenzije.obrubIsprekidan.toPx()
-                    val crtica = MacroDimenzije.crtica.toPx()
-                    drawCircle(
-                        color = boje.naOrahuPrigusen.copy(alpha = alfa),
-                        radius = size.minDimension / 2 - obrub,
-                        style = Stroke(width = obrub, pathEffect = PathEffect.dashPathEffect(floatArrayOf(crtica, crtica)))
-                    )
-                }
-            }
-            if (!pun) {
-                Icon(
-                    imageVector = Icons.Rounded.Add,
-                    contentDescription = null,
-                    tint = boje.naOrahu,
-                    modifier = Modifier.size(MacroDimenzije.ikona)
-                )
-            }
-            if (makro != null) {
-                Tanjur(
-                    makro = makro,
-                    promjer = MacroDimenzije.tanjurPrazan,
-                    okvir = MacroDimenzije.tanjurPrazan,
-                    smanjeno = smanjeno,
-                    punjenjeRuba = true,
-                    modifier = Modifier.graphicsLayer {
-                        val s = sletanje.value
-                        alpha = s.coerceIn(0f, 1f)
-                        translationY = (1f - s) * -POMAK_TANJURA_DP.dp.toPx()
-                        val skala = SKALA_TANJURA + (1f - SKALA_TANJURA) * s
-                        scaleX = skala
-                        scaleY = skala
-                    }
-                )
-            }
-        }
-
-        Text(
-            text = naziv,
-            style = MaterialTheme.typography.labelLarge,
-            color = boje.naOrahu,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
-        Text(
-            text = stringResource(if (makro != null) R.string.ko_uredi else R.string.ko_dodaj),
-            style = MaterialTheme.typography.labelMedium,
-            color = boje.naOrahuPrigusen,
-            maxLines = 1
-        )
-    }
-}
-
 /** Sporedni ulaz u prepoznavanje obroka: mirna porculanska kartica, ne natječe se s pladnjem. */
 @Composable
-private fun SlikaIliOpisKartica(onClick: () -> Unit) {
+private fun SlikaIliOpisKartica(onClick: () -> Unit, modifier: Modifier = Modifier) {
     val shema = MaterialTheme.colorScheme
     val izvor = remember { MutableInteractionSource() }
 
@@ -423,7 +319,7 @@ private fun SlikaIliOpisKartica(onClick: () -> Unit) {
         shape = MacroOblici.kartica,
         color = shema.surface,
         border = androidx.compose.foundation.BorderStroke(MacroDimenzije.linija, shema.outlineVariant),
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .skalaPritiska(izvor)
     ) {
@@ -466,47 +362,60 @@ private fun SlikaIliOpisKartica(onClick: () -> Unit) {
     }
 }
 
-// ---------- Previewi (⚠ lažni podaci, samo za @Preview) ----------
+// ---------- Previewi (⚠ lažni podaci, samo za @Preview; prava jela iz menze, okvirne vrijednosti) ----------
 
-private val UTORI_PRAZNO = TIPOVI_PLADNJA.map { UtorUnosa(it, null, 0, null) }
+private val TANJURI_PRAZNO = TIPOVI_PLADNJA.map { TanjurUi(it, null, jeUzina = it == "UZINA") }
 
-private val UTORI_DJELOMICNO = listOf(
-    UtorUnosa("DORUCAK", Makro(kcal = 470.0, proteini = 14.0, masti = 19.0, ugljikohidrati = 59.0), 1, null),
-    UtorUnosa("RUCAK", Makro(kcal = 1040.0, proteini = 52.0, masti = 38.0, ugljikohidrati = 120.0), 1, null),
-    UtorUnosa("VECERA", null, 0, null),
-    UtorUnosa("UZINA", null, 0, null)
+private val TANJURI_DJELOMICNO = listOf(
+    TanjurUi("DORUCAK", Makro(kcal = 470.0, proteini = 14.0, masti = 19.0, ugljikohidrati = 59.0), "08:10"),
+    TanjurUi("RUCAK", Makro(kcal = 1040.0, proteini = 52.0, masti = 38.0, ugljikohidrati = 120.0), "12:40"),
+    TanjurUi("UZINA", null, jeUzina = true),
+    TanjurUi("VECERA", null)
+)
+
+private fun jeloPrimjera(id: Long, naziv: String, kcal: Double, p: Double, m: Double, u: Double) =
+    Jelo(id, naziv, null, kcal, p, u, m, null, null, null, null)
+
+private val CESTO_PRIMJERA = listOf(
+    CestoJedenoJelo(jeloPrimjera(72, "Pileći file na žaru", 253.0, 44.0, 8.0, 1.0), 9, "2026-10-23"),
+    CestoJedenoJelo(jeloPrimjera(171, "Grah varivo", 472.0, 24.0, 14.0, 62.0), 6, "2026-10-21"),
+    CestoJedenoJelo(jeloPrimjera(209, "Jogurt", 114.0, 6.0, 6.0, 9.0), 5, "2026-10-25")
 )
 
 @Composable
-private fun PreviewKonzumacija(tamna: Boolean, utori: List<UtorUnosa>) {
+private fun PreviewKonzumacija(tamna: Boolean, tanjuri: List<TanjurUi>, cesto: List<CestoJedenoJelo>) {
     MacroMenzaTheme(darkTheme = tamna) {
         KonzumacijaSadrzaj(
             datum = LocalDate.of(2026, 10, 26),
-            utori = utori,
+            tanjuri = tanjuri,
             predlozeniTip = "VECERA",
-            onUtor = {},
+            cesto = cesto,
+            puniUlaz = false,
+            onTanjur = {},
             onJosObrok = {},
+            onDodajCesto = {},
+            onDetaljCesto = {},
             onSlikaIliOpis = {}
         )
     }
 }
 
-@Preview(name = "Unos · svijetla · prazan dan", widthDp = 360, heightDp = 800)
+@Preview(name = "Unos · svijetla · prazan dan", widthDp = 360, heightDp = 1000)
 @Composable
-private fun PreviewKonzumacijaSvijetlaPrazno() = PreviewKonzumacija(false, UTORI_PRAZNO)
+private fun PreviewKonzumacijaSvijetlaPrazno() = PreviewKonzumacija(false, TANJURI_PRAZNO, emptyList())
 
-@Preview(name = "Unos · svijetla · djelomično", widthDp = 360, heightDp = 800)
+@Preview(name = "Unos · svijetla · djelomično", widthDp = 360, heightDp = 1000)
 @Composable
-private fun PreviewKonzumacijaSvijetlaDjelomicno() = PreviewKonzumacija(false, UTORI_DJELOMICNO)
+private fun PreviewKonzumacijaSvijetlaDjelomicno() = PreviewKonzumacija(false, TANJURI_DJELOMICNO, CESTO_PRIMJERA)
 
-@Preview(name = "Unos · tamna · prazan dan", widthDp = 360, heightDp = 800)
+@Preview(name = "Unos · tamna · prazan dan", widthDp = 360, heightDp = 1000)
 @Composable
-private fun PreviewKonzumacijaTamnaPrazno() = PreviewKonzumacija(true, UTORI_PRAZNO)
+private fun PreviewKonzumacijaTamnaPrazno() = PreviewKonzumacija(true, TANJURI_PRAZNO, CESTO_PRIMJERA)
 
-@Preview(name = "Unos · tamna · djelomično", widthDp = 360, heightDp = 800)
+@Preview(name = "Unos · tamna · djelomično", widthDp = 360, heightDp = 1000)
 @Composable
-private fun PreviewKonzumacijaTamnaDjelomicno() = PreviewKonzumacija(true, UTORI_DJELOMICNO)
+private fun PreviewKonzumacijaTamnaDjelomicno() = PreviewKonzumacija(true, TANJURI_DJELOMICNO, CESTO_PRIMJERA)
 
-@Preview(name = "Unos · fontScale 1,3", widthDp = 360, heightDp = 900, fontScale = 1.3f)
+@Preview(name = "Unos · fontScale 1,3", widthDp = 360, heightDp = 1200, fontScale = 1.3f)
 @Composable
-private fun PreviewKonzumacijaVelikiFont() = PreviewKonzumacija(false, UTORI_DJELOMICNO)
+private fun PreviewKonzumacijaVelikiFont() = PreviewKonzumacija(false, TANJURI_DJELOMICNO, CESTO_PRIMJERA)

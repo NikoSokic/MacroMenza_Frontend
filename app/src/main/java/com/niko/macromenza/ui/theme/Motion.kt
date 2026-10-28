@@ -52,6 +52,16 @@ object Trajanje {
 
     /** Odlazni ekran u prijelazu "fade-through": brži od dolaznog (~60 % njegova trajanja). */
     const val izlaz = 140
+
+    /**
+     * Ponovni ulaz u ekran u istoj sesiji: jedno kratko izblijeđivanje, bez stupnjevanja (≤ 300 ms).
+     * Puni slijed (fade-through + stupnjevani redovi, < 900 ms) igra samo pri prvom ulazu, vidi [UlazUSesiji].
+     */
+    const val ponovniUlaz = 250
+
+    /** Globalni fade-through između ekrana: odlazni 90 ms, dolazni 160 ms nakon njega (ukupno 250 ms). */
+    const val prijelazIzlaz = 90
+    const val prijelazUlaz = 160
 }
 
 object Kasnjenje {
@@ -71,9 +81,6 @@ object Kasnjenje {
 
     /** Redovi unosa kreću malo nakon pretrage i prvog naslova. */
     const val unosRedovi = 100
-
-    /** Jedan blagi puls predloženog utora, nakon što su tanjuri sjeli. */
-    const val pulsa = 520
 }
 
 object Ublazavanje {
@@ -93,15 +100,15 @@ const val SKALA_PRITISKA = 0.96f
 /** Pomak pri ulazu reda (u dp, primjenjuje se kroz graphicsLayer). */
 const val POMAK_ULAZA_DP = 12f
 
+/** Pomak sadržaja tjedna pri listanju (u dp, kroz graphicsLayer). */
+const val POMAK_TJEDNA_DP = 48f
+
 /** Visina s koje tanjur "pada" na pladanj (u dp) i početna skala. */
 const val POMAK_TANJURA_DP = 18f
 const val SKALA_TANJURA = 1.07f
 
 /** Najviše toliko redova liste animira ulaz (ostali su odmah tu). */
 const val MAKS_ANIMIRANIH_REDOVA = 8
-
-/** Puls predloženog utora: jedan blagi porast i povratak. */
-const val SKALA_PULSA = 1.05f
 
 /** Početna skala dolaznog ekrana u prijelazu fade-through. */
 const val SKALA_EKRANA = 0.96f
@@ -132,5 +139,24 @@ fun rememberSmanjeniPokret(): Boolean {
     return remember(context) {
         if (pregled) false
         else Settings.Global.getFloat(context.contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) == 0f
+    }
+}
+
+/**
+ * Pamti koji su ekrani u ovoj sesiji aplikacije (dok proces živi) već imali puni ulazni slijed.
+ * Prvi ulaz igra puni koreografirani slijed, svaki sljedeći samo [Trajanje.ponovniUlaz].
+ */
+object UlazUSesiji {
+    const val KARTICA_UNOS = "kartica_unos"
+    const val UNOS_OBROKA = "unos_obroka"
+    const val SLIKA_ILI_OPIS = "slika_ili_opis"
+    const val POVIJEST = "povijest"
+
+    private val vidjeni = mutableSetOf<String>()
+
+    fun jePrvi(kljuc: String): Boolean = kljuc !in vidjeni
+
+    fun oznaci(kljuc: String) {
+        vidjeni += kljuc
     }
 }

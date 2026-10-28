@@ -60,6 +60,11 @@ object MacroDimenzije {
     val zrnoNjihanje = 6.dp
     val crtica = 5.dp
 
+    // Povijest: tanjur dana u redu tjedna (7 stupaca od ≥ 48 dp)
+    val tanjurTjedanMax = 40.dp
+    /** Vodoravno povlačenje dulje od ovoga mijenja tjedan. */
+    val pragListanja = 80.dp
+
     // Redovi obroka i glif porcije
     val ikonaObroka = 40.dp
     val glifPorcije = 22.dp
@@ -98,4 +103,11 @@ object MacroOmjeri {
 
     const val kosturNaziv = 0.6f
     const val kosturMakro = 0.4f
+
+    /** Okvir pregleda slike (Slika ili opis): širina / visina = 16 : 10. */
+    const val pregledSlike = 1.6f
+
+    /** Disanje praznog tanjura i pulsiranje kostura: alfa između ovih vrijednosti (kao prazni utori na Home). */
+    const val disanjeMin = 0.45f
+    const val disanjeMaks = 0.8f
 }

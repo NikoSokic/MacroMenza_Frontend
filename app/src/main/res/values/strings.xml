@@ -43,6 +43,8 @@
     <string name="kom_utor_prazan">%1$s: prazno</string>
     <string name="kom_dodaj">dodaj</string>
     <string name="kom_dodaj_u">Dodaj obrok: %1$s</string>
+    <string name="kom_predlozeno">Predloženo</string>
+    <string name="kom_predlozeno_opis">%1$s. Predloženo za ovo doba dana</string>
     <string name="dp_cilj_dosegnut">Cilj dana dosegnut</string>
 
     <string name="kom_tip_dorucak">Doručak</string>
@@ -83,12 +85,8 @@
 
     <!-- Unos: odabir obroka (KonzumacijaScreen) -->
     <string name="ko_naslov">Što jedeš?</string>
-    <string name="ko_uredi">Uredi</string>
-    <string name="ko_dodaj">Dodaj</string>
-    <string name="ko_utor_pun">%1$s: %2$s kcal. Uredi obrok</string>
-    <string name="ko_utor_prazan">Dodaj obrok: %1$s</string>
-    <string name="ko_predlozeno">%1$s. Predloženo za ovo doba dana</string>
     <string name="ko_jos_obrok">Dodaj još jedan obrok</string>
+    <string name="ko_cesto_tekst">„+” otvara unos s već dodanim jelom</string>
     <string name="ko_slika_naslov">Slika ili opis</string>
     <string name="ko_slika_tekst">Uslikaj pladanj ili opiši što si jeo</string>
 
@@ -97,6 +95,11 @@
     <string name="uo_uredivanje">Uređivanje obroka</string>
     <string name="uo_promijeni_tip">Vrsta obroka: %1$s. Promijeni</string>
     <string name="uo_danas">Danas</string>
+    <string name="uo_datum_godina">%1$s, %2$d. %3$d. %4$d.</string>
+    <string name="uo_razdjelnik"> · </string>
+    <string name="uo_danas_s_obrokom">danas s ovim obrokom</string>
+    <string name="uo_datum_s_obrokom">%1$d. %2$d. s ovim obrokom</string>
+    <string name="uo_vrsta_promijenjena">Vrsta promijenjena u %1$s</string>
     <string name="uo_datum_opis">Datum: %1$s. Promijeni datum</string>
     <string name="uo_vrijeme_opis">Vrijeme: %1$s. Promijeni vrijeme</string>
     <string name="uo_napredak">%1$s / %2$s kcal</string>
@@ -109,7 +112,9 @@
     <string name="uo_pretrazi">Pretraži jela iz menze</string>
     <string name="uo_ocisti_pretragu">Očisti pretragu</string>
     <string name="uo_slika_ili_opis">Slika ili opis</string>
-    <string name="uo_raspon">Raspon</string>
+    <string name="uo_filteri">Filteri</string>
+    <string name="uo_filteri_broj">Filteri · %1$d</string>
+    <string name="uo_brzi_odabir">Brzi odabir</string>
     <string name="uo_ponisti_filtere">Poništi filtere</string>
     <string name="uo_do_kcal">Do %1$s kcal</string>
     <string name="uo_proteini_od">Proteini %1$s+ g</string>
@@ -118,9 +123,11 @@
     <string name="uo_meniji_rucak">Meniji za ručak</string>
     <string name="uo_meniji_vecera">Meniji za večeru</string>
     <string name="uo_meniji">Meniji menze</string>
-    <string name="uo_nema_menija_dorucak">Za doručak menza nema menije.</string>
-    <string name="uo_nema_menija_uzina">Za užinu menza nema menije.</string>
-    <string name="uo_nema_menija_tekst">Možeš dodati meni za ručak ili večeru.</string>
+    <string name="uo_meniji_rucak_vecera">Meniji za ručak/večeru</string>
+    <string name="uo_meni_sazetak">%1$s · %2$s</string>
+    <string name="uo_meni_jos"> +%1$d</string>
+    <string name="uo_meni_prosiren">prošireno</string>
+    <string name="uo_meni_sazet">sažeto</string>
     <string name="uo_nema_menija_filter">Nema menija za odabrane filtere.</string>
     <string name="uo_vegetarijanski">Vegetarijanski</string>
     <string name="uo_prikazi_sve_menije">Prikaži sve menije (%1$d)</string>
@@ -168,4 +175,102 @@
     <string name="uo_max">Max</string>
     <string name="uo_primijeni">Primijeni filtere</string>
     <string name="uo_resetiraj">Resetiraj filtere</string>
+
+    <!-- Slika ili opis (sio_) -->
+    <string name="sio_natrag">Natrag</string>
+    <string name="sio_naslov">Slika ili opis</string>
+    <string name="sio_podnaslov">Prepoznaj obrok sa slike ili iz opisa</string>
+    <string name="sio_fotografiraj">Fotografiraj</string>
+    <string name="sio_iz_galerije">Iz galerije</string>
+    <string name="sio_odabrana_slika">Odabrana slika</string>
+    <string name="sio_ucitavam_pregled">Učitavam pregled slike</string>
+    <string name="sio_pregled_nedostupan">Pregled slike nije dostupan</string>
+    <string name="sio_ukloni_sliku">Ukloni sliku</string>
+    <string name="sio_opis_oznaka">Opiši obrok</string>
+    <string name="sio_opis_primjer">npr. pohana svinjetina, pire krumpir i zelena salata</string>
+    <string name="sio_brojac">%1$d/%2$d</string>
+    <string name="sio_brojac_opis">%1$d od %2$d znakova</string>
+    <string name="sio_prepoznaj">Prepoznaj</string>
+    <string name="sio_prepoznajem">Prepoznajem…</string>
+    <string name="sio_razlog_prazno">Dodaj sliku ili opiši obrok</string>
+    <string name="sio_razlog_korisnik">Učitavam korisnika…</string>
+    <string name="sio_analiza_naslov">Prepoznajem obrok…</string>
+    <string name="sio_analiza_tekst">Obično traje nekoliko sekundi</string>
+    <string name="sio_pokusaj_ponovno">Pokušaj ponovno</string>
+    <string name="sio_napomena">Slika i opis šalju se Google Gemini servisu radi prepoznavanja. Prijedlog je okviran, provjeri ga prije spremanja.</string>
+    <string name="sio_prijedlog_naslov">Prijedlog obroka</string>
+    <string name="sio_nista_prepoznato">Nijedno jelo iz menze nije prepoznato.</string>
+    <string name="sio_provjeri">Provjeri</string>
+    <string name="sio_neprepoznato_naslov">Nije u bazi menze</string>
+    <string name="sio_neprepoznato_stavka">• %1$s</string>
+    <string name="sio_koristi_prijedlog">Koristi prijedlog</string>
+    <string name="sio_prepoznaj_ponovno">Prepoznaj ponovno</string>
+    <string name="sio_nista_savjet">Slikaj pladanj odozgo ili opiši obrok riječima</string>
+    <string name="sio_ukupno">Ukupno</string>
+    <string name="sio_ukupno_opis">Ukupno: %1$s</string>
+    <string name="sio_stavka_opis">%1$s, %2$s, %3$s.</string>
+    <string name="sio_provjeri_opis">Provjeri količinu i jelo.</string>
+
+    <!-- Povijest (pov_) -->
+    <string name="pov_naslov">Povijest</string>
+    <string name="pov_tab_tjedan">Tjedan</string>
+    <string name="pov_tab_dan">Dan</string>
+    <string name="pov_prethodni_tjedan">Prethodni tjedan</string>
+    <string name="pov_sljedeci_tjedan">Sljedeći tjedan</string>
+    <string name="pov_ovaj_tjedan">Ovaj tjedan</string>
+    <string name="pov_ucitavanje">Učitavanje povijesti</string>
+    <string name="pov_greska_naslov">Povijest nije dostupna</string>
+    <string name="pov_greska_tekst">Provjeri vezu s poslužiteljem.</string>
+    <string name="pov_pokusaj_ponovno">Pokušaj ponovno</string>
+    <string name="pov_prazno_naslov">Nema unosa u ovom tjednu</string>
+    <string name="pov_prazno_tekst">Dodaj obroke ili prelistaj na drugi tjedan.</string>
+    <string name="pov_ucitaj_primjer">Učitaj primjer tjedna</string>
+    <string name="pov_primjer_prikazan">Prikazan je primjer tjedna</string>
+    <string name="pov_ukloni_primjer">Ukloni primjer</string>
+    <string-array name="pov_oznake_dana">
+        <item>P</item>
+        <item>U</item>
+        <item>S</item>
+        <item>Č</item>
+        <item>P</item>
+        <item>S</item>
+        <item>N</item>
+    </string-array>
+    <string-array name="pov_kratki_dani">
+        <item>Pon</item>
+        <item>Uto</item>
+        <item>Sri</item>
+        <item>Čet</item>
+        <item>Pet</item>
+        <item>Sub</item>
+        <item>Ned</item>
+    </string-array>
+    <string name="pov_kalorije_po_danima">Kalorije po danima</string>
+    <string name="pov_dodirni_stupac">Dodirni stupac za kalorije, ponovno za obroke tog dana.</string>
+    <string name="pov_dan_datum">%1$s, %2$d. %3$d.</string>
+    <string name="pov_dan_kcal">%1$s kcal%2$s</string>
+    <string name="pov_dan_nema_unosa">Nema unosa%1$s</string>
+    <string name="pov_dan_cilj"> · cilj %1$s</string>
+    <string name="pov_otvori_dan">Otvori dan</string>
+    <string name="pov_legenda_u_cilju">U cilju</string>
+    <string name="pov_legenda_izvan_cilja">Izvan cilja</string>
+    <string name="pov_legenda_bez_unosa">Bez unosa</string>
+    <string name="pov_legenda_cilj">Cilj</string>
+    <string name="pov_u_cilju">U cilju</string>
+    <string name="pov_u_cilju_vrijednost">%1$d / %2$d dana</string>
+    <string name="pov_prosjecno_dnevno">Prosječno dnevno</string>
+    <string name="pov_kcal">%1$s kcal</string>
+    <string name="pov_cilj_kcal">cilj %1$s kcal</string>
+    <string name="pov_bez_cilja">bez cilja</string>
+    <string name="pov_napomena_cilja" formatted="false">±10 % od cilja, samo dani s unosom</string>
+    <string name="pov_nema_cilja">Za dane s unosom nema postavljenog cilja.</string>
+    <string name="pov_makro_vrijednost">%1$s / %2$s g</string>
+    <string name="pov_makro_bez_cilja">%1$s g</string>
+    <string name="pov_odaberi_datum">Odaberi datum</string>
+    <string name="pov_dnevni_pregled">Dnevni pregled</string>
+    <string name="pov_prethodni_dan">Prethodni dan</string>
+    <string name="pov_sljedeci_dan">Sljedeći dan</string>
+    <string name="pov_ukupni_dnevni_unos">Ukupni dnevni unos</string>
+    <string name="pov_dan_prazno_naslov">Nema unosa za ovaj dan</string>
+    <string name="pov_dan_prazno_tekst">Za odabrani datum nije evidentiran nijedan obrok.</string>
 </resources>

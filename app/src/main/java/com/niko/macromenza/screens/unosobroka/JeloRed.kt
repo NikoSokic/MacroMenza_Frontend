@@ -29,6 +29,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.ExpandLess
+import androidx.compose.material.icons.rounded.ExpandMore
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -44,6 +46,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -54,6 +57,8 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -75,6 +80,7 @@ import com.niko.macromenza.ui.theme.Trajanje
 import com.niko.macromenza.ui.theme.Ublazavanje
 import com.niko.macromenza.ui.theme.macroBoje
 import com.niko.macromenza.ui.theme.rememberSmanjeniPokret
+import com.niko.macromenza.util.formatKcal
 import com.niko.macromenza.util.formatKolicina
 
 /**
@@ -278,12 +284,26 @@ private fun DodajGumb(kolicina: Double, opis: String, onClick: () -> Unit) {
 fun nazivMenija(meni: MeniDTO): String =
     meni.redniBroj?.let { stringResource(R.string.uo_meni_naziv, nazivTipa(meni.tip), it.toString()) } ?: nazivTipa(meni.tip)
 
-/** Red menija: naziv, stavke (≈ približne, s objašnjenjem na dugi pritisak), zbroj i "+" za dodavanje cijelog menija. */
+/** U sažetom redu menija vidi se ovoliko prvih stavki, ostale kao "+N". */
+private const val MENI_STAVKI_SAZETO = 2
+
+/**
+ * Red menija u ritmu reda jela. Sažeto: naziv i "1298 kcal · Juha od gljiva, Pohana svinjetina +4".
+ * Dodir na red ga proširuje na sve stavke (≈ približne, s objašnjenjem na dugi pritisak) i makronutrijente;
+ * "+" dodaje cijeli meni. Proširenje mijenja visinu reda bez animiranja layouta.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MeniRed(meni: MeniDTO, onDodaj: () -> Unit, crta: Boolean, modifier: Modifier = Modifier) {
     val shema = MaterialTheme.colorScheme
     val naziv = nazivMenija(meni)
+    var prosiren by rememberSaveable(meni.id) { mutableStateOf(false) }
+    val izvor = remember { MutableInteractionSource() }
+
+    val kcal = stringResource(R.string.kom_kcal_vrijednost, formatKcal(meni.kalorije))
+    val prve = meni.stavke.take(MENI_STAVKI_SAZETO).joinToString(", ") { it.oznaka }
+    val ostalo = meni.stavke.size - MENI_STAVKI_SAZETO
+    val stanje = stringResource(if (prosiren) R.string.uo_meni_prosiren else R.string.uo_meni_sazet)
 
     Column(modifier = modifier.fillMaxWidth()) {
         if (crta) {
@@ -296,14 +316,23 @@ fun MeniRed(meni: MeniDTO, onDodaj: () -> Unit, crta: Boolean, modifier: Modifie
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = MacroRazmaci.rubEkrana, end = MacroRazmaci.s, top = MacroRazmaci.m, bottom = MacroRazmaci.m),
-            verticalAlignment = Alignment.Top
+                .heightIn(min = MacroDimenzije.dodirniCilj)
+                .padding(start = MacroRazmaci.rubEkrana, end = MacroRazmaci.s),
+            verticalAlignment = if (prosiren) Alignment.Top else Alignment.CenterVertically
         ) {
-            Column(modifier = Modifier.weight(1f)) {
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .clip(MacroOblici.cip)
+                    .clickable(interactionSource = izvor, indication = null, role = Role.Button) { prosiren = !prosiren }
+                    .semantics { stateDescription = stanje }
+                    .skalaPritiska(izvor)
+                    .padding(vertical = MacroRazmaci.s)
+            ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         text = naziv,
-                        style = MaterialTheme.typography.titleSmall,
+                        style = MaterialTheme.typography.bodyLarge,
                         color = shema.onSurface
                     )
                     if (meni.vegetarijanski) {
@@ -314,32 +343,62 @@ fun MeniRed(meni: MeniDTO, onDodaj: () -> Unit, crta: Boolean, modifier: Modifie
                             color = shema.onSurfaceVariant
                         )
                     }
+                    Icon(
+                        imageVector = if (prosiren) Icons.Rounded.ExpandLess else Icons.Rounded.ExpandMore,
+                        contentDescription = null,
+                        tint = shema.onSurfaceVariant,
+                        modifier = Modifier
+                            .padding(start = MacroRazmaci.xs)
+                            .size(MacroDimenzije.ikonaMala)
+                    )
                 }
-                Spacer(Modifier.height(MacroRazmaci.xxs))
-                meni.stavke.forEach { stavka ->
-                    val tekst = buildString {
-                        if (stavka.priblizno) append("≈ ")
-                        if (stavka.kolicina != 1.0) append("${formatKolicina(stavka.kolicina)}× ")
-                        append(stavka.oznaka)
+                if (!prosiren) {
+                    // Nazivi stavki se skraćuju, "+N" uvijek ostaje vidljiv.
+                    Row {
+                        Text(
+                            text = stringResource(R.string.uo_meni_sazetak, kcal, prve),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = shema.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f, fill = false)
+                        )
+                        if (ostalo > 0) {
+                            Text(
+                                text = stringResource(R.string.uo_meni_jos, ostalo),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = shema.onSurfaceVariant,
+                                maxLines = 1
+                            )
+                        }
                     }
-                    if (stavka.priblizno) {
-                        TooltipBox(
-                            positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
-                            tooltip = { PlainTooltip { Text(stringResource(R.string.uo_priblizno)) } },
-                            state = rememberTooltipState()
-                        ) {
+                } else {
+                    Spacer(Modifier.height(MacroRazmaci.xxs))
+                    meni.stavke.forEach { stavka ->
+                        val tekst = buildString {
+                            if (stavka.priblizno) append("≈ ")
+                            if (stavka.kolicina != 1.0) append("${formatKolicina(stavka.kolicina)}× ")
+                            append(stavka.oznaka)
+                        }
+                        if (stavka.priblizno) {
+                            TooltipBox(
+                                positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
+                                tooltip = { PlainTooltip { Text(stringResource(R.string.uo_priblizno)) } },
+                                state = rememberTooltipState()
+                            ) {
+                                Text(text = tekst, style = MaterialTheme.typography.bodySmall, color = shema.onSurfaceVariant)
+                            }
+                        } else {
                             Text(text = tekst, style = MaterialTheme.typography.bodySmall, color = shema.onSurfaceVariant)
                         }
-                    } else {
-                        Text(text = tekst, style = MaterialTheme.typography.bodySmall, color = shema.onSurfaceVariant)
                     }
+                    Spacer(Modifier.height(MacroRazmaci.xs))
+                    Text(
+                        text = kcalIMakroKratko(Makro(meni.kalorije, meni.proteini, meni.masti, meni.ugljikohidrati)),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = shema.onSurface
+                    )
                 }
-                Spacer(Modifier.height(MacroRazmaci.xs))
-                Text(
-                    text = kcalIMakroKratko(Makro(meni.kalorije, meni.proteini, meni.masti, meni.ugljikohidrati)),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = shema.onSurface
-                )
             }
             Spacer(Modifier.width(MacroRazmaci.s))
             DodajGumb(kolicina = 0.0, opis = stringResource(R.string.uo_dodaj_meni, naziv), onClick = onDodaj)
