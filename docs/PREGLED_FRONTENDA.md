@@ -23,7 +23,7 @@ Stupci: **Pladanj** = boje, tipografija, oblici i razmaci iz `ui/theme/`; **spec
 | Welcome (`WelcomeScreen.kt`) | da (korak 8) | `prijava.md` § Welcome | — | krugovi i zelena kao u svijetloj | `fontSize` u kodu, ne skalira se po stilu | vlastiti „logo" s „M" (`:83-98`) |
 | Login (`LoginScreen.kt`) | da (korak 7) | `prijava.md` | spinner u gumbu (`:255`) | `Color.White` na zelenoj (`:247`, `:258`) | lozinka ima `contentDescription` (`:195-200`) | — |
 | Register (`RegisterScreen.kt`) | da (korak 7) | `prijava.md` | spinner u gumbu (`:324`) | isto kao Login | — | uspjeh u zelenoj (`:278-289`) |
-| Onboarding (`OnboardingScreen.kt`) | ne | nema | spinneri (`:443`, `:541`) | `tonalElevation` kartice (`:568`) | `RadioButton` u retku, ali red nije `selectable` (`:632-665`) | jedino `KakoSmoIzracunaliKartica` (`:390`) je na Pladnju |
+| Onboarding (`OnboardingScreen.kt`) | da (korak 9) | `profil.md` § Onboarding | spinneri (`:443`, `:541`) | `tonalElevation` kartice (`:568`) | `RadioButton` u retku, ali red nije `selectable` (`:632-665`) | jedino `KakoSmoIzracunaliKartica` (`:390`) je na Pladnju |
 | Home (`HomeScreen.kt`, `screens/dnevnipregled/`) | da | `daily-overview.md` | sva (kostur, prazno, greška, preko cilja) | ok | ok prema kodu | otvara stari `JeloDetaljSheet` (`HomeScreen.kt:166`) |
 | Kartica Unos (`KonzumacijaScreen.kt`) | da | `meal-logging.md` | ok | ok | ok | otvara stari `JeloDetaljSheet` (`:189`); prefiks resursa `ko_` uz `uo_` |
 | Unos obroka (`UnosObrokaScreen.kt`, `screens/unosobroka/`) | djelomično | `meal-logging.md` (paket 1) | ok | ok | ok | dno ekrana je stari `SazetakObrokaBar` (`:354`), dijalog odbacivanja na zadanom M3 (`:407-427`) |

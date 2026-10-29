@@ -573,4 +573,45 @@
     <string name="spl_naslov">MacroMenza</string>
     <string name="spl_slogan">Pametnije prati svoju prehranu</string>
     <string name="spl_ucitavam">Učitavam aplikaciju</string>
+
+    <!-- Onboarding (pages/profil.md § Onboarding) -->
+    <string name="onb_naslov">Još samo par detalja</string>
+    <string name="onb_podnaslov">Ovi podaci služe za izračun tvoje dnevne preporuke.</string>
+    <string name="onb_osobni_podaci">Osobni podaci</string>
+    <string name="onb_ime">Ime</string>
+    <string name="onb_prezime">Prezime</string>
+    <string name="onb_spol">Spol</string>
+    <string name="onb_musko">Muško</string>
+    <string name="onb_zensko">Žensko</string>
+    <string name="onb_mjere">Tjelesne mjere</string>
+    <string name="onb_visina">Visina (cm)</string>
+    <string name="onb_visina_pomoc">Između 100 i 250 cm</string>
+    <string name="onb_dob">Dob</string>
+    <string name="onb_dob_pomoc">Između 15 i 100 godina</string>
+    <string name="onb_masa">Masa (kg)</string>
+    <string name="onb_masa_pomoc">Između 30 i 300 kg, najviše jedna decimala</string>
+    <string name="onb_greska_visina">Provjeri visinu. Vrijednost treba biti između 100 i 250 cm.</string>
+    <string name="onb_greska_dob">Provjeri dob. Vrijednost treba biti između 15 i 100 godina.</string>
+    <string name="onb_greska_masa">Provjeri masu. Vrijednost treba biti između 30 i 300 kg.</string>
+    <string name="onb_aktivnost">Razina aktivnosti</string>
+    <string name="onb_akt_sjedilacka">Sjedilačka</string>
+    <string name="onb_akt_sjedilacka_opis">×1,2 · uglavnom sjediš, bez treninga</string>
+    <string name="onb_akt_lagana">Lagana</string>
+    <string name="onb_akt_lagana_opis">×1,375 · 1–3 treninga tjedno</string>
+    <string name="onb_akt_umjerena">Umjerena</string>
+    <string name="onb_akt_umjerena_opis">×1,55 · 3–5 treninga tjedno</string>
+    <string name="onb_akt_visoka">Visoka</string>
+    <string name="onb_akt_visoka_opis">×1,725 · 6–7 treninga tjedno</string>
+    <string name="onb_cilj">Tvoj cilj</string>
+    <string name="onb_cilj_mrsavljenje">Mršavljenje</string>
+    <string name="onb_cilj_mrsavljenje_opis">−500 kcal od dnevne potrošnje</string>
+    <string name="onb_cilj_odrzavanje">Održavanje težine</string>
+    <string name="onb_cilj_odrzavanje_opis">0 kcal · jedeš koliko trošiš</string>
+    <string name="onb_cilj_dobivanje_mase">Dobivanje mase</string>
+    <string name="onb_cilj_dobivanje_mase_opis">+300 kcal na dnevnu potrošnju</string>
+    <string name="onb_pokazi_izracun">Pokaži kako se računa moj cilj</string>
+    <string name="onb_racunam">Računam…</string>
+    <string name="onb_zavrsi">Završi postavljanje</string>
+    <string name="onb_greska_izracun">Nismo uspjeli izračunati preporuku. Pokušaj ponovno.</string>
+    <string name="onb_greska_spremanje">Nismo uspjeli spremiti podatke. Pokušaj ponovno.</string>
 </resources>
