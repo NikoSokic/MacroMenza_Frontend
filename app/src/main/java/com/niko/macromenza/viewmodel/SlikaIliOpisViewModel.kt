@@ -5,8 +5,10 @@ import android.net.Uri
 import androidx.core.content.FileProvider
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.niko.macromenza.R
 import com.niko.macromenza.api.RetrofitInstance
 import com.niko.macromenza.model.PrijedlogObroka
+import com.niko.macromenza.util.UiTekst
 import com.niko.macromenza.util.pripremiSliku
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -43,8 +45,8 @@ class SlikaIliOpisViewModel(application: Application) : AndroidViewModel(applica
     private val _izvor = MutableStateFlow("OPIS")
     val izvor: StateFlow<String> = _izvor
 
-    private val _greska = MutableStateFlow<String?>(null)
-    val greska: StateFlow<String?> = _greska
+    private val _greska = MutableStateFlow<UiTekst?>(null)
+    val greska: StateFlow<UiTekst?> = _greska
 
     // Datoteka koju kamera upravo puni, ili već snimljena fotografija; brišemo je nakon slanja.
     private var kameraDatoteka: File? = null
@@ -100,13 +102,15 @@ class SlikaIliOpisViewModel(application: Application) : AndroidViewModel(applica
                     try {
                         pripremiSliku(getApplication(), slikaUri)
                     } catch (e: IOException) {
-                        _greska.value = e.message ?: "Slika se ne može pročitati."
+                        // Poruka iz pripremiSliku (util/SlikaUtil.kt) prikazuje se kakva jest.
+                        _greska.value = e.message?.let { UiTekst.Dinamicki(it) }
+                            ?: UiTekst.Resurs(R.string.sio_greska_slika_citanje)
                         return@launch
                     } catch (e: SecurityException) {
-                        _greska.value = "Aplikacija nema pristup toj slici. Odaberi je ponovno."
+                        _greska.value = UiTekst.Resurs(R.string.sio_greska_slika_pristup)
                         return@launch
                     } catch (e: OutOfMemoryError) {
-                        _greska.value = "Slika je prevelika za obradu."
+                        _greska.value = UiTekst.Resurs(R.string.sio_greska_slika_prevelika)
                         return@launch
                     }
                 } else {
@@ -133,11 +137,11 @@ class SlikaIliOpisViewModel(application: Application) : AndroidViewModel(applica
             } catch (e: HttpException) {
                 _greska.value = porukaGreske(e)
             } catch (e: InterruptedIOException) {
-                _greska.value = "Poslužitelj nije odgovorio na vrijeme. Pokušaj ponovno."
+                _greska.value = UiTekst.Resurs(R.string.sio_greska_timeout)
             } catch (e: IOException) {
-                _greska.value = "Nema veze s poslužiteljem. Provjeri vezu i pokušaj ponovno."
+                _greska.value = UiTekst.Resurs(R.string.sio_greska_veza)
             } catch (e: Exception) {
-                _greska.value = "Prepoznavanje nije uspjelo."
+                _greska.value = UiTekst.Resurs(R.string.sio_greska_opca)
             } finally {
                 pripremljena?.delete()
                 _ucitava.value = false
@@ -155,7 +159,7 @@ class SlikaIliOpisViewModel(application: Application) : AndroidViewModel(applica
         super.onCleared()
     }
 
-    private fun porukaGreske(e: HttpException): String {
+    private fun porukaGreske(e: HttpException): UiTekst {
         val poruka = try {
             e.response()?.errorBody()?.string()?.let { JSONObject(it).optString("poruka") }
         } catch (ex: Exception) {
@@ -163,9 +167,9 @@ class SlikaIliOpisViewModel(application: Application) : AndroidViewModel(applica
         }
 
         return if (poruka.isNullOrBlank()) {
-            "Prepoznavanje nije uspjelo (greška ${e.code()})."
+            UiTekst.Resurs(R.string.sio_greska_http, e.code())
         } else {
-            poruka
+            UiTekst.Dinamicki(poruka)
         }
     }
 }

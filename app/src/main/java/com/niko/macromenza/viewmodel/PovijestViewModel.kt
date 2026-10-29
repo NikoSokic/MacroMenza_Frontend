@@ -1,14 +1,17 @@
 package com.niko.macromenza.viewmodel
 
+import androidx.annotation.StringRes
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.niko.macromenza.R
 import com.niko.macromenza.api.RetrofitInstance
 import com.niko.macromenza.model.Obrok
 import com.niko.macromenza.model.ObrokRequest
 import com.niko.macromenza.model.PovijestDana
 import com.niko.macromenza.model.StavkaObrokaRequest
 import com.niko.macromenza.model.Tjedan
+import com.niko.macromenza.util.UiTekst
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -47,7 +50,7 @@ class PovijestViewModel(
     private val _obrisaniObrok = MutableStateFlow<Obrok?>(null)
     val obrisaniObrok = _obrisaniObrok.asStateFlow()
 
-    private val _greskaBrisanja = MutableStateFlow<String?>(null)
+    private val _greskaBrisanja = MutableStateFlow<UiTekst?>(null)
     val greskaBrisanja = _greskaBrisanja.asStateFlow()
 
     private var brisanjeUTijeku = false
@@ -128,15 +131,15 @@ class PovijestViewModel(
                     osvjezi(idKorisnik, obrok.datum)
                     _obrisaniObrok.value = obrok
                 } else if (odgovor.code() == 404) {
-                    _greskaBrisanja.value = "Obrok je već obrisan."
+                    _greskaBrisanja.value = UiTekst.Resurs(R.string.pov_obrok_vec_obrisan)
                     osvjezi(idKorisnik, obrok.datum)
                 } else {
-                    _greskaBrisanja.value = "Brisanje nije uspjelo (greška ${odgovor.code()})."
+                    _greskaBrisanja.value = UiTekst.Resurs(R.string.kom_brisanje_greska_http, odgovor.code())
                 }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                _greskaBrisanja.value = "Brisanje nije uspjelo. Provjeri vezu s poslužiteljem."
+                _greskaBrisanja.value = UiTekst.Resurs(R.string.kom_brisanje_greska_veza)
             } finally {
                 brisanjeUTijeku = false
             }
@@ -163,9 +166,10 @@ class PovijestViewModel(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: HttpException) {
-                _greskaBrisanja.value = "Vraćanje nije uspjelo: " + (poruka(e) ?: "greška ${e.code()}.")
+                _greskaBrisanja.value = poruka(e)?.let { UiTekst.Resurs(R.string.pov_vracanje_greska_poruka, it) }
+                    ?: UiTekst.Resurs(R.string.pov_vracanje_greska_http, e.code())
             } catch (e: Exception) {
-                _greskaBrisanja.value = "Vraćanje nije uspjelo. Provjeri vezu s poslužiteljem."
+                _greskaBrisanja.value = UiTekst.Resurs(R.string.pov_vracanje_greska_veza)
             }
         }
     }
@@ -173,18 +177,24 @@ class PovijestViewModel(
     /** Stvara primjer tjedna (obroci s izvorom PRIMJER) za dane bez unosa; greška ide u snackbar. */
     fun ucitajPrimjerTjedna(idKorisnik: Long) = primjerTjedna(
         idKorisnik,
-        greska = "Primjer tjedna nije učitan."
+        greskaPoruka = R.string.pov_primjer_ucitavanje_poruka,
+        greskaHttp = R.string.pov_primjer_ucitavanje_http,
+        greskaVeza = R.string.pov_primjer_ucitavanje_veza
     ) { RetrofitInstance.api.ucitajPrimjerTjedna(idKorisnik) }
 
     /** Briše samo obroke s izvorom PRIMJER. */
     fun ukloniPrimjerTjedna(idKorisnik: Long) = primjerTjedna(
         idKorisnik,
-        greska = "Primjer tjedna nije uklonjen."
+        greskaPoruka = R.string.pov_primjer_uklanjanje_poruka,
+        greskaHttp = R.string.pov_primjer_uklanjanje_http,
+        greskaVeza = R.string.pov_primjer_uklanjanje_veza
     ) { RetrofitInstance.api.ukloniPrimjerTjedna(idKorisnik) }
 
     private fun primjerTjedna(
         idKorisnik: Long,
-        greska: String,
+        @StringRes greskaPoruka: Int,
+        @StringRes greskaHttp: Int,
+        @StringRes greskaVeza: Int,
         poziv: suspend () -> retrofit2.Response<Unit>
     ) {
         if (_primjerUTijeku.value) return
@@ -201,13 +211,14 @@ class PovijestViewModel(
                     } catch (_: Exception) {
                         null
                     }
-                    _greskaBrisanja.value = "$greska ${poruka ?: "(greška ${odgovor.code()})"}"
+                    _greskaBrisanja.value = poruka?.let { UiTekst.Resurs(greskaPoruka, it) }
+                        ?: UiTekst.Resurs(greskaHttp, odgovor.code())
                 }
                 ucitajTjedan(idKorisnik)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                _greskaBrisanja.value = "$greska Provjeri vezu s poslužiteljem."
+                _greskaBrisanja.value = UiTekst.Resurs(greskaVeza)
             } finally {
                 _primjerUTijeku.value = false
             }

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Launcher i početni prozor ne čitaju Compose tokene; vrijednosti su iste kao u ui/theme/Color.kt. -->
+
+    <!-- Ikona aplikacije (MASTER „Ikona aplikacije") -->
+    <color name="ikona_pozadina">#FF3A2E26</color>        <!-- Orah -->
+    <color name="ikona_porculan">#FFFFFBF3</color>        <!-- Porculan -->
+    <color name="ikona_proteini">#FF3F7A5A</color>        <!-- ProteiniTamni -->
+    <color name="ikona_masti">#FFB0614A</color>           <!-- MastiTamne -->
+    <color name="ikona_ugljikohidrati">#FFA8720F</color>  <!-- UgljikohidratiTamni -->
+    <color name="ikona_sjena">#4D000000</color>           <!-- sjenaTanjura, crna 30 % -->
+
+    <!-- Početni prozor i sustavne trake prije Composea -->
+    <color name="pozadina_prozora">#FFF5EEE2</color>      <!-- Papir -->
+</resources>

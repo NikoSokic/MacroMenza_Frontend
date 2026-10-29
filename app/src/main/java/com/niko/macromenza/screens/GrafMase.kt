@@ -34,6 +34,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -56,7 +57,7 @@ import com.niko.macromenza.ui.theme.macroBoje
 import com.niko.macromenza.ui.theme.opruga
 import com.niko.macromenza.ui.theme.rememberSmanjeniPokret
 import com.niko.macromenza.ui.theme.ulazniTween
-import com.niko.macromenza.util.formatKcalTisuce
+import com.niko.macromenza.util.formatKcal
 import com.niko.macromenza.util.formatMasa
 import com.niko.macromenza.util.formatPromjenaMase
 import java.time.LocalDate
@@ -162,7 +163,9 @@ fun GrafMaseKartica(
         } else {
             val promjena = tocke.last().second - tocke.first().second
             val opisRazdoblja = razdoblje.uRazdoblju?.let { stringResource(it) }
-                ?: stringResource(R.string.mj_u_n_dana, ChronoUnit.DAYS.between(tocke.first().first, tocke.last().first).toInt())
+                ?: ChronoUnit.DAYS.between(tocke.first().first, tocke.last().first).toInt().let {
+                    pluralStringResource(R.plurals.mj_u_n_dana, it, it)
+                }
             val sazetak = stringResource(R.string.mj_promjena_razdoblja, formatPromjenaMase(promjena), opisRazdoblja)
             val odDatuma = pocetak ?: tocke.first().first
             val doDatuma = maxOf(danas, tocke.last().first)
@@ -398,8 +401,8 @@ private fun PromjenaCilja(
     Text(
         text = stringResource(
             R.string.mj_promjena_cilja,
-            formatKcalTisuce(trenutna.kalorije),
-            formatKcalTisuce(prije.kalorije)
+            formatKcal(trenutna.kalorije),
+            formatKcal(prije.kalorije)
         ),
         style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,

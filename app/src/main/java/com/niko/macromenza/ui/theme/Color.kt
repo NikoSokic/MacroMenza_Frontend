@@ -8,6 +8,7 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 
 // Smjer A „Pladanj" (design-system/macromenza/MASTER.md): topli neutralni tonovi, orah, paprika samo za akciju.
+// Ikona i početni prozor kopiraju dio ovih vrijednosti u res/values(-night)/colors.xml; mijenjaju se zajedno.
 
 // Svijetla tema
 internal val Papir = Color(0xFFF5EEE2)
@@ -139,6 +140,3 @@ val MaterialTheme.macroBoje: MacroBoje
     @Composable
     @ReadOnlyComposable
     get() = LocalMacroBoje.current
-
-// Naslijeđeno: ekrani koji još nisu prebačeni na smjer A. Ne koristiti u novom kodu.
-val MacroGreen = Color(0xFF7CB342)

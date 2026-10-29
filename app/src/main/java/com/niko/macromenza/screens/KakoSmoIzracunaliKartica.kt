@@ -17,7 +17,7 @@ import com.niko.macromenza.ui.components.Makro
 import com.niko.macromenza.ui.components.makroKratko
 import com.niko.macromenza.ui.theme.MacroDimenzije
 import com.niko.macromenza.ui.theme.MacroRazmaci
-import com.niko.macromenza.util.formatKcalTisuce
+import com.niko.macromenza.util.formatKcal
 import com.niko.macromenza.util.formatMakro
 
 /**
@@ -35,9 +35,9 @@ fun KakoSmoIzracunaliKartica(
 ) {
     val shema = MaterialTheme.colorScheme
     val tip = MaterialTheme.typography
-    val bmr = formatKcalTisuce(izracun.bmr)
-    val tdee = formatKcalTisuce(izracun.tdee)
-    val cilj = formatKcalTisuce(izracun.ciljKalorije.toDouble())
+    val bmr = formatKcal(izracun.bmr)
+    val tdee = formatKcal(izracun.tdee)
+    val cilj = formatKcal(izracun.ciljKalorije.toDouble())
 
     Column(modifier = modifier.fillMaxWidth()) {
         Text(
@@ -60,9 +60,9 @@ fun KakoSmoIzracunaliKartica(
                 naziv = stringResource(R.string.kom_izracun_prilagodba),
                 racun = when {
                     izracun.korekcijaCilja < 0 ->
-                        stringResource(R.string.kom_izracun_minus, tdee, formatKcalTisuce(-izracun.korekcijaCilja), cilj)
+                        stringResource(R.string.kom_izracun_minus, tdee, formatKcal(-izracun.korekcijaCilja), cilj)
                     izracun.korekcijaCilja > 0 ->
-                        stringResource(R.string.kom_izracun_plus, tdee, formatKcalTisuce(izracun.korekcijaCilja), cilj)
+                        stringResource(R.string.kom_izracun_plus, tdee, formatKcal(izracun.korekcijaCilja), cilj)
                     else -> stringResource(R.string.kom_izracun_bez_korekcije, cilj)
                 }
             )

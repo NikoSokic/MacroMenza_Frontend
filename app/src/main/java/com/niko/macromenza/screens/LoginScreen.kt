@@ -41,6 +41,7 @@ import com.niko.macromenza.ui.components.screenTopPadding
 import com.niko.macromenza.ui.theme.MacroMenzaTheme
 import com.niko.macromenza.ui.theme.MacroRazmaci
 import com.niko.macromenza.ui.theme.UlazUSesiji
+import com.niko.macromenza.util.uString
 import com.niko.macromenza.viewmodel.AuthViewModel
 
 @Composable
@@ -88,7 +89,7 @@ fun LoginScreen(
         onEmail = { email = it },
         lozinka = lozinka,
         onLozinka = { lozinka = it },
-        poruka = poruka,
+        poruka = poruka?.uString(),
         ucitavanje = ucitavanje,
         animirajUlaz = prviUlaz,
         onPrijava = {

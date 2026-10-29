@@ -48,6 +48,7 @@ import com.niko.macromenza.ui.components.screenBottomPadding
 import com.niko.macromenza.ui.theme.MacroRazmaci
 import com.niko.macromenza.ui.theme.UlazUSesiji
 import com.niko.macromenza.util.PrijedlogObrokaStore
+import com.niko.macromenza.util.uString
 import com.niko.macromenza.viewmodel.JelaViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -249,7 +250,7 @@ fun UnosObrokaScreen(
     }
 
     LaunchedEffect(greskaUcitavanja) {
-        val poruka = greskaUcitavanja ?: return@LaunchedEffect
+        val poruka = greskaUcitavanja?.uString(context) ?: return@LaunchedEffect
         viewModel.ocistiGreskuUcitavanja()
         snackbarHostState.showSnackbar(poruka)
     }
@@ -272,7 +273,7 @@ fun UnosObrokaScreen(
     BackHandler(enabled = imaPromjena) { showOdbaciDialog = true }
 
     LaunchedEffect(greskaSpremanja) {
-        val poruka = greskaSpremanja ?: return@LaunchedEffect
+        val poruka = greskaSpremanja?.uString(context) ?: return@LaunchedEffect
         viewModel.ocistiRezultatSpremanja()
         snackbarHostState.showSnackbar(poruka)
     }
@@ -290,8 +291,9 @@ fun UnosObrokaScreen(
         !jelaStigla && !istekaoRok -> StanjeJela.Ucitavanje
         else -> StanjeJela.Sadrzaj(jela)
     }
+    val greskaMenijaTekst = greskaMenija?.uString()
     val stanjeMenija = when {
-        greskaMenija != null -> StanjeMenija.Greska(greskaMenija.orEmpty())
+        greskaMenijaTekst != null -> StanjeMenija.Greska(greskaMenijaTekst)
         menijiUcitavanje || meniji.isEmpty() -> StanjeMenija.Ucitavanje
         else -> StanjeMenija.Sadrzaj(meniji)
     }
@@ -349,7 +351,7 @@ fun UnosObrokaScreen(
         ui = ui,
         akcije = akcije,
         // Prostor za plutajuću navigaciju i sažetak obroka da zadnje jelo ostane vidljivo.
-        donjiRazmak = screenBottomPadding() + visinaBara + MacroRazmaci.m,
+        donjiRazmak = screenBottomPadding(hasBottomNavigation = !uredivanje) + visinaBara + MacroRazmaci.m,
         puniUlaz = puniUlaz
     ) {
         SazetakObrokaBar(
@@ -375,7 +377,7 @@ fun UnosObrokaScreen(
             onVisina = { visinaBara = it },
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(bottom = screenBottomPadding() - MacroRazmaci.m),
+                .padding(bottom = screenBottomPadding(hasBottomNavigation = !uredivanje) - MacroRazmaci.m),
             tekstSpremi = stringResource(if (uredivanje) R.string.uo_spremi_promjene else R.string.uo_spremi)
         )
 
@@ -386,7 +388,7 @@ fun UnosObrokaScreen(
                 .padding(
                     start = MacroRazmaci.rubEkrana,
                     end = MacroRazmaci.rubEkrana,
-                    bottom = screenBottomPadding() + visinaBara + MacroRazmaci.xs
+                    bottom = screenBottomPadding(hasBottomNavigation = !uredivanje) + visinaBara + MacroRazmaci.xs
                 )
         )
     }

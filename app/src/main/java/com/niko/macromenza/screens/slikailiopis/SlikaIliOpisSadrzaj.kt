@@ -310,7 +310,7 @@ private fun Zaglavlje(onNatrag: () -> Unit, modifier: Modifier = Modifier) {
             interactionSource = izvor,
             modifier = Modifier.skalaPritiska(izvor)
         ) {
-            Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(R.string.sio_natrag), tint = shema.onSurface)
+            Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(R.string.kom_natrag), tint = shema.onSurface)
         }
         Spacer(Modifier.height(MacroRazmaci.xs))
         Text(
@@ -623,7 +623,7 @@ private fun Greska(poruka: String, onPonovi: () -> Unit, modifier: Modifier = Mo
                 .heightIn(min = MacroDimenzije.dodirniCilj)
                 .skalaPritiska(izvor)
         ) {
-            Text(stringResource(R.string.sio_pokusaj_ponovno), style = MaterialTheme.typography.labelLarge, color = shema.primary)
+            Text(stringResource(R.string.kom_pokusaj_ponovno), style = MaterialTheme.typography.labelLarge, color = shema.primary)
         }
     }
 }

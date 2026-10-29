@@ -229,10 +229,10 @@ fun ObrokRed(
                 Box(
                     modifier = Modifier
                         .size(MacroDimenzije.ikonaObroka)
-                        .background(shema.primaryContainer, CircleShape),
+                        .background(shema.secondaryContainer, CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(ikonaTipa(obrok.tip), contentDescription = null, tint = shema.onPrimaryContainer, modifier = Modifier.size(MacroDimenzije.ikonaMala))
+                    Icon(ikonaTipa(obrok.tip), contentDescription = null, tint = shema.onSecondaryContainer, modifier = Modifier.size(MacroDimenzije.ikonaMala))
                 }
                 Spacer(Modifier.width(MacroRazmaci.m))
                 Column(modifier = Modifier.weight(1f)) {

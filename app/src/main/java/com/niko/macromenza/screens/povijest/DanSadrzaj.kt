@@ -329,7 +329,7 @@ fun DetaljDanaSadrzaj(
                 ) {
                     val izvor = remember { MutableInteractionSource() }
                     IconButton(onClick = onNatrag, interactionSource = izvor, modifier = Modifier.skalaPritiska(izvor)) {
-                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(R.string.pov_natrag), tint = shema.onSurface)
+                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(R.string.kom_natrag), tint = shema.onSurface)
                     }
                     Spacer(Modifier.width(MacroRazmaci.xs))
                     Column(modifier = Modifier.semantics(mergeDescendants = true) { heading() }) {

@@ -670,7 +670,7 @@ private fun Greska(onPonovi: () -> Unit) {
                 .heightIn(min = MacroDimenzije.dodirniCilj)
                 .skalaPritiska(izvor)
         ) {
-            Text(stringResource(R.string.dp_pokusaj_ponovno), style = MaterialTheme.typography.labelLarge, color = shema.onSurface)
+            Text(stringResource(R.string.kom_pokusaj_ponovno), style = MaterialTheme.typography.labelLarge, color = shema.onSurface)
         }
     }
 }

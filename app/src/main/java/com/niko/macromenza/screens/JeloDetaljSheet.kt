@@ -71,7 +71,9 @@ import com.niko.macromenza.ui.theme.opruga
 import com.niko.macromenza.ui.theme.rememberSmanjeniPokret
 import com.niko.macromenza.util.formatCijena
 import com.niko.macromenza.util.formatGrami
+import com.niko.macromenza.util.UiTekst
 import com.niko.macromenza.util.formatKcal
+import com.niko.macromenza.util.uString
 import com.niko.macromenza.viewmodel.DetaljStanje
 import com.niko.macromenza.viewmodel.JeloDetaljViewModel
 
@@ -154,7 +156,7 @@ private fun JeloDetaljSadrzaj(
                 )
             }
 
-            stanje is DetaljStanje.Greska -> GreskaDetalja(poruka = stanje.poruka, onPonovi = onPonovi)
+            stanje is DetaljStanje.Greska -> GreskaDetalja(poruka = stanje.poruka.uString(), onPonovi = onPonovi)
 
             else -> KosturDetalja()
         }
@@ -413,7 +415,7 @@ private fun GreskaDetalja(poruka: String, onPonovi: () -> Unit) {
                 .heightIn(min = MacroDimenzije.dodirniCilj)
                 .skalaPritiska(izvor)
         ) {
-            Text(stringResource(R.string.jd_pokusaj_ponovno), style = MaterialTheme.typography.labelLarge, color = shema.primary)
+            Text(stringResource(R.string.kom_pokusaj_ponovno), style = MaterialTheme.typography.labelLarge, color = shema.primary)
         }
     }
 }
@@ -527,11 +529,11 @@ private fun PreviewDetaljUcitavanjeTamna() = PreviewDetalj(true, DetaljStanje.Uc
 
 @Preview(name = "Detalj jela · svijetla · greška", widthDp = 360, heightDp = 400)
 @Composable
-private fun PreviewDetaljGreskaSvijetla() = PreviewDetalj(false, DetaljStanje.Greska("Detalj jela se nije učitao."))
+private fun PreviewDetaljGreskaSvijetla() = PreviewDetalj(false, DetaljStanje.Greska(UiTekst.Resurs(R.string.jd_greska_veza)))
 
 @Preview(name = "Detalj jela · tamna · greška", widthDp = 360, heightDp = 400)
 @Composable
-private fun PreviewDetaljGreskaTamna() = PreviewDetalj(true, DetaljStanje.Greska("Detalj jela se nije učitao."))
+private fun PreviewDetaljGreskaTamna() = PreviewDetalj(true, DetaljStanje.Greska(UiTekst.Resurs(R.string.jd_greska_veza)))
 
 @Preview(name = "Detalj jela · normalno · fontScale 1,3", widthDp = 360, heightDp = 1000, fontScale = 1.3f)
 @Composable

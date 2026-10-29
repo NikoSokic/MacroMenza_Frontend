@@ -2,11 +2,13 @@ package com.niko.macromenza.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.niko.macromenza.R
 import com.niko.macromenza.api.RetrofitInstance
 import com.niko.macromenza.model.IzracunPreporuke
 import com.niko.macromenza.model.IzracunPreporukeRequest
 import com.niko.macromenza.model.Mjerenje
 import com.niko.macromenza.model.ProfilPodaci
+import com.niko.macromenza.util.UiTekst
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -14,7 +16,7 @@ import java.time.LocalDate
 
 class CiljeviViewModel : ViewModel() {
 
-    private val _poruka = MutableStateFlow<String?>(null)
+    private val _poruka = MutableStateFlow<UiTekst?>(null)
     val poruka = _poruka.asStateFlow()
 
     /** Izračun zadnje preporuke s ulazima iz profila i zadnjeg mjerenja; [masa] je potrebna kartici. */
@@ -88,11 +90,11 @@ class CiljeviViewModel : ViewModel() {
 
                 RetrofitInstance.api.izracunajPreporuku(idKorisnik)
 
-                _poruka.value = "Cilj i preporuka spremljeni"
+                _poruka.value = UiTekst.Resurs(R.string.prof_cilj_spremljen)
                 ucitajObjasnjenje(idKorisnik)
 
             } catch (e: Exception) {
-                _poruka.value = e.message
+                _poruka.value = e.message?.let { UiTekst.Dinamicki(it) }
             }
         }
     }

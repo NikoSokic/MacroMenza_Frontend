@@ -4,7 +4,6 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -30,11 +29,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.input.pointer.PointerEventPass
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.clearAndSetSemantics
-import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
@@ -42,9 +37,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavController
 import com.niko.macromenza.R
 import com.niko.macromenza.ui.components.GumbSpremi
-import com.niko.macromenza.ui.components.Makro
-import com.niko.macromenza.ui.components.Pladanj
-import com.niko.macromenza.ui.components.TanjurUi
+import com.niko.macromenza.ui.components.MonogramMakro
 import com.niko.macromenza.ui.components.screenBottomPadding
 import com.niko.macromenza.ui.components.screenTopPadding
 import com.niko.macromenza.ui.components.skalaPritiska
@@ -54,13 +47,6 @@ import com.niko.macromenza.ui.theme.MacroOblici
 import com.niko.macromenza.ui.theme.MacroRazmaci
 import com.niko.macromenza.ui.theme.UlazUSesiji
 import com.niko.macromenza.ui.theme.rememberSmanjeniPokret
-
-/** Primjer dana na pladnju: doručak, ručak (~1040 kcal) i večera iz menze. Samo ilustracija, ne dira podatke. */
-private val PRIMJER_PLADNJA = listOf(
-    TanjurUi("DORUCAK", Makro(kcal = 406.0, proteini = 18.0, masti = 14.0, ugljikohidrati = 52.0), "08:10"),
-    TanjurUi("RUCAK", Makro(kcal = 1030.0, proteini = 52.0, masti = 38.0, ugljikohidrati = 120.0), "12:40"),
-    TanjurUi("VECERA", Makro(kcal = 540.0, proteini = 30.0, masti = 20.0, ugljikohidrati = 60.0), "19:00")
-)
 
 @Composable
 fun WelcomeScreen(
@@ -101,7 +87,11 @@ internal fun WelcomeSadrzaj(
                 .padding(horizontal = MacroRazmaci.rubEkrana)
                 .padding(top = screenTopPadding() + MacroRazmaci.xl)
         ) {
-            IzlogPladnja(animirajUlaz = animirajUlaz, smanjeno = smanjeno)
+            MonogramMakro(
+                animirajUlaz = animirajUlaz,
+                smanjeno = smanjeno,
+                modifier = Modifier.ulazAuth(0, animirajUlaz)
+            )
 
             Text(
                 text = stringResource(R.string.auth_welcome_naslov),
@@ -180,38 +170,6 @@ internal fun WelcomeSadrzaj(
                 )
             }
         }
-    }
-}
-
-/**
- * Pladanj iz pregleda dana, ovdje samo kao slika: tanjuri slijeću (Opruge.slijeganje), ali se ne dodiruju
- * i čitaču zaslona je jedna rečenica umjesto triju gumba.
- */
-@Composable
-private fun IzlogPladnja(animirajUlaz: Boolean, smanjeno: Boolean) {
-    val opis = stringResource(R.string.auth_pladanj_opis)
-    Box(modifier = Modifier.clearAndSetSemantics { contentDescription = opis }) {
-        Pladanj(
-            tanjuri = PRIMJER_PLADNJA,
-            danJePrazan = false,
-            animirajUlaz = animirajUlaz,
-            smanjeno = smanjeno,
-            proslava = false,
-            onProslavaGotova = {},
-            onTanjur = {}
-        )
-        // Prozirni sloj guta dodire da tanjuri ne izgledaju kao gumbi.
-        Box(
-            modifier = Modifier
-                .matchParentSize()
-                .pointerInput(Unit) {
-                    awaitPointerEventScope {
-                        while (true) {
-                            awaitPointerEvent(PointerEventPass.Initial).changes.forEach { it.consume() }
-                        }
-                    }
-                }
-        )
     }
 }
 

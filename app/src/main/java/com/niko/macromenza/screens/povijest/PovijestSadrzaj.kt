@@ -72,7 +72,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import com.niko.macromenza.R
 import com.niko.macromenza.ui.components.ObrokUi
 import java.time.LocalDate
@@ -109,6 +108,9 @@ private const val ULAZ_SADRZAJ = 3
 /** Sažetak ulazi s navigacijom: brojevi broje 650 ms od 240 ms, pa je ulaz gotov u 890 ms (< 900). */
 private const val ULAZ_SAZETAK = ULAZ_NAVIGACIJA
 
+/** Graf ulazi s navigacijom: zadnji stupac kreće na 480 ms, njegov broj izblijedi do 880 ms (< 900). */
+private const val ULAZ_GRAF = ULAZ_NAVIGACIJA
+
 /** Radnje ekrana; PovijestScreen ih spaja na ViewModel i navigaciju, previewi ostavljaju prazne. */
 @Immutable
 class PovijestAkcije(
@@ -141,7 +143,7 @@ fun PovijestSadrzaj(
     akcije: PovijestAkcije,
     modifier: Modifier = Modifier,
     puniUlaz: Boolean = true,
-    /** Samo za previewe: dan odabran u redu tanjura. */
+    /** Samo za previewe: dan odabran u grafu tjedna. */
     pocetnoOdabraniDan: Int? = null,
     /** Samo za previewe: prošireni redovi obroka na kartici Dan. */
     pocetnoProsireni: List<Long> = emptyList(),
@@ -324,17 +326,18 @@ fun PovijestSadrzaj(
                                 )
                             }
                         } else {
-                            item(key = "tanjuri") {
-                                // Red ide do 8 dp od ruba da svaki od 7 stupaca ima ≥ 48 dp (pages/povijest.md).
-                                TjedanTanjuri(
+                            item(key = "graf") {
+                                // Graf ide do 8 dp od ruba da svaki od 7 stupaca ima ≥ 48 dp (pages/povijest.md).
+                                // Ulazi uz navigaciju (kao sažetak), da rast stupaca i brojevi završe prije 900 ms.
+                                TjedanStupci(
                                     tjedan = t,
                                     animirajUlaz = animirajUlaz,
-                                    kasnjenjeUlaza = Kasnjenje.nakonPrijelaza + ULAZ_SADRZAJ * Kasnjenje.korak,
+                                    kasnjenjeUlaza = Kasnjenje.nakonPrijelaza + ULAZ_GRAF * Kasnjenje.korak,
                                     smanjeno = smanjeno,
                                     onOtvoriDan = { akcije.onOtvoriDan(it.toString()) },
                                     pocetnoOdabrani = pocetnoOdabraniDan,
                                     modifier = prijelaz(smanjeno)
-                                        .sadrzajTjedna(rub = MacroRazmaci.s)
+                                        .sadrzajTjedna(rub = MacroRazmaci.s, ulazIndeks = ULAZ_GRAF)
                                         .padding(top = MacroRazmaci.s)
                                 )
                             }
@@ -389,7 +392,7 @@ private fun LazyItemScope.prijelaz(smanjeno: Boolean): Modifier =
 /** Pomak i alfa sadržaja tjedna (ili dana) pri listanju; vrijednost se čita u fazi crtanja. */
 private fun Modifier.listanjeTjedna(listanje: Animatable<Float, *>): Modifier = graphicsLayer {
     val v = listanje.value
-    translationX = v * POMAK_TJEDNA_DP.dp.toPx()
+    translationX = v * Dp(POMAK_TJEDNA_DP).toPx()
     alpha = (1f - abs(v)).coerceIn(0f, 1f)
 }
 
@@ -404,7 +407,7 @@ private fun Modifier.ulaz(indeks: Int, aktivno: Boolean): Modifier = composed {
     }
     graphicsLayer {
         alpha = napredak.value
-        translationY = (1f - napredak.value) * POMAK_ULAZA_DP.dp.toPx()
+        translationY = (1f - napredak.value) * Dp(POMAK_ULAZA_DP).toPx()
     }
 }
 
@@ -627,7 +630,10 @@ private fun PrazanTjedan(
     }
 }
 
-/** Učitavanje: kostur navigacije, reda od 7 tanjura i traka (bez spinnera), s blagim pulsiranjem. */
+/** Visine 7 stupaca u kosturu grafa (dio visine grafa), da kostur izgleda kao tjedan, a ne kao traka. */
+private val KOSTUR_STUPCI = listOf(0.72f, 0.86f, 0.45f, 0.64f, 0.78f, 0.38f, 0.56f)
+
+/** Učitavanje: kostur navigacije, grafa od 7 stupaca i traka (bez spinnera), s blagim pulsiranjem. */
 @Composable
 private fun Kostur(smanjeno: Boolean, modifier: Modifier = Modifier) {
     val boje = MaterialTheme.macroBoje
@@ -663,11 +669,19 @@ private fun Kostur(smanjeno: Boolean, modifier: Modifier = Modifier) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = MacroRazmaci.xl),
-            horizontalArrangement = Arrangement.SpaceBetween
+                .padding(top = MacroRazmaci.xl)
+                .height(MacroDimenzije.grafTjednaVisina),
+            verticalAlignment = Alignment.Bottom
         ) {
-            repeat(7) {
-                Box(Modifier.size(MacroDimenzije.tanjurTjedanMax).background(boje.kostur, CircleShape))
+            KOSTUR_STUPCI.forEach { udio ->
+                Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.BottomCenter) {
+                    Box(
+                        Modifier
+                            .width(MacroDimenzije.stupacTjedna)
+                            .fillMaxHeight(udio)
+                            .background(boje.kostur, MacroOblici.stupacTjedna)
+                    )
+                }
             }
         }
         Spacer(Modifier.height(MacroRazmaci.iznadSekcije))
@@ -720,7 +734,7 @@ private fun Greska(onPonovi: () -> Unit, modifier: Modifier = Modifier) {
                 .heightIn(min = MacroDimenzije.dodirniCilj)
                 .skalaPritiska(izvor)
         ) {
-            Text(stringResource(R.string.pov_pokusaj_ponovno), style = MaterialTheme.typography.labelLarge, color = shema.onSurface)
+            Text(stringResource(R.string.kom_pokusaj_ponovno), style = MaterialTheme.typography.labelLarge, color = shema.onSurface)
         }
     }
 }
@@ -803,6 +817,26 @@ private fun PreviewSvijetlaBezCilja() = PreviewOkvir(false, sadrzaj(PRIMJER_TJED
 @Preview(name = "Tamna · tjedan bez cilja", widthDp = 360, heightDp = VISINA_PREVIEWA)
 @Composable
 private fun PreviewTamnaBezCilja() = PreviewOkvir(true, sadrzaj(PRIMJER_TJEDAN_BEZ_CILJA))
+
+@Preview(name = "Svijetla · dan iznad 125 % cilja", widthDp = 360, heightDp = VISINA_PREVIEWA)
+@Composable
+private fun PreviewSvijetlaSvaStanja() = PreviewOkvir(false, sadrzaj(PRIMJER_TJEDAN_SVA_STANJA))
+
+@Preview(name = "Tamna · dan iznad 125 % cilja", widthDp = 360, heightDp = VISINA_PREVIEWA)
+@Composable
+private fun PreviewTamnaSvaStanja() = PreviewOkvir(true, sadrzaj(PRIMJER_TJEDAN_SVA_STANJA))
+
+@Preview(name = "Svijetla · 320 dp · fontScale 1,3 · dan iznad 125 %", widthDp = 320, heightDp = 1400, fontScale = 1.3f)
+@Composable
+private fun PreviewUskiVelikiFontSvaStanja() = PreviewOkvir(false, sadrzaj(PRIMJER_TJEDAN_SVA_STANJA), ODABRANI_DAN_PRIMJERA)
+
+@Preview(name = "Tamna · 320 dp · fontScale 1,3 · bez cilja", widthDp = 320, heightDp = 1400, fontScale = 1.3f)
+@Composable
+private fun PreviewUskiVelikiFontBezCilja() = PreviewOkvir(true, sadrzaj(PRIMJER_TJEDAN_BEZ_CILJA))
+
+@Preview(name = "Tamna · učitavanje · 320 dp · fontScale 1,3", widthDp = 320, heightDp = VISINA_PREVIEWA, fontScale = 1.3f)
+@Composable
+private fun PreviewUskiVelikiFontUcitavanje() = PreviewOkvir(true, TjedanStanje.Ucitavanje)
 
 @Preview(name = "Svijetla · odabran dan (preko cilja)", widthDp = 360, heightDp = VISINA_PREVIEWA)
 @Composable

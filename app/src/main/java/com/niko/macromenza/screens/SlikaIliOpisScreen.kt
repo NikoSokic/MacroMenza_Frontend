@@ -18,6 +18,7 @@ import com.niko.macromenza.screens.slikailiopis.SlikaIliOpisUi
 import com.niko.macromenza.session.UserSessionManager
 import com.niko.macromenza.ui.theme.UlazUSesiji
 import com.niko.macromenza.util.PrijedlogObrokaStore
+import com.niko.macromenza.util.uString
 import com.niko.macromenza.util.ucitajPregled
 import com.niko.macromenza.viewmodel.SlikaIliOpisViewModel
 import java.time.LocalTime
@@ -82,7 +83,7 @@ fun SlikaIliOpisScreen(
             else -> PregledSlike.Gotov(pregled.second)
         },
         ucitava = ucitava,
-        greska = greska,
+        greska = greska?.uString(),
         rezultat = rezultat,
         korisnikSpreman = korisnikId != null
     )

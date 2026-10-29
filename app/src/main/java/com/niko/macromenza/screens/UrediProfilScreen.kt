@@ -54,13 +54,13 @@ import com.niko.macromenza.ui.theme.MacroMenzaTheme
 import com.niko.macromenza.ui.theme.MacroRazmaci
 import com.niko.macromenza.ui.theme.Trajanje
 import com.niko.macromenza.ui.theme.rememberSmanjeniPokret
+import com.niko.macromenza.util.UiTekst
+import com.niko.macromenza.util.uString
 import com.niko.macromenza.viewmodel.ProfilViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
-/** Poruka uspjeha iz [ProfilViewModel.spremiProfil]; sve ostale poruke su greške. */
-private const val PORUKA_USPJEHA = "Profil spremljen"
 
 @Composable
 fun UrediProfilScreen(
@@ -112,7 +112,8 @@ fun UrediProfilScreen(
         }
     }
 
-    val greska = poruka?.takeIf { it != PORUKA_USPJEHA }
+    // Poruka uspjeha iz [ProfilViewModel.spremiProfil]; sve ostale poruke su greške.
+    val greska = poruka?.takeIf { it != UiTekst.Resurs(R.string.prof_urp_spremljeno) }?.uString()
     LaunchedEffect(greska) {
         if (greska != null) cekaSpremanje = false
     }

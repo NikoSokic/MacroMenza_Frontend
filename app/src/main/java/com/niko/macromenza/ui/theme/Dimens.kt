@@ -61,10 +61,15 @@ object MacroDimenzije {
     val zrnoNjihanje = 6.dp
     val crtica = 5.dp
 
-    // Povijest: tanjur dana u redu tjedna (7 stupaca od ≥ 48 dp; s prstenom preko cilja okvir je max + 2 × 5 dp)
-    val tanjurTjedanMax = 36.dp
-    val tanjurTjedanMin = 18.dp
-    val tanjurTjedanPrazan = 22.dp
+    // Povijest: stupčasti graf tjedna (7 stupaca dana od ≥ 48 dp, stupac je uži i centriran)
+    val grafTjednaVisina = 200.dp
+    val stupacTjedna = 26.dp
+    /** Isprekidani obris dana bez unosa na osnovnoj liniji. */
+    val stupacTjednaPrazan = 10.dp
+    /** Obris stupca ispod cilja. */
+    val obrisStupca = 1.5.dp
+    /** Polumjer gornjih kutova stupca (MacroOblici.stupacTjedna). */
+    val stupacTjednaKut = 6.dp
     /** Crtica ispod slova današnjeg dana. */
     val oznakaDanas = DpSize(12.dp, 2.dp)
     /** Vodoravno povlačenje dulje od ovoga mijenja tjedan. */
@@ -72,6 +77,11 @@ object MacroDimenzije {
 
     // Profil: krug s inicijalima u zaglavlju korisnika
     val avatarProfila = 64.dp
+
+    // Welcome: monogram „M" s makro lukom (ukupna veličina, porculanski krug, debljina luka)
+    val monogram = 136.dp
+    val monogramKrug = 104.dp
+    val monogramLuk = 8.dp
 
     // Forme: radio oznaka u IzborOpcije (prsten i točka odabira)
     val radioOznaka = 20.dp

@@ -14,6 +14,8 @@ object MacroOblici {
     val traka = RoundedCornerShape(3.dp)
     /** Pilule u gornjoj traci, pretraga i gumb porcije. */
     val pilula = RoundedCornerShape(percent = 50)
+    /** Stupac dana u grafu Povijesti: zaobljen samo gore, dno stoji na osnovnoj liniji. */
+    val stupacTjedna = RoundedCornerShape(topStart = MacroDimenzije.stupacTjednaKut, topEnd = MacroDimenzije.stupacTjednaKut)
 }
 
 val MacroShapes = Shapes(

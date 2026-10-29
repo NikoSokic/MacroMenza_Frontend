@@ -2,11 +2,13 @@ package com.niko.macromenza.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.niko.macromenza.R
 import com.niko.macromenza.api.RetrofitInstance
 import com.niko.macromenza.api.SupabaseAuthInstance
 import com.niko.macromenza.model.Korisnik
 import com.niko.macromenza.model.SupabaseAuthRequest
 import com.niko.macromenza.session.UserSessionManager
+import com.niko.macromenza.util.UiTekst
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -15,7 +17,7 @@ class AuthViewModel(
     private val sessionManager: UserSessionManager
 ) : ViewModel() {
 
-    private val _poruka = MutableStateFlow<String?>(null)
+    private val _poruka = MutableStateFlow<UiTekst?>(null)
     val poruka = _poruka.asStateFlow()
 
     private val _ucitavanje = MutableStateFlow(false)
@@ -60,25 +62,25 @@ class AuthViewModel(
             val lozinkaTrim = lozinka.trim()
 
             if (emailTrim.isBlank()) {
-                _poruka.value = "📧 Unesi email adresu."
+                _poruka.value = UiTekst.Resurs(R.string.auth_unesi_email)
                 _ucitavanje.value = false
                 return@launch
             }
 
             if (!android.util.Patterns.EMAIL_ADDRESS.matcher(emailTrim).matches()) {
-                _poruka.value = "📧 Ovo ne izgleda kao pravi email. Probaj nešto tipa ime@email.com."
+                _poruka.value = UiTekst.Resurs(R.string.auth_reg_email_neispravan)
                 _ucitavanje.value = false
                 return@launch
             }
 
             if (lozinkaTrim.isBlank()) {
-                _poruka.value = "🔒 Unesi lozinku."
+                _poruka.value = UiTekst.Resurs(R.string.auth_unesi_lozinku)
                 _ucitavanje.value = false
                 return@launch
             }
 
             if (lozinkaTrim.length < 6) {
-                _poruka.value = "🔒 Lozinka mora imati barem 6 znakova. Nije CIA, ali ipak treba malo sigurnosti 😄"
+                _poruka.value = UiTekst.Resurs(R.string.auth_reg_lozinka_kratka)
                 _ucitavanje.value = false
                 return@launch
             }
@@ -92,23 +94,23 @@ class AuthViewModel(
                     )
                 )
 
-                _poruka.value = "📩 Poslali smo ti email za potvrdu računa. Otvori mail i potvrdi registraciju."
+                _poruka.value = UiTekst.Resurs(R.string.auth_reg_email_poslan)
 
             } catch (e: retrofit2.HttpException) {
                 _poruka.value = when (e.code()) {
-                    400 -> "Podaci nisu ispravni. Provjeri email i lozinku."
-                    401 -> "Nemaš dozvolu za ovu akciju."
-                    409 -> "Korisnik s ovom email adresom već postoji."
-                    422 -> "📧 Email ili lozinka nisu ispravni. Provjeri format emaila i duljinu lozinke."
-                    429 -> "Previše pokušaja. Pričekaj malo pa pokušaj ponovno."
-                    else -> "Došlo je do greške (${e.code()}). Pokušaj ponovno."
+                    400 -> UiTekst.Resurs(R.string.auth_reg_greska_400)
+                    401 -> UiTekst.Resurs(R.string.auth_reg_greska_401)
+                    409 -> UiTekst.Resurs(R.string.auth_reg_greska_409)
+                    422 -> UiTekst.Resurs(R.string.auth_reg_greska_422)
+                    429 -> UiTekst.Resurs(R.string.auth_reg_greska_429)
+                    else -> UiTekst.Resurs(R.string.auth_greska_http, e.code())
                 }
             } catch (e: java.net.UnknownHostException) {
-                _poruka.value = "Nema internetske veze. Spoji se na internet pa pokušaj ponovno."
+                _poruka.value = UiTekst.Resurs(R.string.auth_reg_nema_interneta)
             } catch (e: java.net.SocketTimeoutException) {
-                _poruka.value = "Server se malo uspavao. Pričekaj par sekundi pa pokušaj ponovno."
+                _poruka.value = UiTekst.Resurs(R.string.auth_reg_timeout)
             } catch (e: Exception) {
-                _poruka.value = "Greška pri registraciji. Pokušaj ponovno."
+                _poruka.value = UiTekst.Resurs(R.string.auth_reg_greska)
             } finally {
                 _ucitavanje.value = false
             }
@@ -127,19 +129,19 @@ class AuthViewModel(
             val lozinkaTrim = lozinka.trim()
 
             if (emailTrim.isBlank()) {
-                _poruka.value = "📧 Unesi email adresu."
+                _poruka.value = UiTekst.Resurs(R.string.auth_unesi_email)
                 _ucitavanje.value = false
                 return@launch
             }
 
             if (!android.util.Patterns.EMAIL_ADDRESS.matcher(emailTrim).matches()) {
-                _poruka.value = "📧 Ovo ne izgleda kao pravi email."
+                _poruka.value = UiTekst.Resurs(R.string.auth_prij_email_neispravan)
                 _ucitavanje.value = false
                 return@launch
             }
 
             if (lozinkaTrim.isBlank()) {
-                _poruka.value = "🔒 Unesi lozinku."
+                _poruka.value = UiTekst.Resurs(R.string.auth_unesi_lozinku)
                 _ucitavanje.value = false
                 return@launch
             }
@@ -156,7 +158,7 @@ class AuthViewModel(
                 val uid = response.user?.id
 
                 if (uid == null) {
-                    _poruka.value = "Prijava nije uspjela. Pokušaj ponovno."
+                    _poruka.value = UiTekst.Resurs(R.string.auth_prij_neuspjela)
                     return@launch
                 }
 
@@ -186,21 +188,21 @@ class AuthViewModel(
             } catch (e: retrofit2.HttpException) {
 
                 _poruka.value = when (e.code()) {
-                    400 -> "📧 Email ili lozinka nisu ispravni."
-                    401 -> "🔒 Pogrešan email ili lozinka."
-                    403 -> "📩 Prvo potvrdi svoj račun putem emaila."
-                    422 -> "📧 Provjeri email i lozinku."
-                    429 -> "⏳ Previše pokušaja prijave. Pričekaj malo."
-                    else -> "Došlo je do greške (${e.code()}). Pokušaj ponovno."
+                    400 -> UiTekst.Resurs(R.string.auth_prij_greska_400)
+                    401 -> UiTekst.Resurs(R.string.auth_prij_pogresni_podaci)
+                    403 -> UiTekst.Resurs(R.string.auth_prij_greska_403)
+                    422 -> UiTekst.Resurs(R.string.auth_prij_greska_422)
+                    429 -> UiTekst.Resurs(R.string.auth_prij_greska_429)
+                    else -> UiTekst.Resurs(R.string.auth_greska_http, e.code())
                 }
 
             } catch (e: java.net.UnknownHostException) {
 
-                _poruka.value = "📡 Nema internetske veze."
+                _poruka.value = UiTekst.Resurs(R.string.auth_prij_nema_interneta)
 
             } catch (e: java.net.SocketTimeoutException) {
 
-                _poruka.value = "😴 Server se upravo budi. Pokušaj ponovno za nekoliko sekundi."
+                _poruka.value = UiTekst.Resurs(R.string.auth_prij_timeout)
 
             } catch (e: Exception) {
 
@@ -208,13 +210,13 @@ class AuthViewModel(
 
                 _poruka.value = when {
                     "email not confirmed" in poruka ->
-                        "📩 Potvrdi račun putem emaila prije prijave."
+                        UiTekst.Resurs(R.string.auth_prij_nije_potvrden)
 
                     "invalid login credentials" in poruka ->
-                        "🔒 Pogrešan email ili lozinka."
+                        UiTekst.Resurs(R.string.auth_prij_pogresni_podaci)
 
                     else ->
-                        "Prijava nije uspjela. Pokušaj ponovno."
+                        UiTekst.Resurs(R.string.auth_prij_neuspjela)
                 }
             } finally {
                 _ucitavanje.value = false
@@ -229,7 +231,7 @@ class AuthViewModel(
             _supabaseUid.value = null
             _korisnikId.value = null
             _onboardingZavrsen.value = null
-            _poruka.value = "Odjavljen korisnik"
+            _poruka.value = UiTekst.Resurs(R.string.auth_odjavljen)
         }
     }
 

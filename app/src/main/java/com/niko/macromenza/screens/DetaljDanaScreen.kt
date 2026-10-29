@@ -13,6 +13,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.google.gson.Gson
+import androidx.compose.ui.res.stringResource
+import com.niko.macromenza.R
 import com.niko.macromenza.model.Obrok
 import com.niko.macromenza.screens.povijest.DanStanje
 import com.niko.macromenza.screens.povijest.DetaljDanaSadrzaj
@@ -21,6 +23,7 @@ import com.niko.macromenza.session.UserSessionManager
 import com.niko.macromenza.ui.components.PotvrdaBrisanjaObrokaDialog
 import com.niko.macromenza.ui.components.screenBottomPadding
 import com.niko.macromenza.ui.theme.MacroRazmaci
+import com.niko.macromenza.util.uString
 import com.niko.macromenza.viewmodel.PovijestViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -134,10 +137,13 @@ fun BrisanjeObrokaEfekti(
     val obrisaniObrok by viewModel.obrisaniObrok.collectAsState()
     val greskaBrisanja by viewModel.greskaBrisanja.collectAsState()
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+    val porukaObrisan = stringResource(R.string.kom_obrok_obrisan)
+    val akcijaPonisti = stringResource(R.string.kom_ponisti)
 
     fun ponudiPonistavanje(obrok: Obrok) {
         scope.launch {
-            if (snackbarHostState.ponudiPonistavanjeBrisanja()) {
+            if (snackbarHostState.ponudiPonistavanjeBrisanja(porukaObrisan, akcijaPonisti)) {
                 idKorisnik?.let { viewModel.vratiObrok(it, obrok) }
             }
         }
@@ -150,7 +156,7 @@ fun BrisanjeObrokaEfekti(
     }
 
     LaunchedEffect(greskaBrisanja) {
-        val poruka = greskaBrisanja ?: return@LaunchedEffect
+        val poruka = greskaBrisanja?.uString(context) ?: return@LaunchedEffect
         viewModel.ocistiRezultatBrisanja()
         scope.launch {
             snackbarHostState.currentSnackbarData?.dismiss()
@@ -173,13 +179,13 @@ fun BrisanjeObrokaEfekti(
 }
 
 /** Snackbar "Obrok obrisan" s akcijom "Poništi" (oko 5 s). Vraća true ako je korisnik kliknuo "Poništi". */
-suspend fun SnackbarHostState.ponudiPonistavanjeBrisanja(): Boolean {
+suspend fun SnackbarHostState.ponudiPonistavanjeBrisanja(poruka: String, akcija: String): Boolean {
     currentSnackbarData?.dismiss()
 
     val rezultat = withTimeoutOrNull(5_000L) {
         showSnackbar(
-            message = "Obrok obrisan",
-            actionLabel = "Poništi",
+            message = poruka,
+            actionLabel = akcija,
             duration = SnackbarDuration.Indefinite
         )
     }

@@ -75,6 +75,7 @@ import com.niko.macromenza.ui.theme.rememberSmanjeniPokret
 import com.niko.macromenza.util.filtrirajUnosMase
 import com.niko.macromenza.util.formatMasa
 import com.niko.macromenza.util.parsirajMasu
+import com.niko.macromenza.util.uString
 import com.niko.macromenza.viewmodel.PorukaMjerenja
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.math.roundToInt
@@ -199,7 +200,7 @@ fun BrzoMjerenjeKartica(
                         modifier = Modifier.size(MacroDimenzije.ikonaMala)
                     )
                     Spacer(Modifier.width(MacroRazmaci.s))
-                    Text(text = it.tekst, style = tip.bodyMedium, color = boja)
+                    Text(text = it.tekst.uString(), style = tip.bodyMedium, color = boja)
                 }
             }
         }

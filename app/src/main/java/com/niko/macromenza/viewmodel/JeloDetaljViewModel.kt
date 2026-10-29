@@ -2,8 +2,10 @@ package com.niko.macromenza.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.niko.macromenza.R
 import com.niko.macromenza.api.RetrofitInstance
 import com.niko.macromenza.model.JeloDetalj
+import com.niko.macromenza.util.UiTekst
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -13,7 +15,7 @@ import retrofit2.HttpException
 
 sealed interface DetaljStanje {
     data object Ucitavanje : DetaljStanje
-    data class Greska(val poruka: String) : DetaljStanje
+    data class Greska(val poruka: UiTekst) : DetaljStanje
     data class Podaci(val detalj: JeloDetalj) : DetaljStanje
 }
 
@@ -35,11 +37,11 @@ class JeloDetaljViewModel : ViewModel() {
                 throw e
             } catch (e: HttpException) {
                 DetaljStanje.Greska(
-                    if (e.code() == 404) "Jelo nije pronađeno."
-                    else "Detalj nije učitan (greška ${e.code()})."
+                    if (e.code() == 404) UiTekst.Resurs(R.string.jd_greska_404)
+                    else UiTekst.Resurs(R.string.jd_greska_http, e.code())
                 )
             } catch (e: Exception) {
-                DetaljStanje.Greska("Detalj nije učitan. Provjeri vezu s poslužiteljem.")
+                DetaljStanje.Greska(UiTekst.Resurs(R.string.jd_greska_veza))
             }
         }
     }

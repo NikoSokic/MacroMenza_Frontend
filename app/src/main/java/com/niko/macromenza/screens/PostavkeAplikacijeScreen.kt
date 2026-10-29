@@ -192,7 +192,7 @@ fun PostavkeAplikacijeScreen(
                         val odgovor = RetrofitInstance.api.obrisiSvePodatke(id, "OBRISI")
 
                         if (!odgovor.isSuccessful) {
-                            greskaBrisanja = context.getString(R.string.post_brisanje_greska_http, odgovor.code())
+                            greskaBrisanja = context.getString(R.string.kom_brisanje_greska_http, odgovor.code())
                             return@launch
                         }
 
@@ -214,7 +214,7 @@ fun PostavkeAplikacijeScreen(
                             }
                         }
                     } catch (e: Exception) {
-                        greskaBrisanja = context.getString(R.string.post_brisanje_greska_veza)
+                        greskaBrisanja = context.getString(R.string.kom_brisanje_greska_veza)
                     } finally {
                         brisanjeUTijeku = false
                     }

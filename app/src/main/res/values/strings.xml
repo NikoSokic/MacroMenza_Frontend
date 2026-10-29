@@ -83,7 +83,6 @@
 
     <string name="dp_greska_naslov">Pregled dana trenutno nije dostupan</string>
     <string name="dp_greska_tekst">Provjeri vezu s poslužiteljem pa pokušaj ponovno.</string>
-    <string name="dp_pokusaj_ponovno">Pokušaj ponovno</string>
     <string name="dp_ucitavanje">Učitavanje pregleda dana</string>
 
     <!-- Unos: odabir obroka (KonzumacijaScreen) -->
@@ -94,7 +93,6 @@
     <string name="ko_slika_tekst">Uslikaj pladanj ili opiši što si jeo</string>
 
     <!-- Unos obroka (UnosObrokaScreen) -->
-    <string name="uo_natrag">Natrag</string>
     <string name="uo_uredivanje">Uređivanje obroka</string>
     <string name="uo_promijeni_tip">Vrsta obroka: %1$s. Promijeni</string>
     <string name="uo_danas">Danas</string>
@@ -156,7 +154,6 @@
     <string name="uo_nema_jela_filter">Nema jela za odabrane filtere.</string>
     <string name="uo_greska_jela_naslov">Jela se nisu učitala</string>
     <string name="uo_greska_jela_tekst">Provjeri vezu s poslužiteljem pa pokušaj ponovno.</string>
-    <string name="uo_pokusaj_ponovno">Pokušaj ponovno</string>
     <string name="uo_ucitavanje">Učitavanje jela</string>
 
     <string name="uo_prijedlog_dodan">Prijedlog je dodan u obrok. Provjeri jela i količine.</string>
@@ -178,6 +175,11 @@
     <string name="uo_max">Max</string>
     <string name="uo_primijeni">Primijeni filtere</string>
     <string name="uo_resetiraj">Resetiraj filtere</string>
+    <string name="uo_greska_menija">Meniji se nisu učitali. Provjeri vezu s poslužiteljem.</string>
+    <string name="uo_spremanje_greska_http">Spremanje nije uspjelo (greška %1$d).</string>
+    <string name="uo_obrok_ne_postoji">Obrok ne postoji.</string>
+    <string name="uo_obrok_greska_http">Obrok se nije učitao (greška %1$d).</string>
+    <string name="uo_obrok_greska_veza">Obrok se nije učitao. Provjeri vezu s poslužiteljem.</string>
     <!-- Unos obroka: sažetak obroka (paket 2) -->
     <string name="uo_sazetak_prazno">Dodaj jelo ili meni</string>
     <string name="uo_sazetak_kcal">kcal</string>
@@ -214,11 +216,12 @@
     <string name="jd_okvirno">Vrijednosti su okvirne (USDA/EU tablice), izračunate iz normativa NN 120/2013.</string>
     <string name="jd_odakle">Odakle su kalorije?</string>
     <string name="jd_dodaj">Dodaj u obrok</string>
-    <string name="jd_pokusaj_ponovno">Pokušaj ponovno</string>
     <string name="jd_ucitavanje">Učitavanje jela</string>
+    <string name="jd_greska_404">Jelo nije pronađeno.</string>
+    <string name="jd_greska_http">Detalj nije učitan (greška %1$d).</string>
+    <string name="jd_greska_veza">Detalj nije učitan. Provjeri vezu s poslužiteljem.</string>
 
     <!-- Slika ili opis (sio_) -->
-    <string name="sio_natrag">Natrag</string>
     <string name="sio_naslov">Slika ili opis</string>
     <string name="sio_podnaslov">Prepoznaj obrok sa slike ili iz opisa</string>
     <string name="sio_fotografiraj">Fotografiraj</string>
@@ -237,7 +240,6 @@
     <string name="sio_razlog_korisnik">Učitavam korisnika…</string>
     <string name="sio_analiza_naslov">Prepoznajem obrok…</string>
     <string name="sio_analiza_tekst">Obično traje nekoliko sekundi</string>
-    <string name="sio_pokusaj_ponovno">Pokušaj ponovno</string>
     <string name="sio_napomena">Slika i opis šalju se Google Gemini servisu radi prepoznavanja. Prijedlog je okviran, provjeri ga prije spremanja.</string>
     <string name="sio_prijedlog_naslov">Prijedlog obroka</string>
     <string name="sio_nista_prepoznato">Nijedno jelo iz menze nije prepoznato.</string>
@@ -251,6 +253,13 @@
     <string name="sio_ukupno_opis">Ukupno: %1$s</string>
     <string name="sio_stavka_opis">%1$s, %2$s, %3$s.</string>
     <string name="sio_provjeri_opis">Provjeri količinu i jelo.</string>
+    <string name="sio_greska_slika_citanje">Slika se ne može pročitati.</string>
+    <string name="sio_greska_slika_pristup">Aplikacija nema pristup toj slici. Odaberi je ponovno.</string>
+    <string name="sio_greska_slika_prevelika">Slika je prevelika za obradu.</string>
+    <string name="sio_greska_timeout">Poslužitelj nije odgovorio na vrijeme. Pokušaj ponovno.</string>
+    <string name="sio_greska_veza">Nema veze s poslužiteljem. Provjeri vezu i pokušaj ponovno.</string>
+    <string name="sio_greska_opca">Prepoznavanje nije uspjelo.</string>
+    <string name="sio_greska_http">Prepoznavanje nije uspjelo (greška %1$d).</string>
 
     <!-- Povijest (pov_) -->
     <string name="pov_naslov">Povijest</string>
@@ -262,7 +271,6 @@
     <string name="pov_ucitavanje">Učitavanje povijesti</string>
     <string name="pov_greska_naslov">Povijest nije dostupna</string>
     <string name="pov_greska_tekst">Provjeri vezu s poslužiteljem.</string>
-    <string name="pov_pokusaj_ponovno">Pokušaj ponovno</string>
     <string name="pov_prazno_naslov">Nema unosa u ovom tjednu</string>
     <string name="pov_prazno_tekst">Dodaj obroke ili prelistaj na drugi tjedan.</string>
     <string name="pov_ucitaj_primjer">Učitaj primjer tjedna</string>
@@ -287,15 +295,18 @@
     <string name="pov_tjedan_opis">Tjedan %1$s: u cilju %2$d od %3$d dana s unosom</string>
     <string name="pov_dan_ispod">%1$s: %2$s od %3$s kcal, ispod cilja</string>
     <string name="pov_dan_u_cilju">%1$s: %2$s od %3$s kcal, u cilju</string>
-    <string name="pov_dan_preko">%1$s: %2$s od %3$s kcal, preko cilja %4$s kcal</string>
+    <string name="pov_dan_preko">%1$s: %2$s od %3$s kcal, preko cilja</string>
     <string name="pov_dan_bez_cilja">%1$s: %2$s kcal</string>
     <string name="pov_dan_bez_unosa">%1$s: nema unosa</string>
     <string name="pov_dan_buducnost">%1$s: još nije prošao</string>
     <string name="pov_dan_danas">%1$s, danas</string>
     <string name="pov_bez_vrijednosti">–</string>
-    <string name="pov_legenda_cilj">Cilj</string>
+    <string name="pov_legenda_cilj" formatted="false">Cilj ±10 %</string>
     <string name="pov_legenda_u_cilju">U cilju</string>
     <string name="pov_legenda_preko">Preko cilja</string>
+    <string name="pov_legenda_ispod">Ispod cilja</string>
+    <string name="pov_graf_jedinica">kcal po danu</string>
+    <string name="pov_graf_cilj">cilj %1$s kcal</string>
     <string name="pov_odabir_savjet">Dodirni dan za detalje, ponovno za obroke</string>
     <string name="pov_odabrani_kcal">%1$s / %2$s kcal</string>
     <string name="pov_status_ispod">Ispod cilja</string>
@@ -317,6 +328,16 @@
     <string name="pov_sazetak_kcal_opis">Prosječno %1$s kcal dnevno, cilj %2$s kcal</string>
     <string name="pov_sazetak_kcal_opis_preko">Prosječno %1$s kcal dnevno, preko cilja %2$s kcal</string>
     <string name="pov_sazetak_kcal_opis_bez_cilja">Prosječno %1$s kcal dnevno</string>
+    <string name="pov_obrok_vec_obrisan">Obrok je već obrisan.</string>
+    <string name="pov_vracanje_greska_poruka">Vraćanje nije uspjelo: %1$s</string>
+    <string name="pov_vracanje_greska_http">Vraćanje nije uspjelo: greška %1$d.</string>
+    <string name="pov_vracanje_greska_veza">Vraćanje nije uspjelo. Provjeri vezu s poslužiteljem.</string>
+    <string name="pov_primjer_ucitavanje_poruka">Primjer tjedna nije učitan. %1$s</string>
+    <string name="pov_primjer_ucitavanje_http">Primjer tjedna nije učitan. (greška %1$d)</string>
+    <string name="pov_primjer_ucitavanje_veza">Primjer tjedna nije učitan. Provjeri vezu s poslužiteljem.</string>
+    <string name="pov_primjer_uklanjanje_poruka">Primjer tjedna nije uklonjen. %1$s</string>
+    <string name="pov_primjer_uklanjanje_http">Primjer tjedna nije uklonjen. (greška %1$d)</string>
+    <string name="pov_primjer_uklanjanje_veza">Primjer tjedna nije uklonjen. Provjeri vezu s poslužiteljem.</string>
     <!-- Dijeljeno: potvrda brisanja obroka -->
     <string name="kom_brisanje_naslov">Obrisati %1$s u %2$s?</string>
     <string name="kom_brisanje_tekst">%1$s, %2$s kcal. Ovo briše cijeli obrok.</string>
@@ -337,7 +358,6 @@
     <string name="pov_dan_zbroj_opis_preko">Ukupno %1$s od %2$s kcal, preko cilja %3$s kcal</string>
     <string name="pov_dan_zbroj_opis_bez_cilja">Ukupno %1$s kcal</string>
     <string name="pov_dan_ucitavanje">Učitavanje dana</string>
-    <string name="pov_natrag">Natrag</string>
     <string name="pov_detalj_dana">Detalj dana</string>
 
     <!-- Profil (pages/profil.md) -->
@@ -345,7 +365,6 @@
     <string name="prof_ucitavanje">Učitavanje profila</string>
     <string name="prof_greska_naslov">Profil nije dostupan</string>
     <string name="prof_greska_tekst">Provjeri vezu s poslužiteljem.</string>
-    <string name="prof_pokusaj_ponovno">Pokušaj ponovno</string>
     <string name="prof_bez_imena">Ime nije upisano</string>
     <string name="prof_uredi_profil">Uredi profil</string>
     <string name="prof_tvoj_cilj">Tvoj cilj</string>
@@ -374,6 +393,12 @@
 
     <!-- Forme (ui/components: ZaglavljePodekrana, PoljeUnosa, IzborOpcije, GumbSpremi) i objašnjenje izračuna -->
     <string name="kom_natrag">Natrag</string>
+    <string name="kom_pokusaj_ponovno">Pokušaj ponovno</string>
+    <string name="kom_obrok_obrisan">Obrok obrisan</string>
+    <string name="kom_ponisti">Poništi</string>
+    <string name="kom_spremanje_greska_veza">Spremanje nije uspjelo. Provjeri vezu s poslužiteljem.</string>
+    <string name="kom_brisanje_greska_http">Brisanje nije uspjelo (greška %1$d).</string>
+    <string name="kom_brisanje_greska_veza">Brisanje nije uspjelo. Provjeri vezu s poslužiteljem.</string>
     <string name="kom_spremam">Spremam…</string>
     <string name="kom_prikazi_lozinku">Prikaži lozinku</string>
     <string name="kom_sakrij_lozinku">Sakrij lozinku</string>
@@ -424,6 +449,7 @@
     <string name="prof_cilj_spremi">Spremi cilj</string>
     <string name="prof_cilj_okvirno">Vrijednosti su okvirne: izračun je procjena, a kalorije jela dolaze iz USDA/EU tablica namirnica.</string>
     <string name="prof_cilj_kako_je_izracunato">Kako je izračunato</string>
+    <string name="prof_cilj_spremljen">Cilj i preporuka spremljeni</string>
 
     <!-- Profil: Uredi profil -->
     <string name="prof_urp_naslov">Uredi profil</string>
@@ -449,7 +475,6 @@
     <string name="mj_prazno_naslov">Još nema mjerenja</string>
     <string name="mj_prazno_tekst">Masa se upisuje u Postavkama ciljeva, zajedno s ciljem i razinom aktivnosti. Nakon prvog mjerenja ovdje dobiješ brzo mjerenje i graf.</string>
     <string name="mj_greska">Mjerenja nisu učitana. Provjeri vezu s poslužiteljem.</string>
-    <string name="mj_pokusaj_ponovno">Pokušaj ponovno</string>
     <string name="mj_brzo_mjerenje">Brzo mjerenje</string>
     <string name="mj_smanji">Smanji za 0,1 kg</string>
     <string name="mj_povecaj">Povećaj za 0,1 kg</string>
@@ -470,13 +495,20 @@
     <string name="mj_u_30_dana">u 30 dana</string>
     <string name="mj_u_90_dana">u 90 dana</string>
     <string name="mj_u_godinu">u godinu dana</string>
-    <string name="mj_u_n_dana">u %1$d dana</string>
+    <plurals name="mj_u_n_dana">
+        <item quantity="one">u %d dan</item>
+        <item quantity="few">u %d dana</item>
+        <item quantity="other">u %d dana</item>
+    </plurals>
     <string name="mj_promjena_razdoblja">%1$s %2$s</string>
     <string name="mj_graf_opis">Graf mase: %1$s, od %2$s do %3$s kg</string>
     <string name="mj_premalo_tocaka">Za graf trebaju barem dva mjerenja u odabranom razdoblju.</string>
     <string name="mj_promjena_cilja">Cilj: %1$s kcal (prije %2$s kcal)</string>
     <string name="mj_povijest">Povijest mjerenja</string>
     <string name="mj_red">%1$s · %2$s</string>
+    <string name="mj_brzo_spremljeno">Spremljeno · cilj %1$s kcal</string>
+    <string name="mj_brzo_greska_poruka">Spremanje nije uspjelo: %1$s</string>
+    <string name="mj_brzo_greska_http">Spremanje nije uspjelo: greška %1$d.</string>
 
     <!-- Postavke aplikacije (pages/profil.md § Postavke aplikacije) -->
     <string name="post_naslov">Postavke aplikacije</string>
@@ -511,8 +543,6 @@
     <string name="post_brisanje_polje">Upiši OBRIŠI za potvrdu</string>
     <string name="post_brisanje_potvrdi">Obriši</string>
     <string name="post_brisanje_u_tijeku">Brišem…</string>
-    <string name="post_brisanje_greska_http">Brisanje nije uspjelo (greška %1$d).</string>
-    <string name="post_brisanje_greska_veza">Brisanje nije uspjelo. Provjeri vezu s poslužiteljem.</string>
     <string name="post_o_aplikaciji">O aplikaciji</string>
     <string name="post_o_ime">MacroMenza</string>
     <string name="post_o_verzija">Verzija %1$s</string>
@@ -557,6 +587,31 @@
     <string name="auth_registracija_u_tijeku">Registriram…</string>
     <string name="auth_imas_racun">Već imaš račun?</string>
     <string name="auth_prijavi_link">Prijavi se</string>
+    <string name="auth_unesi_email">📧 Unesi email adresu.</string>
+    <string name="auth_unesi_lozinku">🔒 Unesi lozinku.</string>
+    <string name="auth_greska_http">Došlo je do greške (%1$d). Pokušaj ponovno.</string>
+    <string name="auth_odjavljen">Odjavljen korisnik</string>
+    <string name="auth_reg_email_neispravan">📧 Ovo ne izgleda kao pravi email. Probaj nešto tipa ime@email.com.</string>
+    <string name="auth_reg_lozinka_kratka">🔒 Lozinka mora imati barem 6 znakova. Nije CIA, ali ipak treba malo sigurnosti 😄</string>
+    <string name="auth_reg_email_poslan">📩 Poslali smo ti email za potvrdu računa. Otvori mail i potvrdi registraciju.</string>
+    <string name="auth_reg_greska_400">Podaci nisu ispravni. Provjeri email i lozinku.</string>
+    <string name="auth_reg_greska_401">Nemaš dozvolu za ovu akciju.</string>
+    <string name="auth_reg_greska_409">Korisnik s ovom email adresom već postoji.</string>
+    <string name="auth_reg_greska_422">📧 Email ili lozinka nisu ispravni. Provjeri format emaila i duljinu lozinke.</string>
+    <string name="auth_reg_greska_429">Previše pokušaja. Pričekaj malo pa pokušaj ponovno.</string>
+    <string name="auth_reg_nema_interneta">Nema internetske veze. Spoji se na internet pa pokušaj ponovno.</string>
+    <string name="auth_reg_timeout">Server se malo uspavao. Pričekaj par sekundi pa pokušaj ponovno.</string>
+    <string name="auth_reg_greska">Greška pri registraciji. Pokušaj ponovno.</string>
+    <string name="auth_prij_email_neispravan">📧 Ovo ne izgleda kao pravi email.</string>
+    <string name="auth_prij_neuspjela">Prijava nije uspjela. Pokušaj ponovno.</string>
+    <string name="auth_prij_greska_400">📧 Email ili lozinka nisu ispravni.</string>
+    <string name="auth_prij_pogresni_podaci">🔒 Pogrešan email ili lozinka.</string>
+    <string name="auth_prij_greska_403">📩 Prvo potvrdi svoj račun putem emaila.</string>
+    <string name="auth_prij_greska_422">📧 Provjeri email i lozinku.</string>
+    <string name="auth_prij_greska_429">⏳ Previše pokušaja prijave. Pričekaj malo.</string>
+    <string name="auth_prij_nema_interneta">📡 Nema internetske veze.</string>
+    <string name="auth_prij_timeout">😴 Server se upravo budi. Pokušaj ponovno za nekoliko sekundi.</string>
+    <string name="auth_prij_nije_potvrden">📩 Potvrdi račun putem emaila prije prijave.</string>
 
     <!-- Welcome (pages/prijava.md § Welcome) -->
     <string name="auth_welcome_naslov">MacroMenza</string>
@@ -567,7 +622,6 @@
     <string name="auth_znacajka_slika_opis">Slikaj račun ili opiši što si jeo, a aplikacija predloži jela.</string>
     <string name="auth_znacajka_cilj_naslov">Dnevni cilj i povijest</string>
     <string name="auth_znacajka_cilj_opis">Preporuka prema tvojim mjerama i pregled po tjednima.</string>
-    <string name="auth_pladanj_opis">Primjer pladnja s doručkom, ručkom od oko 1040 kcal i večerom.</string>
 
     <!-- Splash (pages/prijava.md § Splash) -->
     <string name="spl_naslov">MacroMenza</string>

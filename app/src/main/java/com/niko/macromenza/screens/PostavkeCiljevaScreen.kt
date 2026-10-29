@@ -53,10 +53,9 @@ import com.niko.macromenza.ui.theme.Trajanje
 import com.niko.macromenza.ui.theme.rememberSmanjeniPokret
 import com.niko.macromenza.util.filtrirajUnosMase
 import com.niko.macromenza.util.parsirajMasu
+import com.niko.macromenza.util.uString
 import com.niko.macromenza.viewmodel.CiljeviViewModel
 
-/** Poruka uspjeha iz [CiljeviViewModel.spremiCilj]; sve ostale poruke su greške. */
-private const val PORUKA_USPJEHA = "Cilj i preporuka spremljeni"
 
 /** Unos forme; vrijednosti tipa cilja i aktivnosti su ključevi koje očekuje backend. */
 @Immutable
@@ -93,7 +92,7 @@ fun PostavkeCiljevaScreen(
     PostavkeCiljevaSadrzaj(
         forma = forma,
         greska = greska,
-        poruka = poruka,
+        poruka = poruka?.uString(),
         objasnjenje = objasnjenje,
         onForma = { nova ->
             // Greška polja nestaje čim se to polje promijeni.
@@ -226,9 +225,11 @@ private fun PostavkeCiljevaSadrzaj(
         )
 
         // Greška bez polja (korisnik) i poruka spremanja ispod gumba; izblijede pri promjeni.
+        // Poruka uspjeha iz [CiljeviViewModel.spremiCilj]; sve ostale poruke su greške.
+        val porukaUspjeha = stringResource(R.string.prof_cilj_spremljen)
         val obavijest = when {
             greska == GreskaCilja.KORISNIK -> stringResource(R.string.prof_cilj_greska_korisnik) to true
-            poruka != null -> poruka to (poruka != PORUKA_USPJEHA)
+            poruka != null -> poruka to (poruka != porukaUspjeha)
             else -> null
         }
         Crossfade(
@@ -340,11 +341,11 @@ private fun PreviewTamnaPrazno() = PreviewOkvir(true)
 
 @Preview(name = "Svijetla · popunjeno", widthDp = 360, heightDp = VISINA_PREVIEWA)
 @Composable
-private fun PreviewSvijetlaPopunjeno() = PreviewOkvir(false, PRIMJER_FORMA, poruka = PORUKA_USPJEHA, objasnjenje = PRIMJER_OBJASNJENJE)
+private fun PreviewSvijetlaPopunjeno() = PreviewOkvir(false, PRIMJER_FORMA, poruka = stringResource(R.string.prof_cilj_spremljen), objasnjenje = PRIMJER_OBJASNJENJE)
 
 @Preview(name = "Tamna · popunjeno", widthDp = 360, heightDp = VISINA_PREVIEWA)
 @Composable
-private fun PreviewTamnaPopunjeno() = PreviewOkvir(true, PRIMJER_FORMA, poruka = PORUKA_USPJEHA, objasnjenje = PRIMJER_OBJASNJENJE)
+private fun PreviewTamnaPopunjeno() = PreviewOkvir(true, PRIMJER_FORMA, poruka = stringResource(R.string.prof_cilj_spremljen), objasnjenje = PRIMJER_OBJASNJENJE)
 
 @Preview(name = "Svijetla · greška", widthDp = 360, heightDp = VISINA_PREVIEWA)
 @Composable

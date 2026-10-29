@@ -67,6 +67,8 @@ import com.niko.macromenza.ui.theme.opruga
 import com.niko.macromenza.ui.theme.rememberSmanjeniPokret
 import com.niko.macromenza.ui.theme.ulazniTween
 import com.niko.macromenza.util.formatMasa
+import com.niko.macromenza.util.UiTekst
+import com.niko.macromenza.util.formatKcal
 import com.niko.macromenza.util.formatPromjenaMase
 import com.niko.macromenza.viewmodel.MjereViewModel
 import com.niko.macromenza.viewmodel.PorukaMjerenja
@@ -400,7 +402,7 @@ private fun GreskaRed(onPonovi: () -> Unit) {
                 .heightIn(min = MacroDimenzije.dodirniCilj)
                 .skalaPritiska(izvor)
         ) {
-            Text(stringResource(R.string.mj_pokusaj_ponovno), style = MaterialTheme.typography.labelLarge, color = shema.primary)
+            Text(stringResource(R.string.kom_pokusaj_ponovno), style = MaterialTheme.typography.labelLarge, color = shema.primary)
         }
     }
 }
@@ -441,7 +443,7 @@ private fun PreviewOkvir(tamna: Boolean, broj: Int?) {
             preporuke = if (broj == null) PRIMJER_PREPORUKE else emptyList(),
             greska = false,
             sprema = false,
-            poruka = if (broj == null) PorukaMjerenja("Spremljeno · cilj 2.020 kcal", uspjeh = true) else null,
+            poruka = if (broj == null) PorukaMjerenja(UiTekst.Resurs(R.string.mj_brzo_spremljeno, formatKcal(2020.0)), uspjeh = true) else null,
             puniUlaz = false,
             onNatrag = {},
             onPonovi = {},

@@ -254,7 +254,7 @@ private fun GornjaTraka(ui: UnosObrokaUi, akcije: UnosObrokaAkcije) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         IconButton(onClick = akcije.onNatrag) {
-            Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(R.string.uo_natrag), tint = shema.onSurface)
+            Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(R.string.kom_natrag), tint = shema.onSurface)
         }
         Spacer(Modifier.weight(1f))
         NapredakTekst(
@@ -830,7 +830,7 @@ private fun KratkaGreska(poruka: String, onPonovi: () -> Unit, modifier: Modifie
             modifier = Modifier.heightIn(min = MacroDimenzije.dodirniCilj)
         ) {
             Text(
-                stringResource(R.string.uo_pokusaj_ponovno),
+                stringResource(R.string.kom_pokusaj_ponovno),
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.primary
             )
@@ -901,7 +901,7 @@ private fun GreskaJela(onPonovi: () -> Unit) {
                 .heightIn(min = MacroDimenzije.dodirniCilj)
                 .skalaPritiska(izvor)
         ) {
-            Text(stringResource(R.string.uo_pokusaj_ponovno), style = MaterialTheme.typography.labelLarge, color = shema.onSurface)
+            Text(stringResource(R.string.kom_pokusaj_ponovno), style = MaterialTheme.typography.labelLarge, color = shema.onSurface)
         }
     }
 }

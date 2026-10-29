@@ -1,5 +1,7 @@
 # Pregled frontenda: tema „Pladanj", dosljednost i višak
 
+Svi koraci iz §7 riješeni (29. 10. 2026.)
+
 > Datum: 28. 10. 2026. Pregledan je samo `frontend/` (bez backenda). Kod, resursi i postojeći dokumenti nisu mijenjani.
 > Putanje su relativne prema `frontend/app/src/main/java/com/niko/macromenza/`, osim kad počinju s `app/`, `res/` ili `frontend/`.
 > Metoda: čitanje `CLAUDE.md`, `design-system/macromenza/MASTER.md`, svih `pages/*.md`, `ui/theme/` i `ui/components/`; `rg`/`grep` po nazivima i vrijednostima; cijelo čitanje ekrana koji nisu na Pladnju; `gradlew assembleDebug`, `gradlew lint` i ponovno `compileDebugKotlin` radi upozorenja.
@@ -34,7 +36,7 @@ Stupci: **Pladanj** = boje, tipografija, oblici i razmaci iz `ui/theme/`; **spec
 | Detalj dana (`DetaljDanaScreen.kt`) | da | `povijest.md` § Detalj dana | ok | ok | ok | tekst snackbara u kodu (`:181-182`) |
 | Profil (`ProfilScreen.kt`, `screens/profil/`) | da | `profil.md` | sva | ok | ok | — |
 | Uredi profil (`UrediProfilScreen.kt`) | da | `profil.md` | ok | ok | ok | — |
-| Postavke ciljeva (`PostavkeCiljevaScreen.kt`) | da | `profil.md` | ok | ok | ok | kcal s točkom tisućica (§3) |
+| Postavke ciljeva (`PostavkeCiljevaScreen.kt`) | da | `profil.md` | ok | ok | ok | kcal s točkom tisućica (§3) ✅ korak 11 |
 | Moje mjere (`MojeMjereScreen.kt`, `GrafMase.kt`, `BrzoMjerenjeKartica.kt`) | da | `profil.md` | ok | ok | ok | „u 1 dana" (§3) |
 | Postavke aplikacije (`PostavkeAplikacijeScreen.kt`) | da | `profil.md` | ok | ok | ok | — |
 | Odakle su kalorije (`OdakleSuKalorijeScreen.kt`) | da | `profil.md` | ok | ok | ok | — |
@@ -142,7 +144,7 @@ P1 = vidljivo korisniku, P2 = sitno.
 ### Unos obroka, prebačeni dio (`screens/UnosObrokaScreen.kt`)
 | Što ne valja | Redak | Prijedlog | Prioritet |
 |---|---|---|---|
-| U uređivanju je plutajuća navigacija skrivena (`navigation/NavGraph.kt:62-71`), a sažetak, lista i snackbar i dalje ostavljaju mjesto za nju (`screenBottomPadding()` sa zadanim `hasBottomNavigation = true`) | `:351`, `:377`, `:388` | `screenBottomPadding(hasBottomNavigation = !uredivanje)`. **Provjeriti u aplikaciji** (iz koda slijedi praznina od oko 80 dp ispod sažetka). | P1 |
+| U uređivanju je plutajuća navigacija skrivena (`navigation/NavGraph.kt:62-71`), a sažetak, lista i snackbar i dalje ostavljaju mjesto za nju (`screenBottomPadding()` sa zadanim `hasBottomNavigation = true`) | `:351`, `:377`, `:388` | `screenBottomPadding(hasBottomNavigation = !uredivanje)`. **Provjeriti u aplikaciji** (iz koda slijedi praznina od oko 80 dp ispod sažetka). ✅ korak 11 | P1 |
 | Dijalog „Odbaciti promjene?" na zadanom M3: bez `shape`/`containerColor`, „Nastavi" u zadanoj boji `TextButton`a (paprika) | `:407-427` | Isti oblik kao `PotvrdaBrisanjaObrokaDialog` (vidi §4). ✅ korak 6 | P2 |
 | „U redu" u biraču datuma i vremena u zadanoj paprici, dok je u Moje mjere „U redu" u `onSurface` | `:465`, `:515` | Odlučiti jedno (§4). ✅ korak 6: „U redu" i „Odustani" u `onSurface` | P2 |
 
@@ -160,19 +162,19 @@ P1 = vidljivo korisniku, P2 = sitno.
 ### Ostalo vidljivo izvan ekrana
 | Što ne valja | Datoteka i redak | Prijedlog | Prioritet |
 |---|---|---|---|
-| Ikona aplikacije je zadana Android ikona (zelena `#3DDC84` i bijeli robot) | `res/drawable/ic_launcher_background.xml`, `res/drawable/ic_launcher_foreground.xml` | Ikona u paleti Pladnja (orah/porculan). | P1 |
-| Početni prozor je `android:Theme.Material.Light.NoActionBar`: u tamnoj temi pri hladnom pokretanju bljesne svijetla pozadina | `res/values/themes.xml:4` | `windowBackground` na papir/noć (`values-night`) ili DayNight roditelj. **Provjeriti na uređaju.** | P2 |
-| Traka sustavne navigacije: `darkScrim = BLACK`, `lightScrim = WHITE`, a `SystemBarStyle.auto` prati temu sustava, ne temu aplikacije | `MainActivity.kt:31-36` | Scrim u bojama pozadine i odabir prema `useDarkTheme`. **Provjeriti** na uređaju s navigacijom gumbima. | P2 |
+| Ikona aplikacije je zadana Android ikona (zelena `#3DDC84` i bijeli robot) | `res/drawable/ic_launcher_background.xml`, `res/drawable/ic_launcher_foreground.xml` | Ikona u paleti Pladnja (orah/porculan). ✅ korak 12 | P1 |
+| Početni prozor je `android:Theme.Material.Light.NoActionBar`: u tamnoj temi pri hladnom pokretanju bljesne svijetla pozadina | `res/values/themes.xml:4` | `windowBackground` na papir/noć (`values-night`) ili DayNight roditelj. **Provjeriti na uređaju.** ✅ korak 12 | P2 |
+| Traka sustavne navigacije: `darkScrim = BLACK`, `lightScrim = WHITE`, a `SystemBarStyle.auto` prati temu sustava, ne temu aplikacije | `MainActivity.kt:31-36` | Scrim u bojama pozadine i odabir prema `useDarkTheme`. **Provjeriti** na uređaju s navigacijom gumbima. ✅ korak 12 | P2 |
 | `dynamicColor` parametar može zamijeniti cijelu paletu Material You bojama (zadano `false`, nitko ga ne postavlja) | `ui/theme/Theme.kt:80-88` | Ukloniti granu (vidi §5). | P2 |
 
 ### Prebačeni ekrani: sitnice
 | Što ne valja | Redak | Prijedlog | Prioritet |
 |---|---|---|---|
-| Ikona vrste obroka u `ObrokRed` na `primaryContainer` (paprika) uz `onPrimaryContainer`: paprika kao ukras stanja, nije opisano ni u MASTER §8 ni u `povijest.md` | `ui/components/ObrokRed.kt:229-236` | `surfaceVariant`/`secondaryContainer` uz `onSurfaceVariant`, ili zapisati iznimku u MASTER. | P2 |
-| kcal s točkom tisućica („2.400") gdje MASTER kaže „kcal bez separatora (`1510`)" i `profil.md` piše „Cilj: 2400 kcal" | `screens/KakoSmoIzracunaliKartica.kt:38-40` (+ `GrafMase.kt:401`, `viewmodel/MjereViewModel.kt:69`, gdje `profil.md` izričito navodi „2.020") | Odlučiti jedno pravilo; za cilj u `KakoSmoIzracunali` `formatKcal`. | P2 |
-| „u %1$d dana" za razdoblje „Sve" daje „u 1 dana", „u 21 dana" | `res/values/strings.xml:428`, `screens/GrafMase.kt:165` | `plurals` („u 1 dan", „u 2 dana", „u 21 dan"). | P2 |
+| Ikona vrste obroka u `ObrokRed` na `primaryContainer` (paprika) uz `onPrimaryContainer`: paprika kao ukras stanja, nije opisano ni u MASTER §8 ni u `povijest.md` | `ui/components/ObrokRed.kt:229-236` | `surfaceVariant`/`secondaryContainer` uz `onSurfaceVariant`, ili zapisati iznimku u MASTER. ✅ korak 11 | P2 |
+| kcal s točkom tisućica („2.400") gdje MASTER kaže „kcal bez separatora (`1510`)" i `profil.md` piše „Cilj: 2400 kcal" | `screens/KakoSmoIzracunaliKartica.kt:38-40` (+ `GrafMase.kt:401`, `viewmodel/MjereViewModel.kt:69`, gdje `profil.md` izričito navodi „2.020") | Odlučiti jedno pravilo; za cilj u `KakoSmoIzracunali` `formatKcal`. ✅ korak 11 | P2 |
+| „u %1$d dana" za razdoblje „Sve" daje „u 1 dana", „u 21 dana" | `res/values/strings.xml:428`, `screens/GrafMase.kt:165` | `plurals` („u 1 dan", „u 2 dana", „u 21 dan"). ✅ korak 11 | P2 |
 | Kursor i ručice odabira teksta u zadanoj paprici u pretrazi, opisu i poljima filtera (samo `PoljeUnosa` postavlja `selectionColors`) | `screens/unosobroka/UnosObrokaSadrzaj.kt:472`, `screens/slikailiopis/SlikaIliOpisSadrzaj.kt:480`, `screens/unosobroka/FilterJela.kt:332` | `LocalTextSelectionColors` na tokenima (npr. u `MacroMenzaTheme`). ✅ korak 6 | P2 |
-| Tekst snackbara „Obrok obrisan" / „Poništi" u kodu | `screens/DetaljDanaScreen.kt:181-182` | `strings.xml` (`kom_`), jer ga dijele Home, Povijest i Detalj dana. | P2 |
+| Tekst snackbara „Obrok obrisan" / „Poništi" u kodu | `screens/DetaljDanaScreen.kt:181-182` | `strings.xml` (`kom_`), jer ga dijele Home, Povijest i Detalj dana. ✅ korak 11 | P2 |
 
 ---
 
@@ -190,8 +192,8 @@ P1 = vidljivo korisniku, P2 = sitno.
 | **Naziv vrste obroka** | `nazivTipa` (Composable, `ui/components/Tekstovi.kt:12`); privatni `nazivTipa(context, …)` (`UnosObrokaScreen.kt:68`, za snackbar izvan kompozicije); `formatTipObrokaSpremljen` s tekstom u kodu (`ObrokSpremljenScreen.kt:209`) | `Tekstovi.kt`; inačicu s `Context` premjestiti uz nju kad bude trebala još jednom ekranu, a `formatTipObrokaSpremljen` obrisati pri prebacivanju ObrokSpremljen. |
 | **Zapis makronutrijenata** | `kcalIMakroKratko`/`makroKratko` „52P 38M 120U" (svi prebačeni ekrani); „x g" + „P/UH/M" u stupcima (`SazetakObrokaBar.kt:214-216`, `JeloDetaljSheet.kt:229-231`) | `Tekstovi.kt` zapis; u detalju jela smije ostati veći prikaz, ali s P/M/U i bojama iz `macroBoje`. |
 | **Snackbar** | Svi koriste zadani M3 `SnackbarHost` iznad plutajuće navigacije; Home dodaje FAB (`HomeScreen.kt:158`), unos obroka sažetak (`UnosObrokaScreen.kt:388`) | Dosljedno; jedini problem je razmak u uređivanju obroka (§3). |
-| **Ponovljeni stringovi** | „Pokušaj ponovno" ×6 (`dp_`, `uo_`, `sio_`, `pov_`, `prof_`, `mj_`), „Natrag" ×4 (`uo_`, `sio_`, `pov_`, `kom_`) u `res/values/strings.xml` | Ne utječe na izgled; spojiti u `kom_` tek kad se dira taj ekran. |
-| **Prefiks resursa kartice Unos** | `ko_` (5 stringova, `strings.xml:87-91`) uz `uo_` za unos obroka | Ostaje; samo zapisati u `meal-logging.md`. |
+| **Ponovljeni stringovi** | „Pokušaj ponovno" ×6 (`dp_`, `uo_`, `sio_`, `pov_`, `prof_`, `mj_`), „Natrag" ×4 (`uo_`, `sio_`, `pov_`, `kom_`) u `res/values/strings.xml` | Ne utječe na izgled; spojiti u `kom_` tek kad se dira taj ekran. ✅ korak 11 |
+| **Prefiks resursa kartice Unos** | `ko_` (5 stringova, `strings.xml:87-91`) uz `uo_` za unos obroka | Ostaje; samo zapisati u `meal-logging.md`. ✅ korak 11 |
 
 ---
 
@@ -201,7 +203,7 @@ P1 = vidljivo korisniku, P2 = sitno.
 |---|---|---|---|
 | `MacroBackground`, `MacroSurface`, `MacroDark`, `MacroDarkSurface`, `MacroText`, `MacroTextSecondary`, `MacroError` (`ui/theme/Color.kt:147-156`) | Stara paleta | `rg -w` nad `*.kt`: samo deklaracija | da — ✅ obrisano (korak 1) |
 | `MacroLightGreen` (`ui/theme/Color.kt:145`) | Samo se uvozi, nigdje ne koristi | Pogoci samo u `import` (`LoginScreen.kt:26`, `RegisterScreen.kt:26`, `OnboardingScreen.kt:33`, `SplashScreen.kt:19`) | da (zajedno s ta četiri importa) — ✅ obrisano (korak 1) |
-| `MacroGreen` (`ui/theme/Color.kt:144`) | Naslijeđena boja | Još 8 datoteka (§3) | **ne** dok se ne prebace Splash, Welcome, Login, Register, Onboarding, ObrokSpremljen, Sažetak i Detalj jela |
+| `MacroGreen` (`ui/theme/Color.kt:144`) | Naslijeđena boja | Još 8 datoteka (§3) | ✅ obrisano (korak 10) |
 | Sve boje u `res/values/colors.xml` (`purple_*`, `teal_*`, `black`, `white`) | Predložak Android Studija | Lint `UnusedResources` za svih 7; `themes.xml` ih ne koristi | da (cijela datoteka) — ✅ obrisano (korak 1) |
 | `dp_bez_cilja` (`res/values/strings.xml:25`) | Nekorišten string | Lint `UnusedResources`; `rg` bez pogodaka | da — ✅ obrisano (korak 1) |
 | `ScreenSpacing.Horizontal` (22 dp) (`ui/theme/ScreenPadding.kt:12`) | Stari bočni rub (sada `rubEkrana` 16 dp) | `rg ScreenSpacing.Horizontal`: samo deklaracija | da — ✅ obrisano (korak 1) |
@@ -225,7 +227,7 @@ P1 = vidljivo korisniku, P2 = sitno.
 
 **Frontend i zastarjeli backend:** `api/ApiService.kt` ne poziva `/api/dashboard/{id}`, `tjedni-pregled` ni `povijest/dani`. Od N+1 poziva iz `CLAUDE.md` frontend još koristi `dohvatiPovijestZaDan` (`GET /api/konzumacije/povijest/{id}`, iz `viewmodel/JelaViewModel.kt` i `viewmodel/PovijestViewModel.kt`); to nije višak, nego posao za backend.
 
-**Tekst u ViewModelima:** poruke grešaka su u kodu (`viewmodel/AuthViewModel.kt` 14, `viewmodel/SlikaIliOpisViewModel.kt` 15, `viewmodel/JelaViewModel.kt` 13, `viewmodel/PovijestViewModel.kt` 12 literala). Korisnik ih vidi, ali premještanje u `strings.xml` mijenja ViewModele, pa je to zaseban korak, a ne dio dizajna.
+**Tekst u ViewModelima:** poruke grešaka su u kodu (`viewmodel/AuthViewModel.kt` 14, `viewmodel/SlikaIliOpisViewModel.kt` 15, `viewmodel/JelaViewModel.kt` 13, `viewmodel/PovijestViewModel.kt` 12 literala). Korisnik ih vidi, ali premještanje u `strings.xml` mijenja ViewModele, pa je to zaseban korak, a ne dio dizajna. ✅ korak 13: `util/UiTekst.kt` (`Resurs` / `Dinamicki`), poruke svih ViewModela u `strings.xml`; poruka s backenda ostaje doslovna.
 
 ---
 
@@ -240,7 +242,7 @@ P1 = vidljivo korisniku, P2 = sitno.
 Lint upozorenja koja se tiču ovog pregleda:
 - **Nekorišteni resursi:** 7 boja u `colors.xml`, `dp_bez_cilja` (§5).
 - **Množina:** `PluralsCandidate` na `strings.xml:192` (`sio_brojac_opis`), `:246` (`pov_tjedan_opis`), `:275` (`pov_sazetak_dani_opis`), `:428` (`mj_u_n_dana`). Stvarna greška je samo `:428` (§3); ostala tri su genitiv iza „od N" i ispravni su.
-- **Resursi:** `mipmap-anydpi-v26` je suvišna mapa jer je `minSdk` 26 (`ObsoleteSdkInt`); sadržaj premjestiti u `mipmap-anydpi`. `AndroidManifest.xml:21` suvišan `android:label` na aktivnosti.
+- **Resursi:** `mipmap-anydpi-v26` je suvišna mapa jer je `minSdk` 26 (`ObsoleteSdkInt`); sadržaj premjestiti u `mipmap-anydpi`. `AndroidManifest.xml:21` suvišan `android:label` na aktivnosti. ✅ korak 11
 - **Compose (nije izgled, samo za znanje):** `ModifierFactoryExtensionFunction` (`FilterJela.kt:78`, `PovijestSadrzaj.kt:382`, `UnosObrokaPokret.kt:89`), `ModifierParameter` (`JeloRed.kt:431`, `KakoSmoIzracunaliKartica.kt:34`), `AutoboxingStateCreation` (`JeloDetaljSheet.kt:55`).
 - Ostalo su novije verzije ovisnosti i `UseTomlInstead`; ne tiču se teme ni viška.
 

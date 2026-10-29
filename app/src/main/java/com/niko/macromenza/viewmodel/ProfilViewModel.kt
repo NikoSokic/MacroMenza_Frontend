@@ -2,11 +2,13 @@ package com.niko.macromenza.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.niko.macromenza.R
 import com.niko.macromenza.api.RetrofitInstance
 import com.niko.macromenza.model.Korisnik
 import com.niko.macromenza.model.Mjerenje
 import com.niko.macromenza.model.ProfilPodaci
 import com.niko.macromenza.model.Preporuka
+import com.niko.macromenza.util.UiTekst
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -19,7 +21,7 @@ class ProfilViewModel : ViewModel() {
     private val _profil = MutableStateFlow<ProfilPodaci?>(null)
     val profil = _profil.asStateFlow()
 
-    private val _poruka = MutableStateFlow<String?>(null)
+    private val _poruka = MutableStateFlow<UiTekst?>(null)
     val poruka = _poruka.asStateFlow()
 
     private val _zadnjeMjerenje = MutableStateFlow<Mjerenje?>(null)
@@ -60,7 +62,7 @@ class ProfilViewModel : ViewModel() {
                 }
 
             } catch (e: Exception) {
-                _poruka.value = e.message
+                _poruka.value = e.message?.let { UiTekst.Dinamicki(it) }
             } finally {
                 _ucitava.value = false
             }
@@ -108,11 +110,11 @@ class ProfilViewModel : ViewModel() {
                     )
                 }
 
-                _poruka.value = "Profil spremljen"
+                _poruka.value = UiTekst.Resurs(R.string.prof_urp_spremljeno)
                 ucitajProfil(idKorisnik)
 
             } catch (e: Exception) {
-                _poruka.value = e.message
+                _poruka.value = e.message?.let { UiTekst.Dinamicki(it) }
             }
         }
     }

@@ -14,6 +14,7 @@ import com.niko.macromenza.screens.profil.ProfilSadrzaj
 import com.niko.macromenza.screens.profil.profilStanje
 import com.niko.macromenza.session.UserSessionManager
 import com.niko.macromenza.ui.theme.UlazUSesiji
+import com.niko.macromenza.util.uString
 import com.niko.macromenza.viewmodel.AuthViewModel
 import com.niko.macromenza.viewmodel.AuthViewModelFactory
 import com.niko.macromenza.viewmodel.ProfilViewModel
@@ -45,8 +46,9 @@ fun ProfilScreen(
         prijavljeniKorisnikId?.let { id -> viewModel.ucitajProfil(id) }
     }
 
-    val stanje = remember(korisnik, zadnjeMjerenje, zadnjaPreporuka, poruka) {
-        profilStanje(korisnik, zadnjeMjerenje, zadnjaPreporuka, poruka)
+    val porukaTekst = poruka?.uString()
+    val stanje = remember(korisnik, zadnjeMjerenje, zadnjaPreporuka, porukaTekst) {
+        profilStanje(korisnik, zadnjeMjerenje, zadnjaPreporuka, porukaTekst)
     }
 
     ProfilSadrzaj(

@@ -40,10 +40,8 @@ import com.niko.macromenza.ui.components.screenTopPadding
 import com.niko.macromenza.ui.theme.MacroMenzaTheme
 import com.niko.macromenza.ui.theme.MacroRazmaci
 import com.niko.macromenza.ui.theme.UlazUSesiji
+import com.niko.macromenza.util.uString
 import com.niko.macromenza.viewmodel.AuthViewModel
-
-/** Početak poruke kojom AuthViewModel javlja uspjeh registracije (postojeće prepoznavanje uspjeha). */
-private const val POCETAK_PORUKE_USPJEHA = "Poslali smo ti email"
 
 @Composable
 fun RegisterScreen(
@@ -73,7 +71,7 @@ fun RegisterScreen(
         onLozinka = { lozinka = it },
         ponovljenaLozinka = ponovljenaLozinka,
         onPonovljenaLozinka = { ponovljenaLozinka = it },
-        poruka = poruka,
+        poruka = poruka?.uString(),
         ucitavanje = ucitavanje,
         animirajUlaz = prviUlaz,
         onRegistracija = {
@@ -111,7 +109,8 @@ internal fun RegisterSadrzaj(
 
     val lozinkeSePoklapaju = lozinka.isNotBlank() && lozinka == ponovljenaLozinka
     val moze = email.isNotBlank() && lozinkeSePoklapaju && !ucitavanje
-    val uspjeh = poruka?.contains(POCETAK_PORUKE_USPJEHA, ignoreCase = true) == true
+    // Jedina poruka uspjeha iz AuthViewModel.registracija; sve ostale su greške.
+    val uspjeh = poruka == stringResource(R.string.auth_reg_email_poslan)
 
     Column(
         modifier = Modifier
@@ -214,7 +213,6 @@ internal fun RegisterSadrzaj(
 // ---------- Previewi ----------
 
 private const val GRESKA_PRIMJER = "Korisnik s ovom email adresom već postoji."
-private const val USPJEH_PRIMJER = "Poslali smo ti email za potvrdu računa. Otvori mail i potvrdi registraciju."
 
 @Composable
 private fun PreviewRegister(
@@ -280,11 +278,11 @@ private fun PreviewTamnaGreska() = PreviewRegister(true, "niko@student.fesb.hr",
 
 @Preview(name = "Svijetla · uspjeh registracije", widthDp = 360, heightDp = 860)
 @Composable
-private fun PreviewSvijetlaUspjeh() = PreviewRegister(false, "niko@student.fesb.hr", "tajna123", "tajna123", USPJEH_PRIMJER)
+private fun PreviewSvijetlaUspjeh() = PreviewRegister(false, "niko@student.fesb.hr", "tajna123", "tajna123", stringResource(R.string.auth_reg_email_poslan))
 
 @Preview(name = "Tamna · uspjeh registracije", widthDp = 360, heightDp = 860)
 @Composable
-private fun PreviewTamnaUspjeh() = PreviewRegister(true, "niko@student.fesb.hr", "tajna123", "tajna123", USPJEH_PRIMJER)
+private fun PreviewTamnaUspjeh() = PreviewRegister(true, "niko@student.fesb.hr", "tajna123", "tajna123", stringResource(R.string.auth_reg_email_poslan))
 
 @Preview(name = "Svijetla · greška · fontScale 1,3", widthDp = 360, heightDp = 1200, fontScale = 1.3f)
 @Composable
@@ -292,4 +290,4 @@ private fun PreviewSvijetlaGreskaVelika() = PreviewRegister(false, "niko@student
 
 @Preview(name = "Tamna · uspjeh · fontScale 1,3", widthDp = 360, heightDp = 1200, fontScale = 1.3f)
 @Composable
-private fun PreviewTamnaUspjehVelika() = PreviewRegister(true, "niko@student.fesb.hr", "tajna123", "tajna123", USPJEH_PRIMJER)
+private fun PreviewTamnaUspjehVelika() = PreviewRegister(true, "niko@student.fesb.hr", "tajna123", "tajna123", stringResource(R.string.auth_reg_email_poslan))

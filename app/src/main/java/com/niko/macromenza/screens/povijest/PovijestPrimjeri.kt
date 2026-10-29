@@ -103,7 +103,23 @@ val PRIMJER_TJEDAN_PRAZNO: Tjedan = tjedan((0..6).map { dan(it, emptyList()) })
 
 val PRIMJER_TJEDAN_PRIMJER: Tjedan = tjedan(DANI_NORMALNO, imaPrimjer = true)
 
-/** Isti dani bez preporuke (korisnik nije postavio cilj): tanjuri bez kruga cilja, bez "u cilju" i "preko cilja". */
+/**
+ * Sva stanja grafa u jednom tjednu: Pon u cilju (2277), Uto preko cilja (2657), Sri bez unosa, Čet iznad 125 % cilja
+ * (3037, dvije pizze; ljestvica se proširuje do njega), Pet (danas) ispod cilja (1510), Sub i Ned u budućnosti.
+ */
+val PRIMJER_TJEDAN_SVA_STANJA: Tjedan = tjedan(
+    listOf(
+        dan(0, DORUCAK + RUCAK + VECERA),
+        dan(1, DORUCAK + RUCAK + PIZZA + VECERA),
+        dan(2, emptyList()),
+        dan(3, DORUCAK + RUCAK + PIZZA + VECERA + PIZZA),
+        dan(4, DORUCAK + RUCAK),
+        dan(5, emptyList()),
+        dan(6, emptyList())
+    )
+)
+
+/** Isti dani bez preporuke (korisnik nije postavio cilj): stupci bez pojasa i linije cilja, bez "u cilju" i "preko cilja". */
 val PRIMJER_TJEDAN_BEZ_CILJA: Tjedan = tjedan(
     listOf(
         dan(0, DORUCAK + RUCAK + VECERA, cilj = null),

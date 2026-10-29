@@ -2,12 +2,14 @@ package com.niko.macromenza.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.niko.macromenza.R
 import com.niko.macromenza.api.RetrofitInstance
 import com.niko.macromenza.model.BrzoMjerenjeRequest
 import com.niko.macromenza.model.Mjerenje
 import com.niko.macromenza.model.MjerenjeMase
 import com.niko.macromenza.model.Preporuka
-import com.niko.macromenza.util.formatKcalTisuce
+import com.niko.macromenza.util.UiTekst
+import com.niko.macromenza.util.formatKcal
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -15,7 +17,7 @@ import kotlinx.coroutines.launch
 import org.json.JSONObject
 import retrofit2.HttpException
 
-data class PorukaMjerenja(val tekst: String, val uspjeh: Boolean)
+data class PorukaMjerenja(val tekst: UiTekst, val uspjeh: Boolean)
 
 class MjereViewModel : ViewModel() {
 
@@ -66,7 +68,7 @@ class MjereViewModel : ViewModel() {
                     BrzoMjerenjeRequest(idKorisnik = idKorisnik, masa = desetinke / 10.0)
                 )
                 _poruka.value = PorukaMjerenja(
-                    "Spremljeno · cilj ${formatKcalTisuce(odgovor.preporuka.kalorije)} kcal",
+                    UiTekst.Resurs(R.string.mj_brzo_spremljeno, formatKcal(odgovor.preporuka.kalorije)),
                     uspjeh = true
                 )
                 ucitajMjerenja(idKorisnik)
@@ -74,12 +76,13 @@ class MjereViewModel : ViewModel() {
                 throw e
             } catch (e: HttpException) {
                 _poruka.value = PorukaMjerenja(
-                    "Spremanje nije uspjelo: " + (porukaGreske(e) ?: "greška ${e.code()}."),
+                    porukaGreske(e)?.let { UiTekst.Resurs(R.string.mj_brzo_greska_poruka, it) }
+                        ?: UiTekst.Resurs(R.string.mj_brzo_greska_http, e.code()),
                     uspjeh = false
                 )
             } catch (e: Exception) {
                 _poruka.value = PorukaMjerenja(
-                    "Spremanje nije uspjelo. Provjeri vezu s poslužiteljem.",
+                    UiTekst.Resurs(R.string.kom_spremanje_greska_veza),
                     uspjeh = false
                 )
             } finally {

@@ -1,7 +1,9 @@
 package com.niko.macromenza.viewmodel
 
+import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.niko.macromenza.R
 import com.niko.macromenza.api.RetrofitInstance
 import com.niko.macromenza.model.CestoJedenoJelo
 import com.niko.macromenza.model.Jelo
@@ -22,6 +24,7 @@ import com.niko.macromenza.model.PovijestDana
 import com.niko.macromenza.model.Preporuka
 import com.niko.macromenza.model.PrijedlogObroka
 import com.niko.macromenza.model.StavkaObrokaRequest
+import com.niko.macromenza.util.UiTekst
 import org.json.JSONObject
 import retrofit2.HttpException
 import java.time.LocalDate
@@ -115,8 +118,8 @@ class JelaViewModel : ViewModel() {
     private val _ucitavanjeObroka = MutableStateFlow(false)
     val ucitavanjeObroka: StateFlow<Boolean> = _ucitavanjeObroka
 
-    private val _greskaUcitavanja = MutableStateFlow<String?>(null)
-    val greskaUcitavanja: StateFlow<String?> = _greskaUcitavanja
+    private val _greskaUcitavanja = MutableStateFlow<UiTekst?>(null)
+    val greskaUcitavanja: StateFlow<UiTekst?> = _greskaUcitavanja
 
     private val _azuriraniObrok = MutableStateFlow<Obrok?>(null)
     val azuriraniObrok: StateFlow<Obrok?> = _azuriraniObrok
@@ -152,8 +155,8 @@ class JelaViewModel : ViewModel() {
     private val _menijiUcitavanje = MutableStateFlow(false)
     val menijiUcitavanje: StateFlow<Boolean> = _menijiUcitavanje
 
-    private val _greskaMenija = MutableStateFlow<String?>(null)
-    val greskaMenija: StateFlow<String?> = _greskaMenija
+    private val _greskaMenija = MutableStateFlow<UiTekst?>(null)
+    val greskaMenija: StateFlow<UiTekst?> = _greskaMenija
 
     /** Tip menija (RUCAK / VECERA) kad tip obroka ne određuje filter; null = svi. */
     private val _tipMenija = MutableStateFlow<String?>(null)
@@ -193,8 +196,8 @@ class JelaViewModel : ViewModel() {
     private val _spremljeniObrok = MutableStateFlow<Obrok?>(null)
     val spremljeniObrok: StateFlow<Obrok?> = _spremljeniObrok
 
-    private val _greskaSpremanja = MutableStateFlow<String?>(null)
-    val greskaSpremanja: StateFlow<String?> = _greskaSpremanja
+    private val _greskaSpremanja = MutableStateFlow<UiTekst?>(null)
+    val greskaSpremanja: StateFlow<UiTekst?> = _greskaSpremanja
 
     /**
      * Učitava jela prema upitu, kategoriji i makro filteru zajedno. Novi poziv otkazuje prethodni,
@@ -276,7 +279,7 @@ class JelaViewModel : ViewModel() {
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                _greskaMenija.value = "Meniji se nisu učitali. Provjeri vezu s poslužiteljem."
+                _greskaMenija.value = UiTekst.Resurs(R.string.uo_greska_menija)
             } finally {
                 _menijiUcitavanje.value = false
             }
@@ -485,7 +488,7 @@ class JelaViewModel : ViewModel() {
             } catch (e: HttpException) {
                 _greskaSpremanja.value = porukaGreske(e)
             } catch (e: Exception) {
-                _greskaSpremanja.value = "Spremanje nije uspjelo. Provjeri vezu s poslužiteljem."
+                _greskaSpremanja.value = UiTekst.Resurs(R.string.kom_spremanje_greska_veza)
             } finally {
                 _spremanjeUTijeku.value = false
             }
@@ -530,9 +533,10 @@ class JelaViewModel : ViewModel() {
                 throw e
             } catch (e: HttpException) {
                 _greskaUcitavanja.value =
-                    if (e.code() == 404) "Obrok ne postoji." else "Obrok se nije učitao (greška ${e.code()})."
+                    if (e.code() == 404) UiTekst.Resurs(R.string.uo_obrok_ne_postoji)
+                    else UiTekst.Resurs(R.string.uo_obrok_greska_http, e.code())
             } catch (e: Exception) {
-                _greskaUcitavanja.value = "Obrok se nije učitao. Provjeri vezu s poslužiteljem."
+                _greskaUcitavanja.value = UiTekst.Resurs(R.string.uo_obrok_greska_veza)
             } finally {
                 _ucitavanjeObroka.value = false
             }
@@ -577,7 +581,7 @@ class JelaViewModel : ViewModel() {
             } catch (e: HttpException) {
                 _greskaSpremanja.value = porukaGreske(e)
             } catch (e: Exception) {
-                _greskaSpremanja.value = "Spremanje nije uspjelo. Provjeri vezu s poslužiteljem."
+                _greskaSpremanja.value = UiTekst.Resurs(R.string.kom_spremanje_greska_veza)
             } finally {
                 _spremanjeUTijeku.value = false
             }
@@ -600,9 +604,9 @@ class JelaViewModel : ViewModel() {
             } catch (e: CancellationException) {
                 throw e
             } catch (e: HttpException) {
-                _greskaSpremanja.value = porukaGreske(e, "Brisanje")
+                _greskaSpremanja.value = porukaGreske(e, R.string.kom_brisanje_greska_http)
             } catch (e: Exception) {
-                _greskaSpremanja.value = "Brisanje nije uspjelo. Provjeri vezu s poslužiteljem."
+                _greskaSpremanja.value = UiTekst.Resurs(R.string.kom_brisanje_greska_veza)
             } finally {
                 _spremanjeUTijeku.value = false
             }
@@ -620,7 +624,10 @@ class JelaViewModel : ViewModel() {
         _greskaSpremanja.value = null
     }
 
-    private fun porukaGreske(e: HttpException, radnja: String = "Spremanje"): String {
+    private fun porukaGreske(
+        e: HttpException,
+        @StringRes greskaHttp: Int = R.string.uo_spremanje_greska_http
+    ): UiTekst {
         val poruka = try {
             e.response()?.errorBody()?.string()?.let { JSONObject(it).optString("poruka") }
         } catch (ex: Exception) {
@@ -628,9 +635,9 @@ class JelaViewModel : ViewModel() {
         }
 
         return if (poruka.isNullOrBlank()) {
-            "$radnja nije uspjelo (greška ${e.code()})."
+            UiTekst.Resurs(greskaHttp, e.code())
         } else {
-            poruka
+            UiTekst.Dinamicki(poruka)
         }
     }
 
