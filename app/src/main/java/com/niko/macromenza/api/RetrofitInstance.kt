@@ -20,6 +20,12 @@ object RetrofitInstance {
             .create(ApiService::class.java)
     }
 
+    /**
+     * Za spore pozive: "Učitaj primjer tjedna" na backendu traje oko 16 s (21 obrok, pojedinačni upisi u udaljenu bazu),
+     * pa bi zadani timeout od 10 s prekinuo vezu dok backend još uspješno piše podatke.
+     */
+    val sporiApi: ApiService get() = prepoznavanjeApi
+
     // Prepoznavanje obroka zove vanjski AI servis, pa treba duži timeout od zadanih 10 s.
     val prepoznavanjeApi: ApiService by lazy {
         val klijent = OkHttpClient.Builder()

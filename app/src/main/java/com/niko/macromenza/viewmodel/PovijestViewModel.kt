@@ -180,7 +180,7 @@ class PovijestViewModel(
         greskaPoruka = R.string.pov_primjer_ucitavanje_poruka,
         greskaHttp = R.string.pov_primjer_ucitavanje_http,
         greskaVeza = R.string.pov_primjer_ucitavanje_veza
-    ) { RetrofitInstance.api.ucitajPrimjerTjedna(idKorisnik) }
+    ) { RetrofitInstance.sporiApi.ucitajPrimjerTjedna(idKorisnik) }
 
     /** Briše samo obroke s izvorom PRIMJER. */
     fun ukloniPrimjerTjedna(idKorisnik: Long) = primjerTjedna(

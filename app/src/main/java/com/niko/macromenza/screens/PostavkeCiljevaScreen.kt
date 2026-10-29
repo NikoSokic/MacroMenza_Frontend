@@ -115,7 +115,7 @@ fun PostavkeCiljevaScreen(
                 id == null -> GreskaCilja.KORISNIK
                 visinaBroj == null || visinaBroj !in 100..250 -> GreskaCilja.VISINA
                 dobBroj == null || dobBroj !in 15..100 -> GreskaCilja.DOB
-                masaBroj == null || masaBroj !in 30.0..300.0 -> GreskaCilja.MASA
+                masaBroj == null || masaBroj !in 20.0..400.0 -> GreskaCilja.MASA
                 else -> null
             }
 

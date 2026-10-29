@@ -223,7 +223,7 @@ fun OnboardingScreen(
 private fun prvaGreska(visina: Int?, dob: Int?, masa: Double?): GreskaOnboarding? = when {
     visina == null || visina !in 100..250 -> GreskaOnboarding.VISINA
     dob == null || dob !in 15..100 -> GreskaOnboarding.DOB
-    masa == null || masa !in 30.0..300.0 -> GreskaOnboarding.MASA
+    masa == null || masa !in 20.0..400.0 -> GreskaOnboarding.MASA
     else -> null
 }
 

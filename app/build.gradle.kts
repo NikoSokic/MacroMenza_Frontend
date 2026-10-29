@@ -4,6 +4,13 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    // Snimke ekrana iz @Preview funkcija: recordRoborazziDebug / verifyRoborazziDebug
+    id("io.github.takahirom.roborazzi") version "1.46.1"
+}
+
+roborazzi {
+    // Referentne slike su u repozitoriju, pa verify uspoređuje s odobrenim stanjem.
+    outputDir.set(file("src/test/snapshots"))
 }
 
 // BASE_URL backenda čita se iz local.properties (ključ macromenza.baseUrl), zadano je emulator -> laptop
@@ -49,6 +56,10 @@ android {
         compose = true
         buildConfig = true
     }
+    testOptions {
+        // Robolectric (Application, Patterns, DataStore, Bitmap) treba resurse aplikacije.
+        unitTests.isIncludeAndroidResources = true
+    }
 }
 
 dependencies {
@@ -62,6 +73,21 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
     testImplementation(libs.junit)
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.9.0")
+    testImplementation("io.mockk:mockk:1.13.13")
+    testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
+    testImplementation("org.robolectric:robolectric:4.14.1")
+    testImplementation("androidx.test:core:1.6.1")
+    // android.jar u JVM testovima ima samo prazne org.json metode; stvarna biblioteka ih zamjenjuje.
+    testImplementation("org.json:json:20240303")
+    // Provjera da JSON iz backenda ne ostavlja null u ne-nullable poljima (Gson zaobilazi Kotlin null-safety).
+    testImplementation("org.jetbrains.kotlin:kotlin-reflect:2.0.21")
+    testImplementation("io.github.takahirom.roborazzi:roborazzi:1.46.1")
+    testImplementation("io.github.takahirom.roborazzi:roborazzi-compose:1.46.1")
+    testImplementation("io.github.takahirom.roborazzi:roborazzi-compose-preview-scanner-support:1.46.1")
+    testImplementation("io.github.sergio-sastre.ComposablePreviewScanner:android:0.6.1")
+    testImplementation(platform(libs.androidx.compose.bom))
+    testImplementation(libs.androidx.compose.ui.test.junit4)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
