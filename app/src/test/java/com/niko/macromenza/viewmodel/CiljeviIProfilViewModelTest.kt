@@ -164,7 +164,7 @@ class ProfilViewModelTest {
     @get:Rule val main = MainDispatcherRule()
     @get:Rule val fake = FakeApiRule()
 
-    private val korisnik = Korisnik(7, "uid-1", "Ana", "Anić", "ana@mail.hr", "")
+    private val korisnik = Korisnik(7, "uid-1", "Ana", "Anić", "ana@mail.hr")
 
     private fun osnovno() {
         coEvery { fake.api.dohvatiKorisnika(7) } returns korisnik
@@ -236,7 +236,7 @@ class ProfilViewModelTest {
         vm.spremiProfil(7, "Ivana", "Ivić", "ivana@mail.hr", "Z")
         advanceUntilIdle()
 
-        assertEquals(Korisnik(7, null, "Ivana", "Ivić", "ivana@mail.hr", ""), korisnikZahtjev.captured)
+        assertEquals(Korisnik(7, null, "Ivana", "Ivić", "ivana@mail.hr"), korisnikZahtjev.captured)
         // Visina i dob ostaju iz postojećeg profila; mijenja se samo spol.
         assertEquals(ProfilPodaci(5, 7, 180, "Z", 25), profilZahtjev.captured)
         // Uspjeh se ne vidi u poruci: ponovno učitavanje profila odmah briše poruku, a UrediProfilScreen

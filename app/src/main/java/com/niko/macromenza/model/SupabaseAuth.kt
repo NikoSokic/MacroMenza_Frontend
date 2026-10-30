@@ -5,6 +5,11 @@ data class SupabaseAuthRequest(
     val password: String
 )
 
+data class SupabaseOsvjeziRequest(
+    @com.google.gson.annotations.SerializedName("refresh_token")
+    val refreshToken: String
+)
+
 data class SupabaseAuthResponse(
     val access_token: String?,
     val token_type: String?,

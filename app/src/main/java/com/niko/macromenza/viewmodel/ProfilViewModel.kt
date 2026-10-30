@@ -78,14 +78,11 @@ class ProfilViewModel : ViewModel() {
     ) {
         viewModelScope.launch {
             try {
-                val stariKorisnik = _korisnik.value
-
                 val azuriraniKorisnik = Korisnik(
                     id = idKorisnik,
                     ime = ime,
                     prezime = prezime,
-                    email = email,
-                    lozinka_hash = stariKorisnik?.lozinka_hash ?: "test"
+                    email = email
                 )
 
                 RetrofitInstance.api.azurirajKorisnika(

@@ -5,6 +5,5 @@ data class Korisnik(
     val supabaseUid: String? = null,
     val ime: String,
     val prezime: String,
-    val email: String,
-    val lozinka_hash: String
+    val email: String
 )

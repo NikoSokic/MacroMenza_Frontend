@@ -243,7 +243,7 @@ class ApiUgovorTest {
         val k = api.dohvatiKorisnika(94)
         val p = api.dohvatiProfilPoKorisniku(94)
         val status = api.dohvatiOnboardingStatus(94)
-        api.azurirajKorisnika(94, Korisnik(94, null, "Ana", "Anić", "ana@mail.hr", ""))
+        api.azurirajKorisnika(94, Korisnik(94, null, "Ana", "Anić", "ana@mail.hr"))
         api.azurirajProfil(3, ProfilPodaci(3, 94, 165, "Z", 30))
 
         assertEquals("/korisnici/94", zahtjev().path)
@@ -251,7 +251,7 @@ class ApiUgovorTest {
         assertEquals("/korisnici/94/onboarding-status", zahtjev().path)
         val putKorisnik = zahtjev()
         assertEquals("PUT /korisnici/94", "${putKorisnik.method} ${putKorisnik.path}")
-        assertEquals(setOf("id", "ime", "prezime", "email", "lozinka_hash"), tijelo(putKorisnik).keys().asSequence().toSet())
+        assertEquals(setOf("id", "ime", "prezime", "email"), tijelo(putKorisnik).keys().asSequence().toSet())
         val putProfil = zahtjev()
         assertEquals("PUT /profil/3", "${putProfil.method} ${putProfil.path}")
         assertEquals(setOf("id", "idKorisnik", "visina", "spol", "dob"), tijelo(putProfil).keys().asSequence().toSet())

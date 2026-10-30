@@ -197,7 +197,7 @@ class AuthViewModelTest {
     private fun pripremiUspjesnuPrijavu(onboardingZavrsen: Boolean) {
         coEvery { supabase.prijava(any(), any(), any(), any()) } returns odgovor
         coEvery { fake.api.pronadiIliDodajKorisnikaPrekoSupabase(any()) } returns
-            Korisnik(7, "uid-1", "Ana", "Anić", "ana@mail.hr", "")
+            Korisnik(7, "uid-1", "Ana", "Anić", "ana@mail.hr")
         coEvery { fake.api.dohvatiOnboardingStatus(7) } returns OnboardingStatusResponse(onboardingZavrsen)
     }
 
@@ -210,7 +210,7 @@ class AuthViewModelTest {
         advanceUntilIdle()
 
         coVerify { supabase.prijava(SupabaseAuthInstance.SUPABASE_ANON_KEY, any(), "password", SupabaseAuthRequest("ana@mail.hr", "lozinka1")) }
-        coVerify { fake.api.pronadiIliDodajKorisnikaPrekoSupabase(Korisnik(null, "uid-1", "", "", "ana@mail.hr", "")) }
+        coVerify { fake.api.pronadiIliDodajKorisnikaPrekoSupabase(Korisnik(null, "uid-1", "", "", "ana@mail.hr")) }
         coVerify(exactly = 1) { sesija.spremiSesiju(7, "uid-1") }
         assertEquals("uid-1", vm.supabaseUid.value)
         assertEquals(7L, vm.korisnikId.value)

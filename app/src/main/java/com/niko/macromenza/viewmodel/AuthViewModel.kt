@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.niko.macromenza.R
 import com.niko.macromenza.api.RetrofitInstance
 import com.niko.macromenza.api.SupabaseAuthInstance
+import com.niko.macromenza.api.TokenStore
 import com.niko.macromenza.model.Korisnik
 import com.niko.macromenza.model.SupabaseAuthRequest
 import com.niko.macromenza.session.UserSessionManager
@@ -162,6 +163,15 @@ class AuthViewModel(
                     return@launch
                 }
 
+                // Backend uz svaki poziv traži token, pa mora biti postavljen prije prvog poziva.
+                val accessToken = response.access_token
+                val refreshToken = response.refresh_token
+                if (accessToken == null || refreshToken == null) {
+                    _poruka.value = UiTekst.Resurs(R.string.auth_prij_neuspjela)
+                    return@launch
+                }
+                TokenStore.postavi(accessToken, refreshToken)
+
                 _supabaseUid.value = uid
 
                 val backendKorisnik = poveziKorisnikaSBackendom(
@@ -226,6 +236,7 @@ class AuthViewModel(
 
     fun odjava() {
         viewModelScope.launch {
+            TokenStore.obrisi()
             sessionManager.obrisiSesiju()
 
             _supabaseUid.value = null
@@ -243,8 +254,7 @@ class AuthViewModel(
             supabaseUid = supabaseUid,
             ime = "",
             prezime = "",
-            email = email,
-            lozinka_hash = ""
+            email = email
         )
 
         return RetrofitInstance.api.pronadiIliDodajKorisnikaPrekoSupabase(korisnik)

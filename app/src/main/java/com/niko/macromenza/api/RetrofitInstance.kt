@@ -10,9 +10,27 @@ object RetrofitInstance {
 
     private const val BASE_URL = BuildConfig.BASE_URL
 
+    /**
+     * Token na svakom zahtjevu i osvježavanje pri 401. Duži timeouti zbog Rendera: besplatni servis se uspava
+     * pa prvi poziv nakon pauze traje i do minutu.
+     */
+    private fun klijent(builder: OkHttpClient.Builder): OkHttpClient =
+        builder
+            .addInterceptor(TokenInterceptor())
+            .authenticator(TokenAuthenticator())
+            .build()
+
     val api: ApiService by lazy {
+        val klijent = klijent(
+            OkHttpClient.Builder()
+                .connectTimeout(30, TimeUnit.SECONDS)
+                .readTimeout(60, TimeUnit.SECONDS)
+                .writeTimeout(30, TimeUnit.SECONDS)
+        )
+
         Retrofit.Builder()
             .baseUrl(BASE_URL)
+            .client(klijent)
             .addConverterFactory(
                 GsonConverterFactory.create()
             )
@@ -28,12 +46,13 @@ object RetrofitInstance {
 
     // Prepoznavanje obroka zove vanjski AI servis, pa treba duži timeout od zadanih 10 s.
     val prepoznavanjeApi: ApiService by lazy {
-        val klijent = OkHttpClient.Builder()
-            .connectTimeout(15, TimeUnit.SECONDS)
-            .writeTimeout(60, TimeUnit.SECONDS)
-            .readTimeout(60, TimeUnit.SECONDS)
-            .callTimeout(70, TimeUnit.SECONDS)
-            .build()
+        val klijent = klijent(
+            OkHttpClient.Builder()
+                .connectTimeout(30, TimeUnit.SECONDS)
+                .writeTimeout(60, TimeUnit.SECONDS)
+                .readTimeout(60, TimeUnit.SECONDS)
+                .callTimeout(100, TimeUnit.SECONDS)
+        )
 
         Retrofit.Builder()
             .baseUrl(BASE_URL)

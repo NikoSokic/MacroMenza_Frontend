@@ -1,6 +1,7 @@
 package com.niko.macromenza.api
 
 import com.niko.macromenza.model.SupabaseAuthRequest
+import com.niko.macromenza.model.SupabaseOsvjeziRequest
 import com.niko.macromenza.model.SupabaseAuthResponse
 import retrofit2.http.Body
 import retrofit2.http.Header
@@ -22,5 +23,14 @@ interface SupabaseAuthApi {
         @Header("Content-Type") contentType: String = "application/json",
         @Query("grant_type") grantType: String = "password",
         @Body request: SupabaseAuthRequest
+    ): SupabaseAuthResponse
+
+    /** Novi access token iz refresh tokena (Supabase pri tome izdaje i novi refresh token). */
+    @POST("auth/v1/token")
+    suspend fun osvjezi(
+        @Header("apikey") apiKey: String,
+        @Header("Content-Type") contentType: String = "application/json",
+        @Query("grant_type") grantType: String = "refresh_token",
+        @Body request: SupabaseOsvjeziRequest
     ): SupabaseAuthResponse
 }

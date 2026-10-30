@@ -18,6 +18,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.toArgb
 import androidx.core.content.IntentCompat
+import com.niko.macromenza.api.TokenStore
 import com.niko.macromenza.navigation.AppNavigation
 import com.niko.macromenza.session.ThemeManager
 import com.niko.macromenza.ui.theme.AppTheme
@@ -32,6 +33,8 @@ class MainActivity : ComponentActivity() {
         savedInstanceState: Bundle?
     ) {
         super.onCreate(savedInstanceState)
+
+        TokenStore.inicijaliziraj(applicationContext)
 
         // Nakon rotacije ili povratka iz nedavnih aplikacija isti intent se ne obrađuje ponovno.
         if (savedInstanceState == null) {

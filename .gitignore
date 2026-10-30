@@ -23,3 +23,9 @@ local.properties
 /.idea/deviceManager.xml
 /.idea/deploymentTargetSelector.xml
 /.idea/appInsightsSettings.xml
+
+# Potpisni ključ aplikacije i lozinke za potpisivanje
+keystore/
+*.jks
+*.keystore
+keystore.properties

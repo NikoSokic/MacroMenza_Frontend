@@ -86,6 +86,16 @@ fun AppNavigation(
         onDijeljenaObradena()
     }
 
+    // Sesija je istekla (refresh token odbijen pa su tokeni obrisani): natrag na prijavu.
+    LaunchedEffect(isLoggedIn) {
+        if (isLoggedIn != false) return@LaunchedEffect
+        val ruta = navController.currentDestination?.route ?: return@LaunchedEffect
+        if (ruta == "welcome" || ruta == "login" || ruta == "register" || ruta.startsWith("onboarding")) {
+            return@LaunchedEffect
+        }
+        navController.navigate("login") { popUpTo(0) }
+    }
+
     if (isLoggedIn == null) {
         SplashScreen()
         return
